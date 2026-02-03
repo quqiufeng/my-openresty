@@ -113,6 +113,159 @@ curl http://localhost:8080/
 
 ---
 
+## CLI Tool / CLI 命令行工具
+
+MyResty 提供 CLI 工具用于代码生成和项目管理。
+
+MyResty provides a CLI tool for code generation and project management.
+
+### Installation / 安装
+
+CLI 工具位于项目根目录，直接使用 luajit 运行：
+
+CLI tool is located in project root, run with luajit:
+
+```bash
+# 添加执行权限 / Add execute permission
+chmod +x myresty
+
+# 方式一：直接运行 / Method 1: Direct run
+./myresty --help
+
+# 方式二：通过 luajit 运行 / Method 2: Run via luajit
+luajit myresty --help
+```
+
+### Commands / 命令
+
+| Command | Description | Description |
+|---------|-------------|-------------|
+| `make:<type> <name>` | Generate code files | 生成代码文件 |
+| `curd <table_name>` | Generate full CRUD for a table | 为表生成完整 CRUD |
+
+### Make Types / 生成类型
+
+| Type | Description | Description |
+|------|-------------|-------------|
+| `controller` | Create controller | 创建控制器 |
+| `model` | Create model | 创建模型 |
+| `middleware` | Create middleware | 创建中间件 |
+| `library` | Create library | 创建库文件 |
+| `command` | Create CLI command | 创建 CLI 命令 |
+| `migration` | Create database migration | 创建数据库迁移 |
+| `seeder` | Create data seeder | 创建数据填充 |
+
+### Examples / 使用示例
+
+```bash
+# 生成控制器
+./myresty make:controller User
+
+# 生成模型
+./myresty make:model Article
+
+# 生成中间件
+./myresty make:middleware Auth
+
+# 生成库文件
+./myresty make:library Payment
+
+# 生成数据库迁移
+./myresty make:migration create_users
+
+# 生成数据填充
+./myresty make:seeder Users
+
+# 为指定表生成完整 CRUD
+./myresty curd users
+./myresty curd products
+./myresty curd orders
+```
+
+### CRUD Generation / CRUD 生成
+
+`curd` 命令为指定表生成完整的 CRUD 代码：
+
+`curd` command generates complete CRUD code for a specified table:
+
+```bash
+./myresty curd users
+```
+
+生成的文件:
+
+Generated files:
+
+| File | Type | Description |
+|------|------|-------------|
+| `app/models/UserModel.lua` | Model | 数据模型 |
+| `app/controllers/User.lua` | Controller | 控制器 |
+| `tests/unit/controllers/UserSpec.lua` | Unit Test | 单元测试 |
+| `tests/integration/crud/User.sh` | Integration Test | 集成测试 |
+
+生成的 API 端点:
+
+Generated API endpoints:
+
+| Method | Endpoint | Action |
+|--------|----------|--------|
+| `GET` | `/users` | List (列表) |
+| `GET` | `/users/{id}` | Show (详情) |
+| `POST` | `/users` | Create (创建) |
+| `PUT` | `/users/{id}` | Update (更新) |
+| `DELETE` | `/users/{id}` | Delete (删除) |
+
+需要添加到 `app/routes.lua`:
+
+Add to `app/routes.lua`:
+
+```lua
+route:get('/users', 'User:index')
+route:get('/users/{id}', 'User:show')
+route:post('/users', 'User:create')
+route:put('/users/{id}', 'User:update')
+route:delete('/users/{id}', 'User:delete')
+```
+
+### Run Tests / 运行测试
+
+```bash
+# 运行集成测试
+./tests/integration/crud/User.sh
+
+# 设置测试 URL
+BASE_URL=http://localhost:8080 ./tests/integration/crud/User.sh
+```
+
+### Help / 帮助
+
+```bash
+./myresty --help
+```
+
+输出:
+
+```
+MyResty CLI v1.0.0
+
+Usage: myresty <command> [options]
+
+Commands:
+  make:<type> <name>   Generate code files
+  curd <table_name>    Generate CRUD for a table
+
+Options:
+  --help, -h           Show help
+  --version, -v        Show version
+
+Examples:
+  myresty make:controller User
+  myresty make:model Article
+  myresty curd users
+```
+
+---
+
 ## Architecture / 项目架构
 
 ```
