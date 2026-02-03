@@ -1487,8 +1487,8 @@ lua tests/unit/run.lua
 ```lua
 -- tests/unit/my_feature_spec.lua
 
-package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;;'
-package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 
