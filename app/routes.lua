@@ -1,0 +1,191 @@
+local M = {}
+
+function M(route)
+    route:get('/', function(req, res)
+        res:json({message = 'Welcome to MyResty API', version = '1.0.0'})
+    end)
+
+    route:get('/hello/{name}', {controller = 'welcome', action = 'hello'})
+
+    route:get('/users', 'user:get_list')
+    route:get('/users/{id}', 'user:get_one')
+    route:post('/users', 'user:create')
+    route:put('/users/{id}', 'user:update')
+    route:delete('/users/{id}', 'user:delete')
+
+    route:get('/api/test', 'test:index')
+
+    -- Query Builder Examples
+    route:get('/query/basic', 'example:index')
+    route:get('/query/joins', 'example:joins')
+    route:get('/query/where', 'example:where_conditions')
+    route:get('/query/aggregates', 'example:aggregates')
+    route:get('/query/insert', 'example:insert_example')
+    route:get('/query/update', 'example:update_example')
+    route:get('/query/delete', 'example:delete_example')
+    route:get('/query/complex', 'example:complex_query')
+    route:get('/query/raw', 'example:raw_expressions')
+
+    -- Request Test API
+    route:get('/request', 'request_test:index')
+    route:get('/request/get', 'request_test:get')
+    route:post('/request/post/form', 'request_test:post_form')
+    route:post('/request/post/json', 'request_test:post_json')
+    route:any('/request/mixed', 'request_test:mixed')
+    route:get('/request/all', 'request_test:all')
+
+    -- File Upload API
+    route:get('/upload', 'upload:index')
+    route:post('/upload', 'upload:upload')
+    route:post('/upload/multiple', 'upload:uploadMultiple')
+    route:post('/upload/validate', 'upload:uploadValidate')
+    route:get('/upload/form', 'upload:showForm')
+
+    -- Image Processing API
+    route:get('/image', 'image:index')
+    route:post('/image/upload', 'image:upload')
+    route:post('/image/upload/multiple', 'image:uploadMultiple')
+    route:post('/image/upload/avatar', 'image:uploadAvatar')
+    route:post('/image/upload/variants', 'image:uploadVariants')
+    route:get('/image/info/{path}', 'image:info')
+    route:get('/image/thumbnail/{path}', 'image:thumbnail')
+    route:get('/image/optimize/{path}', 'image:optimize')
+
+    -- Captcha API
+    route:get('/captcha', 'captcha:generate')
+    route:get('/captcha/code', 'captcha:getCode')
+    route:post('/captcha/verify', 'captcha:verify')
+    route:post('/captcha/refresh', 'captcha:refresh')
+    route:post('/captcha/verify-ajax', 'captcha:verifyAjax')
+
+    -- HttpClient API
+    route:get('/httpclient', 'http_client:index')
+    route:get('/httpclient/get', 'http_client:get')
+    route:post('/httpclient/post', 'http_client:post')
+    route:post('/httpclient/json', 'http_client:json')
+    route:post('/httpclient/api', 'http_client:api')
+    route:get('/httpclient/benchmark', 'http_client:benchmark')
+
+    -- Session API
+    route:get('/session', 'session:index')
+    route:post('/session/set', 'session:set')
+    route:post('/session/get', 'session:get')
+    route:post('/session/remove', 'session:remove')
+    route:post('/session/clear', 'session:clear')
+    route:post('/session/regenerate', 'session:regenerate')
+    route:post('/session/destroy', 'session:destroy')
+    route:post('/session/flash/set', 'session:setFlash')
+    route:post('/session/flash/get', 'session:getFlash')
+    route:post('/session/touch', 'session:touch')
+    route:get('/session/counter', 'session:counter')
+    route:post('/session/user/login', 'session:userLogin')
+    route:get('/session/user/info', 'session:userInfo')
+    route:post('/session/user/logout', 'session:userLogout')
+
+    -- Cache API
+    route:get('/cache', 'cache:index')
+    route:post('/cache/set', 'cache:set')
+    route:post('/cache/get', 'cache:get')
+    route:post('/cache/delete', 'cache:delete')
+    route:post('/cache/clear', 'cache:clear')
+    route:post('/cache/incr', 'cache:incr')
+    route:post('/cache/decr', 'cache:decr')
+    route:get('/cache/keys', 'cache:keys')
+    route:post('/cache/remember', 'cache:remember')
+    route:get('/cache/stats', 'cache:stats')
+    route:get('/cache/user', 'cache:userData')
+    route:post('/cache/user/invalidate', 'cache:invalidateUser')
+    route:get('/cache/pageview', 'cache:pageView')
+
+    -- Test API
+    route:get('/test', 'test:index')
+    route:get('/test/all', 'test:runAll')
+    route:get('/test/users', 'test:users')
+    route:get('/test/session', 'test:session')
+    route:get('/test/cache', 'test:cache')
+    route:get('/test/captcha', 'test:captcha')
+
+    -- Logger Demo API
+    route:get('/demo', 'demo:index')
+    route:get('/demo/log-levels', 'demo:log_levels')
+    route:get('/demo/performance', 'demo:performance')
+    route:get('/demo/logs-stats', 'demo:logs_stats')
+    route:get('/demo/recent-logs', 'demo:recent_logs')
+    route:post('/demo/clear-logs', 'demo:clear_logs')
+    route:get('/demo/context', 'demo:context_logging')
+
+    -- Rate Limit API
+    route:get('/rate-limit', 'rate_limit:index')
+    route:get('/rate-limit/test', 'rate_limit:test')
+    route:get('/rate-limit/status', 'rate_limit:status')
+    route:post('/rate-limit/check', 'rate_limit:check')
+    route:get('/rate-limit/zone', 'rate_limit:zone')
+    route:get('/rate-limit/keys', 'rate_limit:keys')
+    route:post('/rate-limit/reset', 'rate_limit:reset')
+    route:get('/rate-limit/login', 'rate_limit:login')
+    route:get('/rate-limit/api', 'rate_limit:api')
+    route:get('/rate-limit/strict', 'rate_limit:strict')
+    route:get('/rate-limit/combined', 'rate_limit:combined')
+    route:get('/rate-limit/user', 'rate_limit:user')
+
+    -- Validation API
+    route:get('/validate', 'validate:index')
+    route:post('/validate/basic', 'validate:basic')
+    route:post('/validate/login', 'validate:login')
+    route:post('/validate/register', 'validate:register')
+    route:post('/validate/update', 'validate:update')
+    route:post('/validate/custom', 'validate:custom')
+    route:post('/validate/messages', 'validate:messages')
+    route:post('/validate/array', 'validate:array')
+    route:post('/validate/all', 'validate:all')
+    route:post('/validate/login-captcha', 'validate:login_with_session')
+    route:post('/validate/api-key', 'validate:api_key')
+
+    -- Config-based Validation API
+    route:get('/validate-config', 'validate_config:index')
+    route:get('/validate-config/tables', 'validate_config:tables')
+    route:get('/validate-config/table/{table}', 'validate_config:table_info')
+    route:post('/validate-config/users', 'validate_config:users')
+    route:post('/validate-config/users/{scenario}', 'validate_config:users')
+    route:post('/validate-config/products', 'validate_config:products')
+    route:post('/validate-config/products/{scenario}', 'validate_config:products')
+    route:post('/validate-config/orders', 'validate_config:orders')
+    route:post('/validate-config/orders/{scenario}', 'validate_config:orders')
+    route:post('/validate-config/custom', 'validate_config:custom')
+    route:post('/validate-config/users/create', 'validate_config:users_create')
+    route:post('/validate-config/users/login', 'validate_config:users_login')
+    route:post('/validate-config/users/profile', 'validate_config:users_profile')
+    route:post('/validate-config/products/create', 'validate_config:products_create')
+    route:post('/validate-config/products/update', 'validate_config:products_update')
+    route:post('/validate-config/orders/create', 'validate_config:orders_create')
+    route:post('/validate-config/orders/ship', 'validate_config:orders_ship')
+
+    -- Request Helper Demo API
+    route:get('/request-demo', 'request_demo:index')
+    route:post('/request-demo/basic', 'request_demo:basic')
+    route:post('/request-demo/typed', 'request_demo:typed')
+    route:post('/request-demo/validate', 'request_demo:validate')
+    route:post('/request-demo/pagination', 'request_demo:pagination')
+    route:post('/request-demo/search', 'request_demo:search')
+    route:post('/request-demo/filter', 'request_demo:filter')
+    route:post('/request-demo/only', 'request_demo:only')
+    route:post('/request-demo/except', 'request_demo:except')
+    route:post('/request-demo/complete', 'request_demo:complete')
+    route:post('/request-demo/direct-types', 'request_demo:direct_types')
+    route:post('/request-demo/get-post', 'request_demo:get_post')
+    route:post('/request-demo/post-only', 'request_demo:get_post_only_demo')
+    route:post('/request-demo/shorthand-types', 'request_demo:shorthand_types')
+
+    -- Middleware Demo API
+    route:get('/middleware', 'middleware_demo:index')
+    route:get('/middleware/list', 'middleware_demo:list')
+    route:get('/middleware/info', 'middleware_demo:info')
+    route:get('/middleware/headers', 'middleware_demo:headers')
+    route:post('/middleware/auth-test', 'middleware_demo:auth_test')
+    route:post('/middleware/login', 'middleware_demo:login')
+    route:post('/middleware/logout', 'middleware_demo:logout')
+    route:get('/middleware/cors-test', 'middleware_demo:cors_test')
+    route:get('/middleware/rate-limit-test', 'middleware_demo:rate_limit_test')
+end
+
+return M

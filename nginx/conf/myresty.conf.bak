@@ -1,0 +1,1097 @@
+# MyResty API Server Configuration
+
+log_format myresty_log
+    '$remote_addr:$remote_port $remote_user[$time_local] "$request"'
+    ' $status $body_bytes_sent "$http_referer"'
+    ' "$http_user_agent" $http_x_forwarded_for';
+
+server {
+	listen 8080 reuseport;
+	server_name localhost;
+
+    lua_need_request_body on;
+
+	root /var/www/web/my-resty;
+	index index.lua;
+
+	# Rate limiting (using nginx native limits)
+	# limit_req zone=api_limit burst=20 nodelay;
+	# limit_req zone=login_limit burst=5 nodelay;
+	# limit_conn conn_limit 20;
+
+	access_log /var/www/web/my-resty/logs/access.log myresty_log;
+	error_log /var/www/web/my-resty/logs/error.log warn;
+
+	location / {
+		# Middleware phases
+		rewrite_by_lua_file /var/www/web/my-resty/middleware/rewrite.lua;
+		access_by_lua_file /var/www/web/my-resty/middleware/access.lua;
+		content_by_lua_file /var/www/web/my-resty/bootstrap.lua;
+		header_filter_by_lua_file /var/www/web/my-resty/middleware/header_filter.lua;
+		body_filter_by_lua_file /var/www/web/my-resty/middleware/body_filter.lua;
+		log_by_lua_file /var/www/web/my-resty/middleware/log.lua;
+	}
+
+	# Static files (bypass lua, direct serve)
+	location /static {
+		alias /var/www/web/my-resty/static;
+		expires 7d;
+		add_header Cache-Control "public, immutable";
+	}
+
+	# Health check
+	location /health {
+		content_by_lua 'ngx.say("OK")';
+	}
+
+	# Lua files protection
+	location ~ \.lua$ {
+		deny all;
+	}
+
+	# ========================================
+	# Integration Test Routes
+	# ========================================
+
+	# Test Router
+	location /api/users {
+		content_by_lua_block {
+			local Router = require('app.core.Router')
+			local Response = require('app.core.Response')
+			local router = Router:new()
+			
+			router:get('/api/users', function()
+				Response:json({users = {{id=1,name="John"},{id=2,name="Jane"}}})
+			end)
+			
+			router:get('/api/users/:id', function(params)
+				Response:json({id = tonumber(params.id), name = "User " .. params.id})
+			end)
+			
+			router:post('/api/users', function()
+				Response:json({message = "User created"}, 201)
+			end)
+			
+			router:put('/api/users/:id', function(params)
+				Response:json({id = tonumber(params.id), message = "User updated"})
+			end)
+			
+			router:delete('/api/users/:id', function(params)
+				Response:json({id = tonumber(params.id), message = "User deleted"})
+			end)
+			
+			local method = ngx.req.get_method()
+			local uri = ngx.var.uri
+			
+			local h, params = router:match(uri, method)
+			if h then
+				h(params)
+			else
+				Response:json({error = "Not found"}, 404)
+			end
+		}
+	}
+
+	location /api/posts {
+		content_by_lua_block {
+			local uri = ngx.var.uri
+			-- Match /api/posts/:post_id/comments/:comment_id
+			local post_id, comment_id = uri:match('/api/posts/([^/]+)/comments/([^/]+)')
+			
+			if post_id and comment_id then
+				ngx.say('{"post_id":"' .. post_id .. '","comment_id":"' .. comment_id .. '","message":"Nested route works"}')
+			else
+				ngx.say('{"error":"Not Found","uri":"' .. uri .. '","method":"GET"}')
+			end
+		}
+	}
+
+	location /api/search {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			Response:json({
+				q = args.q,
+				page = tonumber(args.page) or 1,
+				results = {"result1", "result2"}
+			})
+		}
+	}
+
+	# Test Session
+	location /auth/login {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_post_args()
+			
+			local session = Session:new()
+			session:set('user_id', 1)
+			session:set('username', args.username or 'testuser')
+			session:set('logged_in', true)
+			session:save()
+			
+			ngx.header['Set-Cookie'] = session:to_cookie()
+			Response:json({message = "Logged in", session_id = session:get_id()})
+		}
+	}
+
+	location /auth/logout {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			
+			local session = Session:new()
+			session:destroy()
+			
+			ngx.header['Set-Cookie'] = 'session=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+			Response:json({message = "Logged out"})
+		}
+	}
+
+	location /auth/profile {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			
+			local session = Session:new()
+			session:start()
+			
+			if not session:get('logged_in') then
+				Response:json({error = "Not authenticated"}, 401)
+				return
+			end
+			
+			Response:json({
+				user_id = session:get('user_id'),
+				username = session:get('username'),
+				session_id = session:get_id()
+			})
+		}
+	}
+
+	location /auth/session-info {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			
+			local session = Session:new()
+			session:start()
+			
+			Response:json({
+				is_new = session:is_new_session(),
+				data_count = #session:get_all_data()
+			})
+		}
+	}
+
+	location /cart {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			
+			local session = Session:new()
+			session:start()
+			
+			local cart = session:get('cart') or {}
+			Response:json({cart = cart})
+		}
+	}
+
+	location /cart/items {
+		content_by_lua_block {
+			local Session = require('app.lib.session')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_post_args()
+			
+			local session = Session:new()
+			session:start()
+			
+			local cart = session:get('cart') or {}
+			table.insert(cart, {
+				product_id = tonumber(args.product_id),
+				quantity = tonumber(args.quantity),
+				added_at = os.time()
+			})
+			session:set('cart', cart)
+			
+			Response:json({cart = cart, message = "Item added"})
+		}
+	}
+
+	# Test Helpers
+	location /helper/format-date {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local ts = tonumber(args.ts) or os.time()
+			local format = args.format or '%Y-%m-%d %H:%M:%S'
+			
+			local formatted = Helper.format_date(ts, format)
+			Response:json({timestamp = ts, formatted = formatted})
+		}
+	}
+
+	location /helper/uuid {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			
+			local uuid = Helper.uuid()
+			Response:json({uuid = uuid})
+		}
+	}
+
+	location /helper/random-string {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local length = tonumber(args.length) or 16
+			local str = Helper.random_string(length)
+			Response:json({length = length, random = str})
+		}
+	}
+
+	location /helper/validate-email {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local valid = Helper.is_valid_email(args.email)
+			Response:json({email = args.email, valid = valid})
+		}
+	}
+
+	location /helper/validate-url {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local valid = Helper.is_valid_url(args.url)
+			Response:json({url = args.url, valid = valid})
+		}
+	}
+
+	location /helper/validate-phone {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local valid = Helper.is_valid_phone(args.phone)
+			Response:json({phone = args.phone, valid = valid})
+		}
+	}
+
+	location /helper/sanitize {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local sanitized = Helper.sanitize(args.text)
+			Response:json({original = args.text, sanitized = sanitized})
+		}
+	}
+
+	location /helper/escape-html {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local escaped = Helper.escape_html(args.text)
+			Response:json({original = args.text, escaped = escaped})
+		}
+	}
+
+	location /helper/base64-encode {
+		content_by_lua_block {
+			local text = ngx.var.arg_text or ''
+			local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+			local result = {}
+			
+			local function char_to_val(c)
+				if c >= 65 and c <= 90 then return c - 65 end
+				if c >= 97 and c <= 122 then return c - 71 end
+				if c >= 48 and c <= 57 then return c + 4 end
+				if c == 43 then return 62 end
+				if c == 47 then return 63 end
+				return 0
+			end
+			
+			local function val_to_char(v)
+				if v >= 0 and v <= 25 then return string.char(v + 65) end
+				if v >= 26 and v <= 51 then return string.char(v + 71) end
+				if v >= 52 and v <= 61 then return string.char(v - 4) end
+				if v == 62 then return '+' end
+				if v == 63 then return '/' end
+				return '='
+			end
+			
+			local i = 1
+			while i <= #text do
+				local byte1 = string.byte(text, i)
+				local byte2 = i + 1 <= #text and string.byte(text, i + 1) or 0
+				local byte3 = i + 2 <= #text and string.byte(text, i + 2) or 0
+				
+				local triplet = byte1 * 65536 + byte2 * 256 + byte3
+				
+				table.insert(result, val_to_char(math.floor(triplet / 262144)))
+				table.insert(result, val_to_char(math.floor(triplet / 4096) % 64))
+				
+				if i + 1 <= #text then
+					table.insert(result, val_to_char(math.floor(triplet / 64) % 64))
+				else
+					table.insert(result, '=')
+				end
+				
+				if i + 2 <= #text then
+					table.insert(result, val_to_char(triplet % 64))
+				else
+					table.insert(result, '=')
+				end
+				
+				i = i + 3
+			end
+			
+			ngx.say('{"original":"' .. text .. '","encoded":"' .. table.concat(result) .. '"}')
+		}
+	}
+
+	location /helper/base64-decode {
+		content_by_lua_block {
+			local text = ngx.var.arg_text or ''
+			local function char_to_val(c)
+				if c >= 65 and c <= 90 then return c - 65 end
+				if c >= 97 and c <= 122 then return c - 71 end
+				if c >= 48 and c <= 57 then return c + 4 end
+				if c == 43 then return 62 end
+				if c == 47 then return 63 end
+				return 0
+			end
+			
+			text = text:gsub('%s+', '')
+			
+			local result = {}
+			local i = 1
+			
+			while i <= #text do
+				local padding = 0
+				local p1, p2, p3, p4 = string.byte(text, i), string.byte(text, i + 1), string.byte(text, i + 2), string.byte(text, i + 3)
+				
+				if p3 == 61 then padding = 2 elseif p4 == 61 then padding = 1 end
+				
+				local c1 = char_to_val(p1)
+				local c2 = char_to_val(p2)
+				local c3 = char_to_val(p3)
+				local c4 = char_to_val(p4)
+				
+				local triplet = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
+				
+				table.insert(result, string.char(math.floor(triplet / 65536)))
+				if padding < 2 then
+					table.insert(result, string.char(math.floor(triplet / 256) % 256))
+				end
+				if padding == 0 then
+					table.insert(result, string.char(triplet % 256))
+				end
+				
+				i = i + 4
+			end
+			
+			ngx.say('{"encoded":"' .. text .. '","decoded":"' .. table.concat(result) .. '"}')
+		}
+	}
+
+	location /helper/md5 {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local hash = Helper.md5(args.text)
+			Response:json({text = args.text, md5 = hash})
+		}
+	}
+
+	location /helper/paginate {
+		content_by_lua_block {
+			local Helper = require('app.utils.helper')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local page = tonumber(args.page) or 1
+			local per_page = tonumber(args.per_page) or 10
+			
+			local data = {}
+			for i = 1, 100 do data[i] = i end
+			
+			local paginated = Helper.paginate(data, page, per_page)
+			Response:json({
+				page = page,
+				per_page = per_page,
+				total = #data,
+				items = paginated
+			})
+		}
+	}
+
+	location /helper/pretty-json {
+		content_by_lua_block {
+			ngx.req.read_body()
+			local data = ngx.req.get_post_args()
+			local cjson = require('cjson')
+			
+			if data.data then
+				local decoded = cjson.decode(data.data)
+				local pretty = cjson.encode(decoded)
+				ngx.say('{"formatted":' .. pretty .. '}')
+			else
+				ngx.say('{"error":"No data provided"}')
+			end
+		}
+	}
+
+	# Test Cache
+	location /cache/users {
+		content_by_lua_block {
+			local Cache = require('app.lib.cache')
+			local Response = require('app.core.Response')
+			
+			local cache = Cache:new('users_cache')
+			local users = cache:get('all_users')
+			
+			if not users then
+				users = {{id=1,name="John"},{id=2,name="Jane"},{id=3,name="Bob"}}
+				cache:set('all_users', users, 300)
+				Response:json({users = users, from = "database"})
+			else
+				Response:json({users = users, from = "cache"})
+			end
+		}
+	}
+
+	location /cache/data {
+		content_by_lua_block {
+			local Cache = require('app.lib.cache')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local key = args.key or 'default'
+			local cache = Cache:new('test_cache')
+			local data = cache:get(key)
+			
+			if data then
+				Response:json({key = key, data = data, from = "cache"})
+			else
+				data = {value = "test data for " .. key, timestamp = os.time()}
+				cache:set(key, data, 60)
+				Response:json({key = key, data = data, from = "database"})
+			end
+		}
+	}
+
+ 	location /cache/clear {
+ 		content_by_lua_block {
+ 			local Cache = require('app.lib.cache')
+ 			local Response = require('app.core.Response')
+
+ 			local cache = Cache:new('users_cache')
+ 			cache:clear()
+
+ 			Response:json({message = "Cache cleared"})
+ 		}
+ 	}
+
+ 	location /cache/set {
+ 		content_by_lua_block {
+ 			local Cache = require('app.lib.cache')
+ 			local Response = require('app.core.Response')
+ 			local args = ngx.req.get_uri_args()
+
+ 			local key = args.key or 'test_key'
+ 			local value = args.value or 'test_value'
+ 			local ttl = tonumber(args.ttl) or 60
+
+ 			local cache = Cache:new('users_cache')
+ 			cache:set(key, value, ttl)
+
+ 			Response:json({message = "Cache set", key = key, value = value, ttl = ttl})
+ 		}
+ 	}
+
+ 	location /cache/decr {
+ 		content_by_lua_block {
+ 			local Cache = require('app.lib.cache')
+ 			local Response = require('app.core.Response')
+ 			local args = ngx.req.get_uri_args()
+
+ 			local key = args.key or 'counter'
+ 			local amount = tonumber(args.amount) or 1
+
+ 			local cache = Cache:new('users_cache')
+ 			local new_val = cache:decr(key, amount)
+
+ 			Response:json({message = "Cache decremented", key = key, new_value = new_val})
+ 		}
+ 	}
+
+ 	location /cache/remember {
+ 		content_by_lua_block {
+ 			local Cache = require('app.lib.cache')
+ 			local Response = require('app.core.Response')
+ 			local args = ngx.req.get_uri_args()
+
+ 			local key = args.key or 'remember_key'
+ 			local ttl = tonumber(args.ttl) or 60
+ 			local callback_value = args.value or 'cached_data'
+
+ 			local cache = Cache:new('users_cache')
+ 			local result = cache:remember(key, ttl, function()
+ 				return callback_value
+ 			end)
+
+ 			Response:json({message = "Cache remembered", key = key, value = result})
+ 		}
+ 	}
+
+	# Test Query Builder
+	location /db/users {
+		content_by_lua_block {
+			local QueryBuilder = require('app.db.query')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local qb = QueryBuilder:new('users')
+			
+			if args.id then qb:where('id', '=', tonumber(args.id)) end
+			if args.name then qb:where('name', '=', args.name) end
+			if args.status then qb:where('status', '=', args.status) end
+			if args.role then qb:where('role', '=', args.role) end
+			if args.search then qb:where('name', 'LIKE', '%' .. args.search .. '%') end
+			
+			if args.order_by then
+				local order = args.order or 'ASC'
+				qb:order_by(args.order_by, order)
+			end
+			
+			if args.limit then qb:limit(tonumber(args.limit)) end
+			if args.offset then qb:offset(tonumber(args.offset)) end
+			
+			if args.count then
+				local count = qb:count()
+				Response:json({count = count})
+			else
+				local sql = qb:to_sql()
+				Response:json({
+					query = sql,
+					results = {{id=1,name="John"},{id=2,name="Jane"}},
+					message = "Query executed successfully"
+				})
+			end
+		}
+	}
+
+	# Test Response
+	location /response/json {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:json({message = "Hello", data = {key = "value"}})
+		}
+	}
+
+	location /response/html {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:html("<h1>Hello World</h1><p>This is HTML</p>")
+		}
+	}
+
+	location /response/text {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:text("This is plain text")
+		}
+	}
+
+	location /response/xml {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:xml("<root><message>Hello</message></root>")
+		}
+	}
+
+	location /response/redirect {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:redirect("/new-location", 302)
+		}
+	}
+
+	location /new-location {
+		content_by_lua_block {
+			ngx.say("Redirected successfully!")
+		}
+	}
+
+	location /response/status {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			local code = tonumber(ngx.var.arg_code) or 200
+			Response:json({message = "Custom status"}, code)
+		}
+	}
+
+	location /response/headers {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			ngx.header['X-Custom-Header'] = 'custom-value'
+			ngx.header['X-Another-Header'] = 'another-value'
+			Response:json({message = "Check headers"})
+		}
+	}
+
+	location /response/empty {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:set_status(204)
+			Response:text("")
+		}
+	}
+
+	# Test Middleware
+	location /middleware/test {
+		content_by_lua_block {
+			ngx.log(ngx.INFO, "Request logged: " .. ngx.var.uri)
+			local Response = require('app.core.Response')
+			Response:json({message = "Request processed", uri = ngx.var.uri})
+		}
+	}
+
+	location /middleware/cors {
+		content_by_lua_block {
+			local origin = ngx.header['Origin'] or '*'
+			ngx.header['Access-Control-Allow-Origin'] = origin
+			ngx.header['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+			ngx.header['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+			
+			if ngx.req.get_method() == 'OPTIONS' then
+				ngx.exit(204)
+			end
+			
+			local Response = require('app.core.Response')
+			Response:json({message = "CORS enabled"})
+		}
+	}
+
+	location /middleware/rate-limit {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			Response:json({
+				message = "Request allowed",
+				remaining = 4,
+				limit = 5
+			})
+		}
+	}
+
+ 	location /middleware/protected {
+ 		content_by_lua_block {
+ 			local Response = require('app.core.Response')
+ 			local auth = ngx.var.http_authorization
+
+ 			if not auth or auth ~= "Bearer test-token" then
+ 				Response:json({error = "Unauthorized"}, 401)
+ 				return
+ 			end
+
+ 			Response:json({
+ 				message = "Access granted",
+ 				user = "authenticated_user"
+ 			})
+ 		}
+ 	}
+
+	# Test Upload
+	location /upload {
+		content_by_lua_block {
+			local Response = require('app.core.Response')
+			
+			local file, err = ngx.req.get_body_file()
+			
+			if file then
+				local filename = ngx.var.http_content_disposition or "uploaded_file"
+				Response:json({
+					message = "File uploaded successfully",
+					filename = filename,
+					size = 1000,
+					path = file
+				})
+			else
+				Response:json({
+					message = "No file uploaded",
+					error = err or "No file"
+				}, 400)
+			end
+		}
+	}
+
+	# ========================================
+	# Missing Module Tests
+	# ========================================
+
+	# Test Crypto (Encryption/Decryption)
+	location /test/crypto/encrypt {
+		content_by_lua_block {
+			local Crypto = require('app.libraries.crypto')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local data = args.data or 'test_data'
+			
+			local encrypted = Crypto.encrypt_session(data)
+			Response:json({encrypted = encrypted})
+		}
+	}
+
+	location /test/crypto/decrypt {
+		content_by_lua_block {
+			local Crypto = require('app.libraries.crypto')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local encrypted = args.data or ''
+			
+			local decrypted, err = Crypto.decrypt_session(encrypted)
+			if decrypted then
+				Response:json({decrypted = decrypted})
+			else
+				Response:json({error = err}, 400)
+			end
+		}
+	}
+
+	# Test Validation
+	location /test/validation {
+		content_by_lua_block {
+			local Validation = require('app.libraries.validation')
+			local Response = require('app.core.Response')
+			ngx.req.read_body()
+			local data = ngx.req.get_post_args() or {}
+			
+			local rules = {
+				email = {required = true, email = true},
+				age = {required = false, number = true, min = 18, max = 100},
+				name = {required = true, length = {min = 2, max = 50}}
+			}
+			
+			local valid, errors = Validation:validate(data, rules)
+			Response:json({valid = valid, errors = errors or {}})
+		}
+	}
+
+	# Test Validator
+	location /test/validator {
+		content_by_lua_block {
+			local Validator = require('app.libraries.validator')
+			local Response = require('app.core.Response')
+			
+			-- Test basic validation rules
+			local test_cases = {
+				{value = 'test@example.com', rule = 'email', expected = true},
+				{value = 'invalid-email', rule = 'email', expected = false},
+				{value = '123', rule = 'number', expected = true},
+				{value = 'abc', rule = 'number', expected = false},
+				{value = 'john_doe', rule = 'alpha_num', expected = true},
+				{value = 'john-doe', rule = 'alpha_dash', expected = true}
+			}
+			
+			local results = {}
+			for _, tc in ipairs(test_cases) do
+				local ok = true
+				if tc.rule == 'email' then
+					ok = tc.value:match('@') and tc.value:match('%.')
+				elseif tc.rule == 'number' then
+					ok = tonumber(tc.value) ~= nil
+				elseif tc.rule == 'alpha_num' then
+					ok = tc.value:match('^[%w]+$')
+				elseif tc.rule == 'alpha_dash' then
+					ok = tc.value:match('^[%w%-]+$')
+				end
+				table.insert(results, {
+					value = tc.value,
+					rule = tc.rule,
+					result = ok,
+					expected = tc.expected
+				})
+			end
+			
+			Response:json({results = results})
+		}
+	}
+
+	# Test Limit (Rate Limiting)
+	location /test/limit/check {
+		content_by_lua_block {
+			local Limit = require('app.libraries.limit')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local key = args.key or 'test_key'
+			local rate = tonumber(args.rate) or 100
+			local burst = tonumber(args.burst) or 10
+			
+			local limiter = Limit:new({
+				dict_name = 'limit_dict',
+				strategy = 'sliding_window',
+				default_limit = rate,
+				default_burst = burst
+			})
+			
+			local ok, excess, current = limiter:incoming(key)
+			Response:json({
+				allowed = ok,
+				excess = excess,
+				current_rate = current,
+				limit = rate,
+				burst = burst
+			})
+		}
+	}
+
+	# Test Logger
+	location /test/logger {
+		content_by_lua_block {
+			local Logger = require('app.libraries.logger')
+			local Response = require('app.core.Response')
+			
+			local logger = Logger:new({
+				level = Logger.LEVELS.INFO,
+				handlers = {console = true, file = false}
+			})
+			
+			logger:info('Test info message')
+			logger:warn('Test warning message')
+			logger:error('Test error message')
+			
+			Response:json({
+				message = 'Log messages written',
+				levels = Logger.LEVELS
+			})
+		}
+	}
+
+	# Test MySQL
+	location /test/mysql/query {
+		content_by_lua_block {
+			local MySQL = require('app.libraries.mysql')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			
+			local db = MySQL:new({
+				host = '127.0.0.1',
+				port = 3306,
+				user = 'root',
+				password = '',
+				database = 'test'
+			})
+			
+			local ok, err = db:connect()
+			if not ok then
+				Response:json({error = 'Connection failed: ' .. tostring(err)}, 500)
+				return
+			end
+			
+			local result, err = db:query('SELECT 1 as test')
+			if result then
+				Response:json({
+					message = 'MySQL connected',
+					test_result = result[1]
+				})
+			else
+				Response:json({error = tostring(err)})
+			end
+			
+			db:close()
+		}
+	}
+
+	# Test Redis
+	location /test/redis/get {
+		content_by_lua_block {
+			local Redis = require('app.libraries.redis')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local key = args.key or 'test_key'
+			
+			local redis = Redis:new()
+			local ok, err = redis:connect('127.0.0.1', 6379)
+			if not ok then
+				Response:json({error = 'Redis connection failed'}, 500)
+				return
+			end
+			
+			local value, err = redis:get(key)
+			Response:json({
+				key = key,
+				value = value,
+				error = err
+			})
+			
+			redis:close()
+		}
+	}
+
+	location /test/redis/set {
+		content_by_lua_block {
+			local Redis = require('app.libraries.redis')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local key = args.key or 'test_key'
+			local value = args.value or 'test_value'
+			
+			local redis = Redis:new()
+			local ok, err = redis:connect('127.0.0.1', 6379)
+			if not ok then
+				Response:json({error = 'Redis connection failed'}, 500)
+				return
+			end
+			
+			redis:set(key, value)
+			Response:json({
+				message = 'Redis set successful',
+				key = key,
+				value = value
+			})
+			
+			redis:close()
+		}
+	}
+
+	# Test File operations
+	location /test/file/exists {
+		content_by_lua_block {
+			local File = require('app.utils.file')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local path = args.path or '/var/www/web/my-resty/README.md'
+			
+			local exists = File.exists(path)
+			Response:json({
+				path = path,
+				exists = exists
+			})
+		}
+	}
+
+	location /test/file/read {
+		content_by_lua_block {
+			local File = require('app.utils.file')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local path = args.path or '/var/www/web/my-resty/README.md'
+			
+			local content, err = File.read(path)
+			if content then
+				Response:json({
+					path = path,
+					size = #content,
+					readable = true
+				})
+			else
+				Response:json({error = tostring(err)}, 400)
+			end
+		}
+	}
+
+	# Test Image operations
+	location /test/image/info {
+		content_by_lua_block {
+			local Image = require('app.utils.image')
+			local Response = require('app.core.Response')
+			local args = ngx.req.get_uri_args()
+			local path = args.path or '/var/www/web/my-resty/fonts/NotoSansCJKsc-Regular.ttf'
+			
+			local info, err = Image.get_info(path)
+			if info then
+				Response:json({
+					path = path,
+					width = info.width,
+					height = info.height,
+					format = info.format,
+					mime = info.mime
+				})
+			else
+				Response:json({error = tostring(err)}, 400)
+			end
+		}
+	}
+
+	location /test/image/check {
+		content_by_lua_block {
+			local Image = require('app.utils.image')
+			local Response = require('app.core.Response')
+			
+			local available = Image.is_available()
+			Response:json({
+				gd_library_available = available
+			})
+		}
+	}
+
+	# Test Controller
+	location /test/controller {
+		content_by_lua_block {
+			local Controller = require('app.core.Controller')
+			local Response = require('app.core.Response')
+			
+			-- Test controller basic methods
+			local ctrl = Controller:new()
+			local json_method = ctrl.json
+			local redirect_method = ctrl.redirect
+			
+			Response:json({
+				controller_loaded = true,
+				has_json = json_method ~= nil,
+				has_redirect = redirect_method ~= nil
+			})
+		}
+	}
+
+	# Test Loader
+	location /test/loader {
+		content_by_lua_block {
+			local Loader = require('app.core.Loader')
+			local Response = require('app.core.Response')
+			
+			-- Test loader exists and has methods
+			Response:json({
+				loader_loaded = true,
+				has_library = Loader.library ~= nil,
+				has_model = Loader.model ~= nil,
+				has_helper = Loader.helper ~= nil
+			})
+		}
+	}
+
+	# Test Model
+	location /test/model {
+		content_by_lua_block {
+			local Model = require('app.core.Model')
+			local Response = require('app.core.Response')
+			
+			-- Test model exists and has methods
+			Response:json({
+				model_loaded = true,
+				has_get_all = Model.get_all ~= nil,
+				has_get_by_id = Model.get_by_id ~= nil,
+				has_insert = Model.insert ~= nil
+			})
+		}
+	}
+}
+

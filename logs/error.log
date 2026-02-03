@@ -1,0 +1,1861 @@
+2026/02/03 04:13:38 [error] 37455#0: *2 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:13:38 [error] 37455#0: *2 [lua] bootstrap.lua:35: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table GET: 68 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 2: /hello/{name}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 3: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 4: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 5: /api/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 6: /query/basic, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 7: /query/joins, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 8: /query/where, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 9: /query/aggregates, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 10: /query/insert, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 11: /query/update, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 12: /query/delete, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 13: /query/complex, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 14: /query/raw, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 15: /request, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 16: /request/get, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 17: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 18: /request/all, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 19: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 20: /upload/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 21: /image, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 22: /image/info/{path}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 23: /image/thumbnail/{path}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 24: /image/optimize/{path}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 25: /captcha, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 26: /captcha/code, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 27: /session, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 28: /session/counter, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 29: /session/user/info, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 30: /cache, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 31: /cache/keys, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 32: /cache/stats, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 33: /cache/user, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 34: /cache/pageview, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 35: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 36: /test/all, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 37: /test/users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 38: /test/session, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 39: /test/cache, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 40: /test/captcha, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 41: /demo, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 42: /demo/log-levels, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 43: /demo/performance, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 44: /demo/logs-stats, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 45: /demo/recent-logs, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 46: /demo/context, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 47: /rate-limit, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 48: /rate-limit/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 49: /rate-limit/status, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 50: /rate-limit/zone, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 51: /rate-limit/keys, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 52: /rate-limit/login, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 53: /rate-limit/api, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 54: /rate-limit/strict, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 55: /rate-limit/combined, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 56: /rate-limit/user, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 57: /validate, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 58: /validate-config, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 59: /validate-config/tables, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 60: /validate-config/table/{table}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 61: /request-demo, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 62: /middleware, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 63: /middleware/list, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 64: /middleware/info, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 65: /middleware/headers, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 66: /middleware/cors-test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 67: /middleware/rate-limit-test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 68: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table OPTIONS: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table POST: 76 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 2: /request/post/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 3: /request/post/json, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 4: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 5: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 6: /upload/multiple, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 7: /upload/validate, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 8: /image/upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 9: /image/upload/multiple, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 10: /image/upload/avatar, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 11: /image/upload/variants, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 12: /captcha/verify, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 13: /captcha/refresh, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 14: /captcha/verify-ajax, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 15: /session/set, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 16: /session/get, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 17: /session/remove, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 18: /session/clear, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 19: /session/regenerate, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 20: /session/destroy, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 21: /session/flash/set, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 22: /session/flash/get, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 23: /session/touch, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 24: /session/user/login, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 25: /session/user/logout, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 26: /cache/set, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 27: /cache/get, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 28: /cache/delete, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 29: /cache/clear, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 30: /cache/incr, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 31: /cache/decr, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 32: /cache/remember, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 33: /cache/user/invalidate, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 34: /demo/clear-logs, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 35: /rate-limit/check, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 36: /rate-limit/reset, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 37: /validate/basic, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 38: /validate/login, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 39: /validate/register, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 40: /validate/update, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 41: /validate/custom, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 42: /validate/messages, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 43: /validate/array, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 44: /validate/all, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 45: /validate/login-captcha, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 46: /validate/api-key, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 47: /validate-config/users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 48: /validate-config/users/{scenario}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 49: /validate-config/products, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 50: /validate-config/products/{scenario}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 51: /validate-config/orders, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 52: /validate-config/orders/{scenario}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 53: /validate-config/custom, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 54: /validate-config/users/create, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 55: /validate-config/users/login, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 56: /validate-config/users/profile, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 57: /validate-config/products/create, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 58: /validate-config/products/update, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 59: /validate-config/orders/create, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 60: /validate-config/orders/ship, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 61: /request-demo/basic, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 62: /request-demo/typed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 63: /request-demo/validate, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 64: /request-demo/pagination, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 65: /request-demo/search, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 66: /request-demo/filter, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 67: /request-demo/only, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 68: /request-demo/except, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 69: /request-demo/complete, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 70: /request-demo/direct-types, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 71: /request-demo/get-post, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 72: /request-demo/post-only, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 73: /request-demo/shorthand-types, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 74: /middleware/auth-test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 75: /middleware/login, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 76: /middleware/logout, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table PUT: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table DELETE: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:165: _debug_routes(): Route table PATCH: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] Router.lua:167: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:23 [error] 37619#0: *3 [lua] bootstrap.lua:37: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table POST: 76 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 2: /request/post/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 3: /request/post/json, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 4: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 5: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:177: _debug_routes():   ... and 71 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table PUT: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table DELETE: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table OPTIONS: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table PATCH: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:165: _debug_routes(): Route table GET: 68 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 1: /, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 2: /hello/{name}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 3: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 4: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:173: _debug_routes():   Route 5: /api/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:169: _debug_routes():   FOUND /test at position 35, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:169: _debug_routes():   FOUND /test at position 68, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] Router.lua:177: _debug_routes():   ... and 63 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:43 [error] 37697#0: *4 [lua] bootstrap.lua:37: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table POST: 76 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 2: /request/post/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 3: /request/post/json, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 4: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 5: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:180: _debug_routes():   ... and 71 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table PUT: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table DELETE: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table PATCH: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table OPTIONS: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:165: _debug_routes(): Route table GET: 68 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 1: /, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 2: /hello/{name}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 3: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 4: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:176: _debug_routes():   Route 5: /api/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:169: _debug_routes():   FOUND /test at position 35, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:172: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:169: _debug_routes():   FOUND /test at position 68, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:172: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] Router.lua:180: _debug_routes():   ... and 63 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:14:54 [error] 37739#0: *5 [lua] bootstrap.lua:37: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table POST: 76 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 2: /request/post/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 3: /request/post/json, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 4: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 5: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:182: _debug_routes():   ... and 71 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table PUT: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table DELETE: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table PATCH: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table OPTIONS: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:167: _debug_routes(): Route table GET: 68 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 1: /, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 2: /hello/{name}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 3: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 4: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:178: _debug_routes():   Route 5: /api/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:171: _debug_routes():   FOUND /test at position 35, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:174: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:171: _debug_routes():   FOUND /test at position 68, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:174: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] Router.lua:182: _debug_routes():   ... and 63 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:07 [error] 37791#0: *6 [lua] bootstrap.lua:37: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] bootstrap.lua:31: run(): DEBUG: uri=/test, method=GET, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table PUT: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table DELETE: 2 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 2: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table PATCH: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table GET: 68 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 2: /hello/{name}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 3: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 4: /users/{id}, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 5: /api/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:174: _debug_routes():   FOUND /test at position 35, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:177: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:174: _debug_routes():   FOUND /test at position 68, pattern=^/test$, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:177: _debug_routes():     Pattern match result: /test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:185: _debug_routes():   ... and 63 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table OPTIONS: 1 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:170: _debug_routes(): Route table POST: 76 routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 1: /users, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 2: /request/post/form, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 3: /request/post/json, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 4: /request/mixed, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:181: _debug_routes():   Route 5: /upload, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:185: _debug_routes():   ... and 71 more routes, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:143: match(): MATCH FUNCTION CALLED: uri=GET, http_method=/test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] Router.lua:146: match():   method_routes=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:19 [error] 37837#0: *7 [lua] bootstrap.lua:37: run(): DEBUG: matched=nil, type=nil, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:15:42 [error] 37928#0: *8 lua entry thread aborted: runtime error: /var/www/web/my-resty/bootstrap.lua:52: unfinished capture
+stack traceback:
+coroutine 0:
+	[C]: in function '(for generator)'
+	/var/www/web/my-resty/bootstrap.lua:52: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:04 [error] 38000#0: *9 [lua] Loader.lua:95: controller(): Controller not found: app.controllers.test:index, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:13 [error] 38037#0: *10 [lua] Loader.lua:95: controller(): Controller not found: app.controllers.test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:41 [error] 38142#0: *11 [lua] Loader.lua:27: _load_module(): LOADER: Loading module: app.controllers.test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:41 [error] 38142#0: *11 [lua] Loader.lua:30: _load_module(): LOADER: Loaded module: app.controllers.test, type=table, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:41 [error] 38142#0: *11 [lua] Loader.lua:98: controller(): Controller not found: app.controllers.test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:27: _load_module(): LOADER: Loading module: app.controllers.test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:30: _load_module(): LOADER: Loaded module: app.controllers.test, type=table, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:36: _load_module():   Module key: captcha, type=function, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:36: _load_module():   Module key: session, type=function, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:36: _load_module():   Module key: users, type=function, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:40: _load_module():   ... and 3 more keys, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:16:54 [error] 38188#0: *12 [lua] Loader.lua:110: controller(): Controller not found: app.controllers.test, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:17:19 [error] 38274#0: *13 [lua] bootstrap.lua:78: json(): /var/www/web/my-resty/app/controllers/test.lua:17: attempt to call method 'json' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'json'
+	/var/www/web/my-resty/app/controllers/test.lua:17: in function </var/www/web/my-resty/app/controllers/test.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:18:11 [error] 38452#0: *18 [lua] bootstrap.lua:78: __index(): /var/www/web/my-resty/app/core/Controller.lua:130: attempt to index field 'response' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function '__index'
+	/var/www/web/my-resty/app/core/Controller.lua:130: in function </var/www/web/my-resty/app/core/Controller.lua:129>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:18:35 [error] 38537#0: *19 attempt to set ngx.header.HEADER after sending out response headers, client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:19:38 [error] 38784#0: *30 limiting requests, excess: 5.760 by zone "login_limit", client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:19:44 [error] 38781#0: *31 limiting requests, excess: 5.288 by zone "login_limit", client: 127.0.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost:8080"
+2026/02/03 04:19:44 [error] 38783#0: *32 limiting requests, excess: 5.287 by zone "login_limit", client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:49:19 [error] 51534#0: *20 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):2: module 'app.lib.session' not found:
+	no field package.preload['app.lib.session']
+	no file '/var/www/web/my-resty/app/lib/session.lua'
+	no file '/var/www/web/my-resty/app/lib/session/init.lua'
+	no file '/usr/local/web/site/lualib/app/lib/session.ljbc'
+	no file '/usr/local/web/site/lualib/app/lib/session/init.ljbc'
+	no file '/usr/local/web/lualib/app/lib/session.ljbc'
+	no file '/usr/local/web/lualib/app/lib/session/init.ljbc'
+	no file '/usr/local/web/site/lualib/app/lib/session.lua'
+	no file '/usr/local/web/site/lualib/app/lib/session/init.lua'
+	no file '/usr/local/web/lualib/app/lib/session.lua'
+	no file '/usr/local/web/lualib/app/lib/session/init.lua'
+	no file './app/lib/session.lua'
+	no file '/usr/local/web/luajit/share/luajit-2.1/app/lib/session.lua'
+	no file '/usr/local/share/lua/5.1/app/lib/session.lua'
+	no file '/usr/local/share/lua/5.1/app/lib/session/init.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/app/lib/session.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/app/lib/session/init.lua'
+	no file '/var/www/web/my-resty/app/lib/session.so'
+	no file '/usr/local/web/site/lualib/app/lib/session.so'
+	no file '/usr/local/web/lualib/app/lib/session.so'
+	no file './app/lib/session.so'
+	no file '/usr/local/lib/lua/5.1/app/lib/session.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/app/lib/session.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/site/lualib/app.so'
+	no file '/usr/local/web/lualib/app.so'
+	no file './app.so'
+	no file '/usr/local/lib/lua/5.1/app.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/app.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:50:01 [error] 51750#0: *31 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):4: no request body found; maybe you should turn on lua_need_request_body?
+stack traceback:
+coroutine 0:
+	[C]: in function 'get_post_args'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):4: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:50:04 [error] 51751#0: *32 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):4: no request body found; maybe you should turn on lua_need_request_body?
+stack traceback:
+coroutine 0:
+	[C]: in function 'get_post_args'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:120):4: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:50:17 [error] 51904#0: *33 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:145: attempt to index global 'bit32' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'base64_encode'
+	/var/www/web/my-resty/app/lib/session.lua:108: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:122):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:51:07 [error] 52056#0: *51 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:223):2: module 'app.utils.helper' not found:
+	no field package.preload['app.utils.helper']
+	no file '/var/www/web/my-resty/app/utils/helper.lua'
+	no file '/var/www/web/my-resty/app/utils/helper/init.lua'
+	no file '/var/www/web/app/utils/helper.lua'
+	no file '/var/www/web/my-resty/app/utils/helper.so'
+	no file '/usr/local/web/lualib/app/utils/helper.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/lualib/app.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:223):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200 HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:51:13 [error] 52055#0: *53 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:223):2: module 'app.utils.helper' not found:
+	no field package.preload['app.utils.helper']
+	no file '/var/www/web/my-resty/app/utils/helper.lua'
+	no file '/var/www/web/my-resty/app/utils/helper/init.lua'
+	no file '/var/www/web/app/utils/helper.lua'
+	no file '/var/www/web/my-resty/app/utils/helper.so'
+	no file '/usr/local/web/lualib/app/utils/helper.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/lualib/app.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:223):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200 HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:52:34 [error] 52499#0: *68 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/utils/helper.lua:361: attempt to call global 'bit_lshift' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/utils/helper.lua: in function 'base64_encode'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:314):6: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/base64-encode?text=Hello%20World HTTP/1.1", host: "localhost:8080"
+2026/02/03 05:58:14 [error] 54771#0: *218 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:322):12: attempt to index global 'bit32' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:322): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/base64-encode?text=Hello%20World HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:01:19 [error] 55461#0: *316 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/utils/helper.lua:529: module 'resty.md5' not found:
+	no field package.preload['resty.md5']
+	no file '/var/www/web/my-resty/resty/md5.lua'
+	no file '/var/www/web/my-resty/resty/md5/init.lua'
+	no file '/var/www/web/resty/md5.lua'
+	no file '/var/www/web/my-resty/resty/md5.so'
+	no file '/usr/local/web/lualib/resty/md5.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/utils/helper.lua:529: in function 'md5'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:414):6: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/md5?text=test HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:01:22 [error] 55462#0: *317 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/utils/helper.lua:529: module 'resty.md5' not found:
+	no field package.preload['resty.md5']
+	no file '/var/www/web/my-resty/resty/md5.lua'
+	no file '/var/www/web/my-resty/resty/md5/init.lua'
+	no file '/var/www/web/resty/md5.lua'
+	no file '/var/www/web/my-resty/resty/md5.so'
+	no file '/usr/local/web/lualib/resty/md5.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/utils/helper.lua:529: in function 'md5'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:414):6: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/md5?text=test HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:02:10 [error] 56310#0: *334 lua entry thread aborted: runtime error: error loading module 'app.utils.helper' from file '/var/www/web/my-resty/app/utils/helper.lua':
+	/var/www/web/my-resty/app/utils/helper.lua:550: unexpected symbol near '<'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:224):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200 HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:02:14 [error] 56312#0: *335 lua entry thread aborted: runtime error: error loading module 'app.utils.helper' from file '/var/www/web/my-resty/app/utils/helper.lua':
+	/var/www/web/my-resty/app/utils/helper.lua:550: unexpected symbol near '<'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:224):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200 HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:02:35 [error] 56584#0: *369 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):2: module 'app.lib.cache' not found:
+	no field package.preload['app.lib.cache']
+	no file '/var/www/web/my-resty/app/lib/cache.lua'
+	no file '/var/www/web/my-resty/app/lib/cache/init.lua'
+	no file '/usr/local/web/site/lualib/app/lib/cache.ljbc'
+	no file '/usr/local/web/site/lualib/app/lib/cache/init.ljbc'
+	no file '/usr/local/web/lualib/app/lib/cache.ljbc'
+	no file '/usr/local/web/lualib/app/lib/cache/init.ljbc'
+	no file '/usr/local/web/site/lualib/app/lib/cache.lua'
+	no file '/usr/local/web/site/lualib/app/lib/cache/init.lua'
+	no file '/usr/local/web/lualib/app/lib/cache.lua'
+	no file '/usr/local/web/lualib/app/lib/cache/init.lua'
+	no file './app/lib/cache.lua'
+	no file '/usr/local/web/luajit/share/luajit-2.1/app/lib/cache.lua'
+	no file '/usr/local/share/lua/5.1/app/lib/cache.lua'
+	no file '/usr/local/share/lua/5.1/app/lib/cache/init.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/app/lib/cache.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/app/lib/cache/init.lua'
+	no file '/var/www/web/my-resty/app/lib/cache.so'
+	no file '/usr/local/web/site/lualib/app/lib/cache.so'
+	no file '/usr/local/web/lualib/app/lib/cache.so'
+	no file './app/lib/cache.so'
+	no file '/usr/local/lib/lua/5.1/app/lib/cache.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/app/lib/cache.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/site/lualib/app.so'
+	no file '/usr/local/web/lualib/app.so'
+	no file './app.so'
+	no file '/usr/local/lib/lua/5.1/app.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/app.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:02:39 [error] 56585#0: *370 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):2: module 'app.lib.cache' not found:
+	no field package.preload['app.lib.cache']
+	no file '/var/www/web/my-resty/app/lib/cache.lua'
+	no file '/var/www/web/my-resty/app/lib/cache/init.lua'
+	no file '/var/www/web/app/lib/cache.lua'
+	no file '/var/www/web/my-resty/app/lib/cache.so'
+	no file '/usr/local/web/lualib/app/lib/cache.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/lualib/app.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:03:19 [error] 57325#0: *446 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: module 'app.db.query' not found:
+	no field package.preload['app.db.query']
+	no file '/var/www/web/my-resty/app/db/query.lua'
+	no file '/var/www/web/my-resty/app/db/query/init.lua'
+	no file '/var/www/web/app/db/query.lua'
+	no file '/var/www/web/my-resty/app/db/query.so'
+	no file '/usr/local/web/lualib/app/db/query.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/lualib/app.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:03:22 [error] 57327#0: *447 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: module 'app.db.query' not found:
+	no field package.preload['app.db.query']
+	no file '/var/www/web/my-resty/app/db/query.lua'
+	no file '/var/www/web/my-resty/app/db/query/init.lua'
+	no file '/var/www/web/app/db/query.lua'
+	no file '/var/www/web/my-resty/app/db/query.so'
+	no file '/usr/local/web/lualib/app/db/query.so'
+	no file '/var/www/web/my-resty/app.so'
+	no file '/usr/local/web/lualib/app.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:03:44 [error] 57744#0: *486 lua entry thread aborted: runtime error: error loading module 'app.db.query' from file '/var/www/web/my-resty/app/db/query.lua':
+	/var/www/web/my-resty/app/db/query.lua:37: unexpected symbol near 'or'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:04:01 [error] 57745#0: *487 lua entry thread aborted: runtime error: error loading module 'app.db.query' from file '/var/www/web/my-resty/app/db/query.lua':
+	/var/www/web/my-resty/app/db/query.lua:37: unexpected symbol near 'or'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:515):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:18:51 [error] 63592#0: *717 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:144: module 'resty.evp' not found:
+	no field package.preload['resty.evp']
+	no file '/var/www/web/my-resty/resty/evp.lua'
+	no file '/var/www/web/my-resty/resty/evp/init.lua'
+	no file '/usr/local/web/site/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp.lua'
+	no file '/usr/local/web/site/lualib/resty/evp/init.lua'
+	no file '/usr/local/web/lualib/resty/evp.lua'
+	no file '/usr/local/web/lualib/resty/evp/init.lua'
+	no file './resty/evp.lua'
+	no file '/usr/local/web/luajit/share/luajit-2.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp/init.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp/init.lua'
+	no file '/var/www/web/my-resty/resty/evp.so'
+	no file '/usr/local/web/site/lualib/resty/evp.so'
+	no file '/usr/local/web/lualib/resty/evp.so'
+	no file './resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/site/lualib/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+	no file './resty.so'
+	no file '/usr/local/lib/lua/5.1/resty.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:19:23 [error] 63591#0: *719 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:144: module 'resty.evp' not found:
+	no field package.preload['resty.evp']
+	no file '/var/www/web/my-resty/resty/evp.lua'
+	no file '/var/www/web/my-resty/resty/evp/init.lua'
+	no file '/usr/local/web/site/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp.lua'
+	no file '/usr/local/web/site/lualib/resty/evp/init.lua'
+	no file '/usr/local/web/lualib/resty/evp.lua'
+	no file '/usr/local/web/lualib/resty/evp/init.lua'
+	no file './resty/evp.lua'
+	no file '/usr/local/web/luajit/share/luajit-2.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp/init.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp/init.lua'
+	no file '/var/www/web/my-resty/resty/evp.so'
+	no file '/usr/local/web/site/lualib/resty/evp.so'
+	no file '/usr/local/web/lualib/resty/evp.so'
+	no file './resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/site/lualib/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+	no file './resty.so'
+	no file '/usr/local/lib/lua/5.1/resty.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:20:10 [error] 63592#0: *720 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:144: module 'resty.evp' not found:
+	no field package.preload['resty.evp']
+	no file '/var/www/web/my-resty/resty/evp.lua'
+	no file '/var/www/web/my-resty/resty/evp/init.lua'
+	no file '/usr/local/web/site/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/lualib/resty/evp.ljbc'
+	no file '/usr/local/web/lualib/resty/evp/init.ljbc'
+	no file '/usr/local/web/site/lualib/resty/evp.lua'
+	no file '/usr/local/web/site/lualib/resty/evp/init.lua'
+	no file '/usr/local/web/lualib/resty/evp.lua'
+	no file '/usr/local/web/lualib/resty/evp/init.lua'
+	no file './resty/evp.lua'
+	no file '/usr/local/web/luajit/share/luajit-2.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/share/lua/5.1/resty/evp/init.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp.lua'
+	no file '/usr/local/web/luajit/share/lua/5.1/resty/evp/init.lua'
+	no file '/var/www/web/my-resty/resty/evp.so'
+	no file '/usr/local/web/site/lualib/resty/evp.so'
+	no file '/usr/local/web/lualib/resty/evp.so'
+	no file './resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty/evp.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/site/lualib/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+	no file './resty.so'
+	no file '/usr/local/lib/lua/5.1/resty.so'
+	no file '/usr/local/web/luajit/lib/lua/5.1/resty.so'
+	no file '/usr/local/lib/lua/5.1/loadall.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:20:20 [error] 64134#0: *721 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:282: unexpected symbol near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:20:37 [error] 64201#0: *722 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:286: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:20:53 [error] 64263#0: *723 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:158: attempt to index field 'cipher' (a function value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:21:39 [error] 64394#0: *734 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:31:09 [error] 64561#0: *809 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:31:38 [error] 66510#0: *852 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:31:49 [error] 66983#0: *863 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:32:30 [error] 67244#0: *40 [lua] Loader.lua:101: controller(): Controller not found: app.controllers.cache, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:32:50 [error] 67243#0: *50 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:35:43 [error] 67242#0: *60 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:35:47 [error] 67243#0: *61 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:36:22 [error] 68187#0: *102 [lua] Loader.lua:101: controller(): Controller not found: app.controllers.cache, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:36:26 [error] 68189#0: *103 [lua] Loader.lua:101: controller(): Controller not found: app.controllers.cache, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:37:39 [error] 68793#0: *104 [lua] Loader.lua:101: controller(): Controller not found: app.controllers.cache, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:38:42 [error] 69111#0: *111 [lua] Loader.lua:101: controller(): Controller not found: app.controllers.cache, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:39:15 [error] 69261#0: *112 [lua] bootstrap.lua:78: request(): /var/www/web/my-resty/app/controllers/cache.lua:29: attempt to call method 'request' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'request'
+	/var/www/web/my-resty/app/controllers/cache.lua:29: in function </var/www/web/my-resty/app/controllers/cache.lua:28>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:39:40 [error] 69349#0: *113 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/core/Controller.lua:113: bad argument #1 to 'pairs' (table expected, got function)
+stack traceback:
+coroutine 0:
+	[C]: in function 'pairs'
+	/var/www/web/my-resty/app/core/Controller.lua:113: in function 'load_helper'
+	/var/www/web/my-resty/app/core/Controller.lua:45: in function '__construct'
+	/var/www/web/my-resty/app/core/Loader.lua:99: in function 'controller'
+	/var/www/web/my-resty/bootstrap.lua:63: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:40:37 [error] 69560#0: *114 [lua] bootstrap.lua:78: request(): /var/www/web/my-resty/app/controllers/cache.lua:29: attempt to call method 'request' (a table value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'request'
+	/var/www/web/my-resty/app/controllers/cache.lua:29: in function </var/www/web/my-resty/app/controllers/cache.lua:28>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:41:55 [error] 69822#0: *164 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 06:42:46 [error] 71105#0: *11 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:35:24 [error] 23990#0: *74 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/core/Response.lua:303: bad argument #1 to 'pairs' (table expected, got nil)
+stack traceback:
+coroutine 0:
+	[C]: in function 'pairs'
+	/var/www/web/my-resty/app/core/Response.lua:303: in function 'send'
+	/var/www/web/my-resty/app/core/Response.lua:85: in function 'json'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:706):6: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:35:30 [error] 23991#0: *75 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/core/Response.lua:303: bad argument #1 to 'pairs' (table expected, got nil)
+stack traceback:
+coroutine 0:
+	[C]: in function 'pairs'
+	/var/www/web/my-resty/app/core/Response.lua:303: in function 'send'
+	/var/www/web/my-resty/app/core/Response.lua:85: in function 'json'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:706):6: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:10 [error] 24187#0: *80 lua entry thread aborted: runtime error: /usr/local/web/lualib/resty/core/misc.lua:114: bad argument #2 to 'ngx_http_lua_ffi_set_resp_status' (cannot convert 'nil' to 'int')
+stack traceback:
+coroutine 0:
+	[C]: in function 'ngx_http_lua_ffi_set_resp_status'
+	/usr/local/web/lualib/resty/core/misc.lua:114: in function '__newindex'
+	/var/www/web/my-resty/app/core/Response.lua:300: in function 'send'
+	/var/www/web/my-resty/app/core/Response.lua:85: in function 'json'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:706):10: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:24 [error] 24227#0: *92 attempt to set ngx.status after sending out response headers, client: 127.0.0.1, server: localhost, request: "GET /api/nonexistent HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:24 [error] 24227#0: *92 attempt to set ngx.header.HEADER after sending out response headers, client: 127.0.0.1, server: localhost, request: "GET /api/nonexistent HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:24 [error] 24228#0: *121 attempt to set ngx.status after sending out response headers, client: 127.0.0.1, server: localhost, request: "POST /cache/incr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:24 [error] 24228#0: *121 attempt to set ngx.header.HEADER after sending out response headers, client: 127.0.0.1, server: localhost, request: "POST /cache/incr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:36:24 [error] 24226#0: *122 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531):10: attempt to call method 'decr' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/decr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24835#0: *149 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:58):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /api/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *150 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:58):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /api/users/123 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *151 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:58):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /api/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *152 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:58):3: in main chunk, client: 127.0.0.1, server: localhost, request: "PUT /api/users/123 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24832#0: *153 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:58):3: in main chunk, client: 127.0.0.1, server: localhost, request: "DELETE /api/users/123 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24833#0: *155 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:110):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /api/search?q=keyword&page=1 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *156 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/bootstrap.lua:7: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /api/nonexistent HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24833#0: *157 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24835#0: *158 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *159 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24835#0: *160 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24833#0: *161 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24834#0: *162 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24832#0: *163 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:224):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24832#0: *164 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:224):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/format-date?ts=1704067200&format=%Y-%m-%d HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24832#0: *165 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:238):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/uuid HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24835#0: *166 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:248):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/random-string?length=16 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:13 [error] 24832#0: *167 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:260):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-email?email=test@example.com HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *168 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:260):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-email?email=invalid HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *169 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:271):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-url?url=https://example.com HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *170 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:271):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-url?url=not-a-url HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *171 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:282):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-phone?phone=13800138000 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *172 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:282):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/validate-phone?phone=123 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *173 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:293):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/sanitize?text=<script>alert('xss')</script> HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *174 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:304):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/escape-html?text=<div>&"test"</div> HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *177 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:414):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/md5?text=test HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *178 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:425):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /helper/paginate?page=1&per_page=10 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *179 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *180 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *181 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:482):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/data?key=user:123 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *182 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:502):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/clear HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *183 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:464):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *184 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:514):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/set HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *185 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/bootstrap.lua:7: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/incr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *186 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/decr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *187 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:547):3: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/remember HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *188 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:482):3: in main chunk, client: 127.0.0.1, server: localhost, request: "DELETE /cache/data?key=test:incr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *189 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *190 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?id=1 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *191 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?name=John HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *192 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?status=active&role=admin HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *193 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?order_by=created_at&order=DESC HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *194 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?limit=10&offset=20 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *195 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users?search=john HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *196 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:567):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /db/users/count HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *197 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:604):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/json HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *198 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:611):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/html HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *199 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:618):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/text HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *200 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:625):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/xml HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *201 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:632):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/redirect HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24835#0: *202 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:645):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/status?code=201 HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *203 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:653):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/headers HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24833#0: *204 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:662):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /response/empty HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *205 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:671):3: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/test HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *206 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:679):11: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/cors HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *207 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:695):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /middleware/rate-limit HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24832#0: *208 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:706):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:14 [error] 24834#0: *209 lua entry thread aborted: runtime error: error loading module 'app.core.Response' from file '/var/www/web/my-resty/app/core/Response.lua':
+	/var/www/web/my-resty/app/core/Response.lua:103: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:706):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:30 [error] 25319#0: *223 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:30 [error] 25319#0: *226 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:37:31 [error] 25321#0: *250 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531):10: attempt to call method 'decr' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/decr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:39:51 [error] 26656#0: *420 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):5: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:40:12 [error] 27682#0: *483 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:41:33 [error] 28599#0: *740 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):5: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:41:37 [error] 28599#0: *801 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:41:37 [error] 28599#0: *802 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:41:37 [error] 28599#0: *803 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):5: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:41:37 [error] 28599#0: *804 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):6: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:42:15 [error] 28602#0: *855 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:254: unexpected symbol near '|'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:42:15 [error] 28599#0: *856 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:254: unexpected symbol near '|'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:780):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/decrypt?data=SGVsbG8= HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:42:30 [error] 30824#0: *857 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:254: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:42:44 [error] 30872#0: *858 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:259: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:43:03 [error] 30978#0: *859 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:259: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:43:18 [error] 31026#0: *860 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:282: unexpected symbol near '<'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:43:45 [error] 31130#0: *861 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:55: declaration specifier expected near '-'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:51:11 [error] 32202#0: *862 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:131: /lib/x86_64-linux-gnu/libcrypto.so.3: undefined symbol: OPENSSL_malloc
+stack traceback:
+coroutine 0:
+	[C]: in function '__index'
+	/var/www/web/my-resty/app/libraries/crypto.lua:131: in function 'encrypt_aes256_gcm'
+	/var/www/web/my-resty/app/libraries/crypto.lua:369: in function 'encrypt_session'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):7: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:51:49 [error] 32328#0: *863 lua entry thread aborted: runtime error: error loading module 'app.libraries.crypto' from file '/var/www/web/my-resty/app/libraries/crypto.lua':
+	/var/www/web/my-resty/app/libraries/crypto.lua:169: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:52:05 [error] 32388#0: *864 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768):7: attempt to call field 'encrypt_session' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:768): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /test/crypto/encrypt?data=hello HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33611#0: *882 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33617#0: *883 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33611#0: *884 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33617#0: *885 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33613#0: *886 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33617#0: *887 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:50 [error] 33611#0: *911 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531):10: attempt to call method 'decr' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/decr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33612#0: *945 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33613#0: *946 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33612#0: *947 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33617#0: *948 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33611#0: *949 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:55 [error] 33613#0: *950 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:58:56 [error] 33617#0: *974 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531):10: attempt to call method 'decr' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:531): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cache/decr HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34645#0: *1008 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34648#0: *1009 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34646#0: *1010 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34646#0: *1011 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34648#0: *1012 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 08:59:38 [error] 34647#0: *1013 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:241: '<eof>' expected near 'end'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:03:31 [error] 37017#0: *12 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:70: bad argument #4 to 'EVP_EncryptUpdate' (cannot convert 'table' to 'const unsigned char *')
+stack traceback:
+coroutine 0:
+	[C]: in function 'EVP_EncryptUpdate'
+	/var/www/web/my-resty/app/libraries/crypto.lua:70: in function 'encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:155: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:11:21 [error] 41448#0: *4 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):13: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:06 [error] 41450#0: *15 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):13: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:06 [error] 41448#0: *16 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):9: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:06 [error] 41449#0: *17 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):10: attempt to call method 'send' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:06 [error] 41448#0: *20 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):9: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:07 [error] 41448#0: *66 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:722):6: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:722): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:12:07 [error] 41450#0: *67 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:722):13: attempt to index a nil value
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:722): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /middleware/protected HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:14:16 [error] 42506#0: *83 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:201: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:201: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:38: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:25: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):6: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43121#0: *143 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:123):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43119#0: *144 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:153):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43119#0: *145 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:174):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43119#0: *146 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:140):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43121#0: *147 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:202):2: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:15:01 [error] 43122#0: *148 lua entry thread aborted: runtime error: error loading module 'app.lib.session' from file '/var/www/web/my-resty/app/lib/session.lua':
+	/var/www/web/my-resty/app/lib/session.lua:162: ')' expected near '~'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:189):2: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:19:43 [error] 46300#0: *465 [lua] session.lua:43: load_from_cookie(): Session decryption failed, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:20:06 [error] 46407#0: *467 [lua] session.lua:43: load_from_cookie(): Session decryption failed, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:27:53 [error] 48687#0: *600 [lua] session.lua:163: aes_encrypt(): Failed to create AES cipher: bad iv length, client: 127.0.0.1, server: localhost, request: "GET /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:27:53 [error] 48687#0: *600 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:123: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:31:38 [error] 49833#0: *675 [lua] session.lua:160: aes_encrypt(): Failed to create AES cipher: bad iv length, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:31:38 [error] 49833#0: *675 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:121: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:32:25 [error] 50415#0: *738 [lua] session.lua:171: aes_encrypt(): Encryption failed: EVP_EncryptFinal_ex failed, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:32:25 [error] 50415#0: *738 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:121: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:32:59 [error] 50958#0: *801 [lua] session.lua:171: aes_encrypt(): Encryption failed: EVP_EncryptFinal_ex failed, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:32:59 [error] 50958#0: *801 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:121: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:33:25 [error] 51515#0: *864 [lua] session.lua:151: aes_encrypt(): Failed to create AES cipher: salt must be 8 characters or nil, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:33:25 [error] 51515#0: *864 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:121: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:33:53 [error] 52060#0: *917 [lua] session.lua:147: aes_encrypt(): aes_encrypt: key len=29, salt len=289, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:33:53 [error] 52060#0: *917 [lua] session.lua:153: aes_encrypt(): Failed to create AES cipher: salt must be 8 characters or nil, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:33:53 [error] 52060#0: *917 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:121: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:17 [error] 52150#0: *918 [lua] session.lua:148: aes_encrypt(): DEBUG: salt="stuvwxyz0123456789opqrstuvwxyz0123456789IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ijklmnopqrstuvwxyz0123456789defghijklmnopqrstuvwxyz0123456789JKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567894567890123456789" len=224, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:17 [error] 52150#0: *918 [lua] session.lua:154: aes_encrypt(): Failed to create AES cipher: salt must be 8 characters or nil, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:17 [error] 52150#0: *918 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:122: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:33 [error] 52212#0: *919 [lua] session.lua:148: aes_encrypt(): DEBUG: salt="OPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789PQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678923456789STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789012345678923456789" len=281, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:33 [error] 52212#0: *919 [lua] session.lua:154: aes_encrypt(): Failed to create AES cipher: salt must be 8 characters or nil, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:33 [error] 52212#0: *919 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:122: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:59 [error] 52327#0: *920 [lua] session.lua:148: aes_encrypt(): DEBUG: salt="xrkuFoVt" len=8, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:59 [error] 52327#0: *920 [lua] session.lua:158: aes_encrypt(): aes_encrypt: cipher created, plaintext len=52, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:59 [error] 52327#0: *920 [lua] session.lua:162: aes_encrypt(): Encryption failed: EVP_EncryptFinal_ex failed, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:34:59 [error] 52327#0: *920 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:122: attempt to concatenate local 'encrypted' (a nil value)
+stack traceback:
+coroutine 0:
+	/var/www/web/my-resty/app/lib/session.lua: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52405#0: *931 [lua] session.lua:148: aes_encrypt(): DEBUG: salt="xrkuFoVt" len=8, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52405#0: *931 [lua] session.lua:158: aes_encrypt(): aes_encrypt: cipher created, plaintext len=52, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52405#0: *932 [lua] session.lua:186: aes_decrypt(): aes_decrypt: salt len=8, encrypted len=64, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52404#0: *933 [lua] session.lua:186: aes_decrypt(): aes_decrypt: salt len=8, encrypted len=64, client: 127.0.0.1, server: localhost, request: "GET /auth/session-info HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52406#0: *934 [lua] session.lua:186: aes_decrypt(): aes_decrypt: salt len=8, encrypted len=64, client: 127.0.0.1, server: localhost, request: "POST /auth/logout HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52404#0: *935 [lua] session.lua:186: aes_decrypt(): aes_decrypt: salt len=8, encrypted len=64, client: 127.0.0.1, server: localhost, request: "POST /cart/items HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:35:18 [error] 52404#0: *936 [lua] session.lua:186: aes_decrypt(): aes_decrypt: salt len=8, encrypted len=64, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:37:21 [error] 53692#0: *1047 [lua] bootstrap.lua:78: secure_random(): /var/www/web/my-resty/app/helpers/captcha_helper.lua:19: attempt to call global 'secure_random' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'secure_random'
+	/var/www/web/my-resty/app/helpers/captcha_helper.lua:19: in function 'generate_random_string'
+	/var/www/web/my-resty/app/helpers/captcha_helper.lua:48: in function 'generate'
+	/var/www/web/my-resty/app/helpers/captcha_helper.lua:139: in function 'generate_and_set_cookie'
+	/var/www/web/my-resty/app/controllers/captcha.lua:54: in function </var/www/web/my-resty/app/controllers/captcha.lua:50>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:39:19 [error] 53918#0: *1062 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:171: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:171: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:36: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:23: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:165):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /auth/profile HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:39:19 [error] 53918#0: *1066 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:171: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:171: in function 'aes_decrypt'
+	/var/www/web/my-resty/app/lib/session.lua:36: in function 'load_from_cookie'
+	/var/www/web/my-resty/app/lib/session.lua:23: in function 'new'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:201):5: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cart HTTP/1.1", host: "localhost:8080"
+2026/02/03 09:39:24 [error] 53918#0: *1125 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/lib/session.lua:143: module 'resty.aes' not found:
+	no field package.preload['resty.aes']
+	no file '/var/www/web/my-resty/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes/init.lua'
+	no file '/var/www/web/resty/aes.lua'
+	no file '/var/www/web/my-resty/resty/aes.so'
+	no file '/usr/local/web/lualib/resty/aes.so'
+	no file '/var/www/web/my-resty/resty.so'
+	no file '/usr/local/web/lualib/resty.so'
+stack traceback:
+coroutine 0:
+	[C]: in function 'require'
+	/var/www/web/my-resty/app/lib/session.lua:143: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:135):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:00:50 [error] 58885#0: *59 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:99: bad argument #2 to 'EVP_CIPHER_CTX_ctrl' (cannot convert 'nil' to 'int')
+stack traceback:
+coroutine 0:
+	[C]: in function 'EVP_CIPHER_CTX_ctrl'
+	/var/www/web/my-resty/app/libraries/crypto.lua:99: in function 'encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:39):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:01:08 [error] 58885#0: *60 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:99: bad argument #2 to 'EVP_CIPHER_CTX_ctrl' (cannot convert 'nil' to 'int')
+stack traceback:
+coroutine 0:
+	[C]: in function 'EVP_CIPHER_CTX_ctrl'
+	/var/www/web/my-resty/app/libraries/crypto.lua:99: in function 'encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:39):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:01:22 [error] 58885#0: *61 lua entry thread aborted: runtime error: /var/www/web/my-resty/app/libraries/crypto.lua:99: bad argument #2 to 'EVP_CIPHER_CTX_ctrl' (cannot convert 'nil' to 'int')
+stack traceback:
+coroutine 0:
+	[C]: in function 'EVP_CIPHER_CTX_ctrl'
+	/var/www/web/my-resty/app/libraries/crypto.lua:99: in function 'encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:144: in function 'aes_encrypt'
+	/var/www/web/my-resty/app/lib/session.lua:120: in function 'to_cookie'
+	content_by_lua(.../web/my-resty/nginx/conf/myresty.conf:39):12: in main chunk, client: 127.0.0.1, server: localhost, request: "POST /auth/login HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:04:33 [error] 62085#0: *69 [lua] bootstrap.lua:78: generate_and_set_cookie(): /var/www/web/my-resty/app/controllers/captcha.lua:80: attempt to call field 'generate_and_set_cookie' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'generate_and_set_cookie'
+	/var/www/web/my-resty/app/controllers/captcha.lua:80: in function </var/www/web/my-resty/app/controllers/captcha.lua:76>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:05:08 [error] 62230#0: *70 [lua] Loader.lua:105: controller(): Controller not found: app.controllers.captcha, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:05:25 [error] 62294#0: *71 [lua] Loader.lua:105: controller(): Controller not found: app.controllers.captcha, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:06:02 [error] 62407#0: *72 [lua] bootstrap.lua:78: request(): /var/www/web/my-resty/app/controllers/captcha.lua:86: attempt to call method 'request' (a table value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'request'
+	/var/www/web/my-resty/app/controllers/captcha.lua:86: in function </var/www/web/my-resty/app/controllers/captcha.lua:80>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:06:32 [error] 62514#0: *73 [lua] bootstrap.lua:78: request(): /var/www/web/my-resty/app/controllers/captcha.lua:82: attempt to call method 'request' (a table value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'request'
+	/var/www/web/my-resty/app/controllers/captcha.lua:82: in function </var/www/web/my-resty/app/controllers/captcha.lua:76>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:06:48 [error] 62587#0: *74 [lua] bootstrap.lua:78: request(): /var/www/web/my-resty/app/controllers/captcha.lua:87: attempt to call method 'request' (a table value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'request'
+	/var/www/web/my-resty/app/controllers/captcha.lua:87: in function </var/www/web/my-resty/app/controllers/captcha.lua:81>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:07:19 [error] 62689#0: *75 [lua] bootstrap.lua:78: get(): /var/www/web/my-resty/app/controllers/captcha.lua:87: attempt to call method 'get' (a table value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'get'
+	/var/www/web/my-resty/app/controllers/captcha.lua:87: in function </var/www/web/my-resty/app/controllers/captcha.lua:81>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:75: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:99: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha/code HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:12:20 [error] 63526#0: *10 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:195):8: attempt to call field 'is_available' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:195): in main chunk, client: 127.0.0.1, server: localhost, request: "POST /captcha/verify HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:13:54 [error] 63848#0: *26 failed to load external Lua file "/tmp/test_captcha.lua": cannot open /tmp/test_captcha.lua: No such file or directory, client: 127.0.0.1, server: localhost, request: "GET /debug/test-captcha HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:14:32 [error] 63849#0: *27 failed to load external Lua file "/tmp/test_captcha.lua": cannot open /tmp/test_captcha.lua: No such file or directory, client: 127.0.0.1, server: localhost, request: "GET /debug/test-captcha HTTP/1.1", host: "localhost:8080"
+2026/02/03 10:15:51 [error] 63848#0: *30 lua entry thread aborted: runtime error: content_by_lua(...web/my-resty/nginx/conf/myresty.conf:195):8: attempt to call field 'is_available' (a nil value)
+stack traceback:
+coroutine 0:
+	content_by_lua(...web/my-resty/nginx/conf/myresty.conf:195): in main chunk, client: 127.0.0.1, server: localhost, request: "GET /captcha HTTP/1.1", host: "localhost:8080"
+2026/02/03 11:57:38 [warn] 73622#0: *3 [lua] session.lua:55: new(): [Session] secret_key should be 64 characters (32 bytes hex), client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 11:57:38 [error] 73622#0: *3 [lua] bootstrap.lua:81: secure_random(): /var/www/web/my-resty/app/libraries/session.lua:98: attempt to call field 'secure_random' (a nil value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function 'secure_random'
+	/var/www/web/my-resty/app/libraries/session.lua:98: in function 'start'
+	/var/www/web/my-resty/app/libraries/session.lua:72: in function 'new'
+	/var/www/web/my-resty/app/controllers/session.lua:7: in function </var/www/web/my-resty/app/controllers/session.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 11:57:58 [warn] 73712#0: *1 [lua] session.lua:55: new(): [Session] secret_key should be 64 characters (32 bytes hex), client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 11:58:09 [warn] 73714#0: *3 [lua] session.lua:55: new(): [Session] secret_key should be 64 characters (32 bytes hex), client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:17:08 [error] 80884#0: *2 [lua] Loader.lua:105: controller(): Controller not found: app.controllers.session, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:17:08 [error] 80885#0: *3 [lua] bootstrap.lua:81: /var/www/web/my-resty/app/libraries/cache.lua:410: bad "zone" argument
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function </var/www/web/my-resty/bootstrap.lua:80>
+	[C]: in function 'error'
+	/usr/local/web/lualib/resty/core/shdict.lua:468: in function 'check_zone'
+	/usr/local/web/lualib/resty/core/shdict.lua:886: in function 'capacity'
+	/var/www/web/my-resty/app/libraries/cache.lua:410: in function 'stats'
+	/var/www/web/my-resty/app/controllers/cache.lua:8: in function </var/www/web/my-resty/app/controllers/cache.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /cache HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:18:12 [error] 80887#0: *4 [lua] bootstrap.lua:81: is_new(): /var/www/web/my-resty/app/controllers/session.lua:25: attempt to call method 'is_new' (a boolean value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function 'is_new'
+	/var/www/web/my-resty/app/controllers/session.lua:25: in function </var/www/web/my-resty/app/controllers/session.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:27:40 [error] 86252#0: *3 [lua] bootstrap.lua:81: is_new(): /var/www/web/my-resty/app/controllers/session.lua:25: attempt to call method 'is_new' (a boolean value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function 'is_new'
+	/var/www/web/my-resty/app/controllers/session.lua:25: in function </var/www/web/my-resty/app/controllers/session.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:28:11 [error] 86519#0: *1 [lua] bootstrap.lua:81: is_new(): /var/www/web/my-resty/app/controllers/session.lua:25: attempt to call method 'is_new' (a boolean value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function 'is_new'
+	/var/www/web/my-resty/app/controllers/session.lua:25: in function </var/www/web/my-resty/app/controllers/session.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
+2026/02/03 12:28:53 [error] 86707#0: *2 [lua] bootstrap.lua:81: is_new(): /var/www/web/my-resty/app/controllers/session.lua:25: attempt to call method 'is_new' (a boolean value)
+stack traceback:
+	/var/www/web/my-resty/bootstrap.lua:81: in function 'is_new'
+	/var/www/web/my-resty/app/controllers/session.lua:25: in function </var/www/web/my-resty/app/controllers/session.lua:6>
+	[C]: in function 'xpcall'
+	/var/www/web/my-resty/bootstrap.lua:78: in function 'run'
+	/var/www/web/my-resty/bootstrap.lua:102: in main chunk, client: 127.0.0.1, server: localhost, request: "GET /session HTTP/1.1", host: "localhost:8080"
