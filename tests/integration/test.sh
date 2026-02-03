@@ -5,6 +5,10 @@
 
 #set -e  # Disabled to allow curl to fail gracefully
 
+# Disable output buffering for real-time results
+export LC_ALL=C
+stty columns 80 2>/dev/null
+
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 COOKIE_JAR="/tmp/myresty_test_cookies.txt"
 VERBOSE=false
@@ -25,10 +29,14 @@ log_pass() { echo -e "${GREEN}[PASS]${NC} $1"; TESTS_PASSED=$((TESTS_PASSED+1));
 log_fail() { echo -e "${RED}[FAIL]${NC} $1"; TESTS_FAILED=$((TESTS_FAILED+1)); TESTS_RUN=$((TESTS_RUN+1)); }
 log_skip() { echo -e "${YELLOW}[SKIP]${NC} $1"; }
 
+# Progress dot for each test
+TEST_DOT="."
+
 curl_get() {
     local endpoint="$1"
     local description="$2"
 
+    echo -n "." >&2
     local response=$(curl -s --max-time 5 -w "\n%{http_code}" "$BASE_URL$endpoint" -c "$COOKIE_JAR" -b "$COOKIE_JAR")
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | sed '$d')
@@ -48,6 +56,7 @@ curl_post() {
     local description="$3"
     local content_type="${4:-application/json}"
 
+    echo -n "." >&2
     local response=$(curl -s --max-time 5 -w "\n%{http_code}" -X POST \
         -H "Content-Type: $content_type" \
         -d "$data" \
@@ -70,6 +79,7 @@ curl_put() {
     local data="$2"
     local description="$3"
 
+    echo -n "." >&2
     local response=$(curl -s --max-time 5 -w "\n%{http_code}" -X PUT \
         -H "Content-Type: application/json" \
         -d "$data" \
@@ -88,6 +98,7 @@ curl_delete() {
     local endpoint="$1"
     local description="$2"
 
+    echo -n "." >&2
     local response=$(curl -s --max-time 5 -w "\n%{http_code}" -X DELETE \
         "$BASE_URL$endpoint" \
         -c "$COOKIE_JAR" -b "$COOKIE_JAR")
@@ -104,6 +115,7 @@ curl_any() {
     local endpoint="$1"
     local description="$2"
 
+    echo -n "." >&2
     local response=$(curl -s --max-time 5 -w "\n%{http_code}" -X ANY "$BASE_URL$endpoint" -c "$COOKIE_JAR" -b "$COOKIE_JAR")
     local http_code=$(echo "$response" | tail -n1)
 
