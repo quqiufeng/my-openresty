@@ -1669,6 +1669,899 @@ All tests passed!
 
 ---
 
+### Helper Functions / 辅助函数
+
+Helper 函数提供便捷的常用操作封装。
+
+Helper functions provide convenient wrappers for common operations.
+
+---
+
+#### Request Helper / 请求辅助函数
+
+请求辅助函数位于 `app/helpers/request_helper.lua`，提供强大的请求数据处理能力。
+
+Request helper is located at `app/helpers/request_helper.lua`, providing powerful request data processing.
+
+```lua
+local RequestHelper = require('app.helpers.request_helper')
+```
+
+##### Request Helper 方法 / Request Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **get(fields, rules)** | `fields`: 字段列表, `rules`: 验证规则 | `data, errors` | 获取请求数据 |
+| **get_get(fields, rules)** | 同上 | 同上 | 仅获取 GET 参数 |
+| **get_post(fields, rules)** | 同上 | 同上 | 仅获取 POST 参数 |
+| **get_json(fields, rules)** | 同上 | 同上 | 仅获取 JSON 参数 |
+| **get_only(fields, rules, source)** | `source`: 数据源 | `data, errors` | 带验证获取 |
+| **get_except(fields, blacklist)** | `blacklist`: 排除列表 | table | 获取除指定外的字段 |
+| **only(...)** | `...`: 字段名 | table | 仅获取指定字段 |
+| **except(...)** | `...`: 排除字段 | table | 排除指定字段 |
+| **merge(defaults)** | `defaults`: 默认值 | table | 合并默认值 |
+| **validate(fields, rules)** | `fields`: 字段, `rules`: 规则 | `valid, data, errors` | 验证请求数据 |
+| **get_pagination_params(default_per_page)** | `default_per_page`: 默认每页数 | table | 获取分页参数 |
+| **get_search_params(search_fields)** | `search_fields`: 搜索字段 | `params, keyword` | 获取搜索参数 |
+| **get_order_params(default_field, default_order)** | `default_field`: 默认排序字段 | table | 获取排序参数 |
+| **get_date_range_params(prefix)** | `prefix`: 前缀 | table | 获取日期范围参数 |
+
+##### 请求数据源 / Request Data Sources
+
+| 来源 | 说明 | 示例 |
+|------|------|------|
+| `get` | URL 查询参数 | `?page=1&limit=10` |
+| `post` | POST 表单数据 | `application/x-www-form-urlencoded` |
+| `json` | JSON Body | `{"name":"john","age":25}` |
+| `all` | 合并所有来源 | 自动合并 |
+
+##### 验证规则 / Validation Rules
+
+| 规则 | 参数 | 说明 |
+|------|------|------|
+| `required` | 无 | 必填 |
+| `type` | `"string"`/`"number"`/`"integer"`/`"boolean"`/`"array"` | 类型转换 |
+| `default` | 默认值 | 默认值 |
+| `trim` | `true`/`false` | 是否 trim |
+| `strip_tags` | `true`/`false` | 是否去除 HTML 标签 |
+| `lowercase` | `true`/`false` | 转为小写 |
+| `uppercase` | `true`/`false` | 转为大写 |
+
+##### Request Helper 使用示例 / Request Helper Example
+
+```lua
+local RequestHelper = require('app.helpers.request_helper')
+
+-- 基本字段获取
+local data = RequestHelper:get(self, {'name', 'email', 'age'})
+
+-- 带类型转换
+local rules = {
+    name = { type = "string", default = "" },
+    age = { type = "integer", default = 0 },
+    is_active = { type = "boolean", default = false }
+}
+local data = RequestHelper:get(self, {'name', 'age', 'is_active'}, rules)
+
+-- 带验证
+local rules = {
+    username = { required = true, message = '用户名必填' },
+    email = { required = true, type = "email", message = '邮箱格式错误' }
+}
+local valid, data, errors = RequestHelper:validate(self, {'username', 'email'}, rules)
+
+-- 分页参数
+local pagination = RequestHelper:get_pagination_params(self, 20)
+-- 返回: { page = 1, per_page = 20, sort_by = 'id', sort_order = 'DESC', offset = 0, limit = 20 }
+
+-- 搜索参数
+local params, keyword = RequestHelper:get_search_params(self, {'title', 'content'})
+-- keyword = "hello", params = { title = "hello", content = "hello" }
+```
+
+---
+
+#### File Helper / 文件辅助函数
+
+文件辅助函数位于 `app/helpers/file_helper.lua`，提供文件操作和类型检查功能。
+
+File helper is located at `app/helpers/file_helper.lua`, providing file operations and type checking.
+
+```lua
+local FileHelper = require('app.helpers.file_helper')
+```
+
+##### File Helper 方法 / File Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **format_size(bytes)** | `bytes`: 字节数 | 格式化大小 | 格式化文件大小 |
+| **safe_path(base_path, filename)** | `base_path`: 基础路径, `filename`: 文件名 | `path, error` | 安全路径（防目录遍历） |
+| **sanitize_filename(filename)** | `filename`: 文件名 | 净化后文件名 | 净化文件名 |
+| **get_extension(filename)** | `filename`: 文件名 | 扩展名 | 获取文件扩展名 |
+| **mime_to_ext(mime)** | `mime`: MIME 类型 | 扩展名 | MIME 转扩展名 |
+| **is_image(mime)** | `mime`: MIME 类型 | boolean | 是否为图片 |
+| **is_document(mime)** | `mime`: MIME 类型 | boolean | 是否为文档 |
+| **is_archive(mime)** | `mime`: MIME 类型 | boolean | 是否为压缩包 |
+| **is_audio(mime)** | `mime`: MIME 类型 | boolean | 是否为音频 |
+| **is_video(mime)** | `mime`: MIME 类型 | boolean | 是否为视频 |
+
+##### 支持的 MIME 类型 / Supported MIME Types
+
+**图片 (image)**: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/svg+xml`, `image/bmp`
+
+**文档 (document)**: `application/pdf`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `application/vnd.ms-excel`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `text/plain`, `text/csv`
+
+**压缩包 (archive)**: `application/zip`, `application/x-zip-compressed`, `application/x-rar-compressed`, `application/gzip`
+
+**音频 (audio)**: `audio/mpeg`, `audio/wav`, `audio/ogg`, `audio/mp3`
+
+**视频 (video)**: `video/mp4`, `video/x-msvideo`, `video/webm`, `video/quicktime`
+
+##### File Helper 使用示例 / File Helper Example
+
+```lua
+local FileHelper = require('app.helpers.file_helper')
+
+-- 格式化文件大小
+FileHelper.format_size(1024)       -- "1.00 KB"
+FileHelper.format_size(1048576)    -- "1.00 MB"
+FileHelper.format_size(1073741824) -- "1.00 GB"
+
+-- 安全路径（防止目录遍历攻击）
+local path, err = FileHelper.safe_path('/var/www/uploads', '../../../etc/passwd')
+-- path = nil, err = "Path outside allowed directory"
+
+-- 净化文件名
+local safe_name = FileHelper.sanitize_filename('../../hack.php')
+-- 返回 "hack.php"
+
+-- 检查文件类型
+if FileHelper.is_image('image/jpeg') then
+    -- 是图片
+end
+
+if FileHelper.is_document('application/pdf') then
+    -- 是文档
+end
+```
+
+---
+
+#### String Helper / 字符串辅助函数
+
+字符串辅助函数位于 `app/helpers/string_helper.lua`，提供字符串处理功能。
+
+String helper is located at `app/helpers/string_helper.lua`, providing string manipulation.
+
+```lua
+local StringHelper = require('app.helpers.string_helper')
+```
+
+##### String Helper 方法 / String Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **trim(s)** | `s`: 字符串 | 去除首尾空格 | 去除首尾空格 |
+| **ltrim(s)** | `s`: 字符串 | 去除左侧空格 | 去除左侧空格 |
+| **rtrim(s)** | `s`: 字符串 | 去除右侧空格 | 去除右侧空格 |
+| **random_string(length)** | `length`: 长度 | 随机字符串 | 生成随机字符串 |
+| **ucfirst(s)** | `s`: 字符串 | 首字母大写 | 首字母大写 |
+
+##### String Helper 使用示例 / String Helper Example
+
+```lua
+local StringHelper = require('app.helpers.string_helper')
+
+StringHelper.trim('  hello  ')      -- "hello"
+StringHelper.ltrim('  hello')       -- "hello"
+StringHelper.rtrim('hello  ')       -- "hello"
+StringHelper.random_string(16)      -- "aBc1XyZ9PqR2mNkL"
+StringHelper.ucfirst('hello')       -- "Hello"
+```
+
+---
+
+#### URL Helper / URL 辅助函数
+
+URL 辅助函数位于 `app/helpers/url_helper.lua`，提供 URL 生成功能。
+
+URL helper is located at `app/helpers/url_helper.lua`, providing URL generation.
+
+```lua
+local UrlHelper = require('app.helpers.url_helper')
+```
+
+##### URL Helper 方法 / URL Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **base_url()** | 无 | 基础 URL | 获取应用基础 URL |
+| **site_url(uri)** | `uri`: 相对路径 | 完整 URL | 生成站点 URL |
+
+##### URL Helper 使用示例 / URL Helper Example
+
+```lua
+local UrlHelper = require('app.helpers.url_helper')
+
+UrlHelper.base_url()          -- "http://localhost:8080"
+UrlHelper.site_url('users')   -- "http://localhost:8080/users"
+UrlHelper.site_url('api/v1')  -- "http://localhost:8080/api/v1"
+```
+
+---
+
+#### Captcha Helper / 验证码辅助函数
+
+验证码辅助函数位于 `app/helpers/captcha_helper.lua`，提供验证码生成和验证功能。
+
+Captcha helper is located at `app/helpers/captcha_helper.lua`, providing captcha generation and validation.
+
+```lua
+local CaptchaHelper = require('app.helpers.captcha_helper')
+```
+
+##### Captcha Helper 方法 / Captcha Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **generate(length, key)** | `length`: 长度, `key`: 密钥 | `code, encrypted` | 生成验证码 |
+| **validate(input_code, ngx)** | `input_code`: 用户输入, `ngx`: 请求对象 | `valid, message` | 验证验证码 |
+| **refresh(ngx, key)** | `ngx`: 请求对象, `key`: 密钥 | 新验证码 | 刷新验证码 |
+| **get_captcha_image(code, width, height)** | `code`: 验证码, `width`: 宽度, `height`: 高度 | PNG 数据 | 生成验证码图片 |
+| **get_captcha_png_base64(code, width, height)** | 同上 | Base64 字符串 | 生成 Base64 图片 |
+
+##### Captcha Helper 使用示例 / Captcha Helper Example
+
+```lua
+local CaptchaHelper = require('app.helpers.captcha_helper')
+
+-- 生成验证码
+local captcha = CaptchaHelper:generate(5)
+-- 返回: { code = "ABC12", encrypted = "...", cookie_name = "captcha_token", expires = 300 }
+
+-- 验证验证码
+local valid, message = CaptchaHelper:validate(user_input, ngx)
+-- valid = true, message = "Captcha validated"
+
+-- 生成验证码图片
+local png_data = CaptchaHelper:get_captcha_image("ABC12", 120, 40)
+
+-- 生成 Base64 图片
+local base64 = CaptchaHelper:get_captcha_png_base64("ABC12", 120, 40)
+-- 返回: "data:image/png;base64,..."
+```
+
+---
+
+#### Query Helper / 查询辅助函数
+
+查询辅助函数位于 `app/helpers/query_helper.lua`，提供便捷的数据库查询方法。
+
+Query helper is located at `app/helpers/query_helper.lua`, providing convenient database query methods.
+
+```lua
+local QueryHelper = require('app.helpers.query_helper')
+```
+
+##### Query Helper 方法 / Query Helper Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **table(table_name)** | `table_name`: 表名 | QueryBuilder | 获取查询构建器 |
+| **qb(table_name)** | `table_name`: 表名 | QueryBuilder | 同上 |
+| **db()** | 无 | Model 实例 | 获取数据库实例 |
+| **query(sql)** | `sql`: SQL 语句 | 结果 | 执行原生 SQL |
+| **select(sql)** | `sql`: SQL 语句 | 结果 | 执行查询 |
+| **insert(table, data)** | `table`: 表, `data`: 数据 | 插入结果 | 插入数据 |
+| **update(table, data, where)** | `table`: 表, `data`: 数据, `where`: 条件 | 更新结果 | 更新数据 |
+| **delete(table, where)** | `table`: 表, `where`: 条件 | 删除结果 | 删除数据 |
+| **count(table, where)** | `table`: 表, `where`: 条件 | 数量 | 统计数量 |
+| **transaction(callback)** | `callback`: 回调函数 | `ok, err` | 事务操作 |
+
+##### Query Helper 使用示例 / Query Helper Example
+
+```lua
+local QueryHelper = require('app.helpers.query_helper')
+
+-- 查询构建器
+local users = QueryHelper.table('users'):where('status', 'active'):get()
+
+-- 便捷方法
+QueryHelper.insert('users', { name = 'John', email = 'john@example.com' })
+
+QueryHelper.update('users', { status = 'active' }, { id = 1 })
+
+QueryHelper.delete('users', { status = 'deleted' })
+
+local count = QueryHelper.count('users', { status = 'active' })
+
+-- 事务操作
+local ok, err = QueryHelper.transaction(function()
+    QueryHelper.insert('users', { name = 'John' })
+    QueryHelper.insert('orders', { user_id = result_id, total = 100 })
+end)
+```
+
+---
+
+### HTTP Client / HTTP 客户端
+
+HTTP 客户端位于 `app/lib/http.lua`，基于 OpenResty cosocket 的异步 HTTP 客户端。
+
+HTTP client is located at `app/lib/http.lua`, an async HTTP client based on OpenResty cosocket.
+
+```lua
+local HttpClient = require('app.lib.http')
+local client = HttpClient:new({ timeout = 30000 })
+```
+
+#### HTTP Client 方法 / HTTP Client Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **new(options)** | `options`: 配置 | 实例 | 创建客户端 |
+| **get(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | GET 请求 |
+| **post(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | POST 请求 |
+| **put(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | PUT 请求 |
+| **patch(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | PATCH 请求 |
+| **delete(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | DELETE 请求 |
+| **head(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | HEAD 请求 |
+| **options(url, options)** | `url`: 地址, `options`: 选项 | `response, err` | OPTIONS 请求 |
+| **json(url, data, method)** | `url`: 地址, `data`: 数据, `method`: 方法 | `response, err` | JSON 请求 |
+| **form(url, data, method)** | `url`: 地址, `data`: 数据, `method`: 方法 | `response, err` | 表单请求 |
+| **download(url, filepath)** | `url`: 地址, `filepath`: 保存路径 | `success, err` | 下载文件 |
+| **set_timeout(timeout)** | `timeout`: 超时时间 | self | 设置超时 |
+
+#### 响应结构 / Response Structure
+
+```lua
+{
+    status = 200,           -- HTTP 状态码
+    body = '{"data":"..."}', -- 响应体
+    headers = {              -- 响应头
+        ['content-type'] = 'application/json',
+        ['content-length'] = '100'
+    },
+    success = true          -- 是否成功 (200-299)
+}
+```
+
+#### HTTP Client 使用示例 / HTTP Client Example
+
+```lua
+local HttpClient = require('app.lib.http')
+
+local client = HttpClient:new({
+    timeout = 30000,
+    pool_size = 10
+})
+
+-- GET 请求
+local res, err = client:get('https://api.example.com/users')
+if res.success then
+    local data = ngx.decode_json(res.body)
+end
+
+-- POST JSON 请求
+local res, err = client:json('https://api.example.com/users', {
+    name = 'John',
+    email = 'john@example.com'
+})
+
+-- POST 表单请求
+local res, err = client:form('https://api.example.com/login', {
+    username = 'john',
+    password = 'secret'
+})
+
+-- 带查询参数
+local res, err = client:get('https://api.example.com/users', {
+    query = {
+        page = 1,
+        limit = 10,
+        status = 'active'
+    },
+    headers = {
+        ['Authorization'] = 'Bearer token123'
+    }
+})
+
+-- 下载文件
+local ok, err = client:download('https://example.com/file.zip', '/tmp/file.zip')
+
+-- 设置超时
+client:set_timeout(60000)
+```
+
+---
+
+### Crypto Library / 加密库
+
+加密库位于 `app/lib/crypto.lua`，基于 OpenSSL FFI 的统一加密库。
+
+Crypto library is located at `app/lib/crypto.lua`, unified encryption library based on OpenSSL FFI.
+
+```lua
+local Crypto = require('app.lib.crypto')
+```
+
+#### Crypto 方法 / Crypto Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **encrypt(data, key)** | `data`: 数据, `key`: 密钥 | `encrypted, err` | AES-256-CBC 加密 |
+| **decrypt(data, key)** | `data`: 数据, `key`: 密钥 | `decrypted, err` | AES-256-CBC 解密 |
+| **base64_encode(data)** | `data`: 数据 | Base64 字符串 | Base64 编码 |
+| **base64_decode(data)** | `data`: 数据 | 原始数据 | Base64 解码 |
+| **random_bytes(length)** | `length`: 长度 | 随机字节 | 生成随机字节 |
+| **encrypt_captcha(plaintext)** | `plaintext`: 明文 | 加密字符串 | 加密验证码 |
+| **decrypt_captcha(encrypted)** | `encrypted`: 密文 | 明文 | 解密验证码 |
+| **encrypt_session(plaintext)** | `plaintext`: 明文 | 加密字符串 | 加密会话 |
+| **decrypt_session(encrypted)** | `encrypted`: 密文 | 明文 | 解密会话 |
+
+#### 密钥获取顺序 / Key Priority
+
+1. 环境变量 `SESSION_SECRET`
+2. 环境变量 `MYRESTY_SESSION_SECRET`
+3. 配置文件 `session.secret_key`
+4. 默认密钥 (不推荐用于生产)
+
+#### Crypto 使用示例 / Crypto Example
+
+```lua
+local Crypto = require('app.lib.crypto')
+
+-- 基本加密/解密
+local encrypted = Crypto.encrypt('Hello World', '32-byte-secret-key-here!')
+local decrypted = Crypto.decrypt(encrypted, '32-byte-secret-key-here!')
+
+-- Base64 编码/解码
+local encoded = Crypto.base64_encode('Hello World')
+local decoded = Crypto.base64_decode(encoded)
+
+-- 生成随机字节
+local random = Crypto.random_bytes(32)
+-- 返回 32 字节的随机数据
+
+-- 验证码加密
+local encrypted_captcha = Crypto.encrypt_captcha('ABC12')
+local decrypted_captcha = Crypto.decrypt_captcha(encrypted_captcha)
+-- decrypted_captcha = 'ABC12'
+
+-- 会话加密
+local encrypted_session = Crypto.encrypt_session('{"user_id":1}')
+local decrypted_session = Crypto.decrypt_session(encrypted_session)
+-- decrypted_session = '{"user_id":1}'
+```
+
+---
+
+### Middleware Details / 中间件详情
+
+#### Auth Middleware / 认证中间件
+
+认证中间件位于 `app/middleware/auth.lua`，支持 Session 和 Token 两种认证模式。
+
+Auth middleware is located at `app/middleware/auth.lua`, supporting both Session and Token authentication.
+
+```lua
+local Auth = require('app.middleware.auth')
+```
+
+##### Auth 方法 / Auth Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **setup(options)** | `options`: 配置 | self | 配置中间件 |
+| **handle(options)** | `options`: 配置 | boolean | 执行认证 |
+| **login(options)** | `options`: 登录数据 | session | 用户登录 |
+| **logout()** | 无 | boolean | 用户登出 |
+| **get_user()** | 无 | `user_id, user_data, type` | 获取当前用户 |
+| **is_guest()** | 无 | boolean | 是否为游客 |
+| **has_role(role)** | `role`: 角色名 | boolean | 是否有角色 |
+
+##### Auth 配置选项 / Auth Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `mode` | `'session'` | 认证模式: `session`, `token`, `both` |
+| `token_header` | `'Authorization'` | Token 请求头 |
+| `token_prefix` | `'Bearer'` | Token 前缀 |
+| `session_name` | `'myresty_session'` | Session 名 |
+| `login_url` | `'/auth/login'` | 登录页 URL |
+| `allow_guest` | `false` | 允许游客访问 |
+| `api_key_enabled` | `false` | 启用 API Key |
+| `roles` | `nil` | 角色限制 |
+
+##### Auth 使用示例 / Auth Example
+
+```lua
+local Auth = require('app.middleware.auth')
+
+-- 基本认证
+Auth:setup():handle()
+
+-- 允许游客
+Auth:setup():handle({ allow_guest = true })
+
+-- 角色限制
+Auth:setup():handle({ roles = { 'admin', 'moderator' } })
+
+-- Token 认证
+Auth:setup({
+    mode = 'token',
+    token_header = 'Authorization',
+    token_prefix = 'Bearer'
+}):handle()
+
+-- 登录
+local session = Auth:login({
+    user_id = 123,
+    user_data = {
+        username = 'john',
+        email = 'john@example.com',
+        role = 'admin'
+    }
+})
+
+-- 登出
+Auth:logout()
+
+-- 获取当前用户
+local user_id, user_data, auth_type = Auth:get_user()
+
+-- 检查角色
+if Auth:has_role('admin') then
+    -- 是管理员
+end
+```
+
+---
+
+#### Rate Limit Middleware / 限流中间件
+
+限流中间件位于 `app/middleware/rate_limit.lua`，提供滑动窗口限流策略。
+
+Rate limit middleware is located at `app/middleware/rate_limit.lua`, providing sliding window rate limiting.
+
+```lua
+local RateLimit = require('app.middleware.rate_limit')
+```
+
+##### RateLimit 方法 / RateLimit Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **setup(options)** | `options`: 配置 | self | 配置中间件 |
+| **handle(options)** | `options`: 配置 | boolean | 执行限流 |
+| **create_zone(name, limit, window, burst)** | `name`: 区域名, `limit`: 限制, `window`: 窗口, `burst`: 突发 | self | 创建区域 |
+| **zone(name)** | `name`: 区域名 | builder | 区域构建器 |
+
+##### RateLimit 配置选项 / RateLimit Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `zone` | `'default'` | 限流区域 |
+| `default_limit` | `60` | 默认限制 |
+| `default_window` | `60` | 默认窗口(秒) |
+| `headers` | `true` | 输出限流头 |
+| `key_by_ip` | `true` | 按 IP 限流 |
+| `key_by_user` | `false` | 按用户限流 |
+| `response_status` | `429` | HTTP 状态码 |
+| `response_message` | `'Too Many Requests'` | 响应消息 |
+| `log_blocked` | `true` | 记录被拦截 |
+
+##### 预定义区域 / Predefined Zones
+
+| 区域 | 限制 | 窗口 | 说明 |
+|------|------|------|------|
+| `api` | 60 | 60 | API 接口限流 |
+| `login` | 5 | 300 | 登录接口限流 |
+| `upload` | 10 | 60 | 文件上传限流 |
+| `default` | 100 | 60 | 默认限流 |
+
+##### RateLimit 使用示例 / RateLimit Example
+
+```lua
+local RateLimit = require('app.middleware.rate_limit')
+
+-- 基本限流
+RateLimit:setup():handle()
+
+-- 自定义区域
+RateLimit:setup({
+    zone = 'api',
+    headers = true,
+    log_blocked = true
+}):handle()
+
+-- 创建新区域
+RateLimit:create_zone('special', 10, 60, 5)
+RateLimit:setup({ zone = 'special' }):handle()
+
+-- 响应头
+-- X-RateLimit-Limit: 60
+-- X-RateLimit-Remaining: 59
+-- X-RateLimit-Reset: 1699999999
+-- X-RateLimit-Window: 60
+```
+
+---
+
+### Example Controllers / 示例控制器
+
+框架提供多个示例控制器，演示各种功能的使用方法。
+
+The framework provides several example controllers demonstrating various features.
+
+---
+
+#### Example Controller / 查询构建器示例
+
+`app/controllers/example.lua` 演示 QueryBuilder 的各种用法。
+
+`app/controllers/example.lua` demonstrates various QueryBuilder usages.
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/query/basic` | GET | 基本查询 |
+| `/query/joins` | GET | JOIN 查询 |
+| `/query/where` | GET | 条件查询 |
+| `/query/aggregates` | GET | 聚合函数 |
+| `/query/insert` | GET | 插入示例 |
+| `/query/update` | GET | 更新示例 |
+| `/query/delete` | GET | 删除示例 |
+| `/query/complex` | GET | 复杂查询 |
+| `/query/raw` | GET | 原生表达式 |
+
+```lua
+-- 示例代码
+local QueryBuilder = require('app.core.QueryBuilder')
+
+-- 基本查询
+local sql = QueryBuilder.new('users')
+    :select('id', 'name', 'email')
+    :where('status', 'active')
+    :order_by('created_at', 'DESC')
+    :limit(10)
+    :get_sql()
+
+-- JOIN 查询
+local sql = QueryBuilder.new('users')
+    :select('users.id', 'users.name', 'orders.total')
+    :left_join('orders')
+    :on('users.id', '=', 'orders.user_id')
+    :get_sql()
+```
+
+---
+
+#### Request Demo Controller / 请求处理演示
+
+`app/controllers/request_demo.lua` 演示 RequestHelper 的完整用法。
+
+`app/controllers/request_demo.lua` demonstrates complete RequestHelper usage.
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/request-demo` | GET | 索引 |
+| `/request-demo/basic` | POST | 基本字段提取 |
+| `/request-demo/typed` | POST | 类型转换 |
+| `/request-demo/validate` | POST | 验证示例 |
+| `/request-demo/pagination` | POST | 分页参数 |
+| `/request-demo/search` | POST | 搜索参数 |
+| `/request-demo/filter` | POST | 过滤参数 |
+| `/request-demo/only` | POST | 仅获取指定字段 |
+| `/request-demo/except` | POST | 排除指定字段 |
+| `/request-demo/complete` | POST | 完整示例 |
+| `/request-demo/get-post` | POST | GET vs POST vs JSON |
+
+---
+
+#### Middleware Demo Controller / 中间件演示
+
+`app/controllers/middleware_demo.lua` 演示中间件系统的使用方法。
+
+`app/controllers/middleware_demo.lua` demonstrates middleware system usage.
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/middleware` | GET | 中间件索引 |
+| `/middleware/list` | GET | 列出中间件 |
+| `/middleware/info` | GET | 中间件信息 |
+| `/middleware/headers` | GET | 响应头 |
+| `/middleware/auth-test` | POST | 认证测试 |
+| `/middleware/login` | POST | 登录 |
+| `/middleware/logout` | POST | 登出 |
+| `/middleware/cors-test` | GET | CORS 测试 |
+| `/middleware/rate-limit-test` | GET | 限流测试 |
+
+---
+
+#### Request Test Controller / 请求测试
+
+`app/controllers/request_test.lua` 测试各种请求数据的获取方式。
+
+`app/controllers/request_test.lua` tests various request data retrieval methods.
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/request` | GET | 索引 |
+| `/request/get` | GET | GET 参数 |
+| `/request/post/form` | POST | POST 表单 |
+| `/request/post/json` | POST | POST JSON |
+| `/request/mixed` | ANY | 混合数据 |
+| `/request/all` | GET | 所有输入 |
+
+---
+
+#### Validate Config Controller / 配置验证
+
+`app/controllers/validate_config.lua` 演示基于配置文件的验证方式。
+
+`app/controllers/validate_config.lua` demonstrates config-based validation.
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/validate-config` | GET | 索引 |
+| `/validate-config/tables` | GET | 列出验证表 |
+| `/validate-config/table/{name}` | GET | 获取表规则 |
+| `/validate-config/users/{scenario}` | POST | 用户验证 |
+| `/validate-config/products/{scenario}` | POST | 产品验证 |
+| `/validate-config/orders/{scenario}` | POST | 订单验证 |
+
+**支持的场景 / Supported Scenarios**:
+
+| 表名 | 场景 |
+|------|------|
+| `users` | `create`, `login`, `profile`, `update` |
+| `products` | `create`, `update` |
+| `orders` | `create`, `ship` |
+
+---
+
+### Available Routes / 可用路由
+
+框架定义了 150+ 路由，涵盖所有功能模块。
+
+The framework defines 150+ routes covering all functional modules.
+
+#### 核心路由 / Core Routes
+
+| 路由 | 控制器 | 说明 |
+|------|--------|------|
+| `GET /` | welcome | 首页 |
+| `GET /hello/{name}` | welcome | 问候 |
+| `GET /users` | user | 用户列表 |
+| `GET /users/{id}` | user | 用户详情 |
+| `POST /users` | user | 创建用户 |
+| `PUT /users/{id}` | user | 更新用户 |
+| `DELETE /users/{id}` | user | 删除用户 |
+
+#### Query Builder 路由 / Query Builder Routes
+
+| 路由 | 说明 |
+|------|------|
+| `GET /query/basic` | 基本查询 |
+| `GET /query/joins` | JOIN 查询 |
+| `GET /query/where` | 条件查询 |
+| `GET /query/aggregates` | 聚合函数 |
+| `GET /query/insert` | 插入示例 |
+| `GET /query/update` | 更新示例 |
+| `GET /query/delete` | 删除示例 |
+| `GET /query/complex` | 复杂查询 |
+| `GET /query/raw` | 原生表达式 |
+
+#### 会话路由 / Session Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /session` | GET | 索引 |
+| `POST /session/set` | POST | 设置会话 |
+| `POST /session/get` | POST | 获取会话 |
+| `POST /session/remove` | POST | 删除键 |
+| `POST /session/clear` | POST | 清空会话 |
+| `POST /session/destroy` | POST | 销毁会话 |
+| `POST /session/flash/set` | POST | 设置 Flash |
+| `POST /session/flash/get` | POST | 获取 Flash |
+| `POST /session/user/login` | POST | 用户登录 |
+| `GET /session/user/info` | GET | 用户信息 |
+| `POST /session/user/logout` | POST | 用户登出 |
+
+#### 缓存路由 / Cache Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /cache` | GET | 索引 |
+| `POST /cache/set` | POST | 设置缓存 |
+| `POST /cache/get` | POST | 获取缓存 |
+| `POST /cache/delete` | POST | 删除缓存 |
+| `POST /cache/clear` | POST | 清空缓存 |
+| `POST /cache/incr` | POST | 增值 |
+| `POST /cache/decr` | POST | 减值 |
+| `GET /cache/keys` | GET | 列出键 |
+| `POST /cache/remember` | POST | 记住缓存 |
+| `GET /cache/stats` | GET | 统计信息 |
+
+#### 验证码路由 / Captcha Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /captcha` | GET | 生成验证码 |
+| `GET /captcha/code` | GET | 获取验证码 |
+| `POST /captcha/verify` | POST | 验证验证码 |
+| `POST /captcha/refresh` | POST | 刷新验证码 |
+
+#### 文件上传路由 / Upload Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /upload` | GET | 索引 |
+| `POST /upload` | POST | 上传文件 |
+| `POST /upload/multiple` | POST | 多文件上传 |
+| `POST /upload/validate` | POST | 验证上传 |
+| `GET /upload/form` | GET | 上传表单 |
+
+#### 图像处理路由 / Image Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /image` | GET | 索引 |
+| `POST /image/upload` | POST | 上传图片 |
+| `POST /image/upload/multiple` | POST | 多图上传 |
+| `POST /image/upload/avatar` | POST | 上传头像 |
+| `POST /image/upload/variants` | POST | 上传变体 |
+| `GET /image/info/{path}` | GET | 图片信息 |
+| `GET /image/thumbnail/{path}` | GET | 生成缩略图 |
+| `GET /image/optimize/{path}` | GET | 优化图片 |
+
+#### HTTP 客户端路由 / HTTP Client Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /httpclient` | GET | 索引 |
+| `GET /httpclient/get` | GET | GET 请求 |
+| `POST /httpclient/post` | POST | POST 请求 |
+| `POST /httpclient/json` | POST | JSON 请求 |
+| `POST /httpclient/api` | POST | API 调用 |
+| `GET /httpclient/benchmark` | GET | 性能测试 |
+
+#### 限流路由 / Rate Limit Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /rate-limit` | GET | 索引 |
+| `GET /rate-limit/test` | GET | 限流测试 |
+| `GET /rate-limit/status` | GET | 状态查询 |
+| `POST /rate-limit/check` | POST | 检查限流 |
+| `GET /rate-limit/zone` | GET | 区域信息 |
+| `GET /rate-limit/keys` | GET | 列出键 |
+| `POST /rate-limit/reset` | POST | 重置限流 |
+| `GET /rate-limit/login` | GET | 登录限流 |
+| `GET /rate-limit/api` | GET | API 限流 |
+| `GET /rate-limit/strict` | GET | 严格限流 |
+| `GET /rate-limit/combined` | GET | 组合限流 |
+| `GET /rate-limit/user` | GET | 用户限流 |
+
+#### 验证路由 / Validation Routes
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `GET /validate` | GET | 索引 |
+| `POST /validate/basic` | POST | 基本验证 |
+| `POST /validate/login` | POST | 登录验证 |
+| `POST /validate/register` | POST | 注册验证 |
+| `POST /validate/update` | POST | 更新验证 |
+| `POST /validate/custom` | POST | 自定义验证 |
+| `POST /validate/messages` | POST | 自定义消息 |
+| `POST /validate/array` | POST | 数组验证 |
+| `POST /validate/all` | POST | 完整验证 |
+| `POST /validate/login-captcha` | POST | 登录验证码 |
+| `POST /validate/api-key` | POST | API Key 验证 |
+
+---
+
 ## Features / 功能特性
 
 - MVC 架构（CodeIgniter 风格）/ MVC architecture (CodeIgniter style)
@@ -1682,6 +2575,9 @@ All tests passed!
 - 文件上传和图像处理 / File upload & image processing
 - HTTP 客户端 / HTTP client
 - 全面的中间件系统 / Comprehensive middleware system
+- Helper 辅助函数系统 / Helper functions system
+- 基于 FFI 的高性能加密 / FFI-based high-performance encryption
+- 配置驱动的数据验证 / Config-driven data validation
 
 ---
 

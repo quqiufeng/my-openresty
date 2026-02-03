@@ -926,7 +926,741 @@ local s = table.concat(parts, ", ")  -- 大量时更快
 
 ---
 
-## 14. 参考资源 / References
+## 14. 加密与安全 / Encryption & Security
+
+### 14.1 AES-256-CBC 加密模式 / AES-256-CBC Encryption
+
+MyResty 使用 OpenSSL FFI 实现 AES-256-CBC 加密：
+
+```lua
+-- crypto.lua 实现模式
+local ffi = require("ffi")
+
+ffi.cdef[[
+    typedef struct evp_cipher_st EVP_CIPHER;
+    typedef struct evp_cipher_ctx_st EVP_CIPHER_CTX;
+
+    const EVP_CIPHER *EVP_aes_256_cbc(void);
+    EVP_CIPHER_CTX *EVP_CIPHER_CTX_new(void);
+    void EVP_CIPHER_CTX_free(EVP_CIPHER_CTX *ctx);
+
+    int EVP_EncryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+                           void *impl, const unsigned char *key,
+                           const unsigned char *iv);
+    int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
+                          int *outl, const unsigned char *in, int inl);
+    int EVP_EncryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+
+    int RAND_bytes(unsigned char *buf, int num);
+]]
+
+local libcrypto = ffi.load("crypto")
+```
+
+### 14.2 密钥管理 / Key Management
+
+```lua
+-- 密钥获取优先级
+local function get_secret_key()
+    -- 1. 环境变量 (最高优先级)
+    local env_key = os.getenv('SESSION_SECRET') or os.getenv('MYRESTY_SESSION_SECRET')
+    if env_key and #env_key >= 32 then
+        return env_key
+    end
+
+    -- 2. 配置文件
+    local config = load_config()
+    if config and config.session and config.session.secret_key then
+        return config.session.secret_key
+    end
+
+    -- 3. 默认密钥 (仅开发环境)
+    return 'd07495d9623312cae328d13ca573e788'
+end
+```
+
+### 14.3 安全的随机数生成 / Secure Random
+
+```lua
+function _M.random_bytes(length)
+    local buf = ffi.new("unsigned char[?]", length)
+    if libcrypto.RAND_bytes(buf, length) ~= 1 then
+        return nil
+    end
+    return ffi.string(buf, length)
+end
+```
+
+### 14.4 Base64 编解码 / Base64 Encode/Decode
+
+```lua
+function _M.base64_encode(data)
+    local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    local result = {}
+
+    local i = 1
+    while i <= #data do
+        local byte1 = string.byte(data, i)
+        local byte2 = i + 1 <= #data and string.byte(data, i + 1) or 0
+        local byte3 = i + 2 <= #data and string.byte(data, i + 2) or 0
+
+        local triplet = byte1 * 65536 + byte2 * 256 + byte3
+
+        table.insert(result, b64chars:sub(math.floor(triplet / 262144) % 64 + 1, math.floor(triplet / 262144) % 64 + 1))
+        table.insert(result, b64chars:sub(math.floor(triplet / 4096) % 64 + 1, math.floor(triplet / 4096) % 64 + 1))
+
+        if i + 1 <= #data then
+            table.insert(result, b64chars:sub(math.floor(triplet / 64) % 64 + 1, math.floor(triplet / 64) % 64 + 1))
+        else
+            table.insert(result, '=')
+        end
+
+        if i + 2 <= #data then
+            table.insert(result, b64chars:sub(triplet % 64 + 1, triplet % 64 + 1))
+        else
+            table.insert(result, '=')
+        end
+
+        i = i + 3
+    end
+
+    return table.concat(result)
+end
+```
+
+---
+
+## 15. HTTP 客户端实现 / HTTP Client Implementation
+
+### 15.1 Cosocket HTTP 客户端 / Cosocket HTTP Client
+
+```lua
+-- http.lua 实现模式
+local HttpClient = {}
+
+function HttpClient:new(options)
+    local self = setmetatable({}, HttpClient)
+    self.options = options or {}
+    self.default_timeout = options and options.timeout or 30000
+    return self
+end
+
+function HttpClient:_parse_url(url)
+    local protocol, host, port, path
+
+    if url:match("^https://") then
+        protocol = "https"
+        port = 443
+        url = url:gsub("^https://", "")
+    elseif url:match("^http://") then
+        protocol = "http"
+        port = 80
+        url = url:gsub("^http://", "")
+    else
+        protocol = "http"
+        port = 80
+    end
+
+    local host_path = url:match("^([^/]+)(.*)$")
+    if host_path then
+        host = host_path:match("^([^:]+)")
+        local port_match = host_path:match(":(%d+)")
+        if port_match then
+            port = tonumber(port_match)
+        end
+        path = url:match("^[^/]+(.*)$")
+        if path == "" then path = "/" end
+    else
+        host = url
+        path = "/"
+    end
+
+    return protocol, host, port, path
+end
+```
+
+### 15.2 请求构建 / Request Building
+
+```lua
+function HttpClient:_build_query(params)
+    if not params or type(params) ~= "table" then
+        return nil
+    end
+
+    local query_parts = {}
+    for key, value in pairs(params) do
+        table.insert(query_parts, ngx.escape_uri(key) .. "=" .. ngx.escape_uri(tostring(value)))
+    end
+
+    if #query_parts > 0 then
+        return table.concat(query_parts, "&")
+    end
+    return nil
+end
+
+function HttpClient:request(method, url, options)
+    options = options or {}
+    local timeout = options.timeout or self.default_timeout
+    local body = options.body or options.data
+    local headers = options.headers or {}
+    local query = options.query
+
+    local protocol, host, port, path = self:_parse_url(url)
+
+    -- 构建查询字符串
+    local query_str = self:_build_query(query)
+    if query_str then
+        if path:find("?") then
+            path = path .. "&" .. query_str
+        else
+            path = path .. "?" .. query_str
+        end
+    end
+
+    -- 创建 socket
+    local sock = ngx.socket.tcp()
+    sock:settimeout(timeout)
+
+    local ok, err = sock:connect(host, port)
+    if not ok then
+        return nil, "Connection failed: " .. err
+    end
+
+    -- SSL 握手
+    if protocol == "https" then
+        local ok, err = sock:sslhandshake(nil, host, false)
+        if not ok then
+            sock:close()
+            return nil, "SSL handshake failed: " .. err
+        end
+    end
+
+    -- 发送请求
+    local request_line = method .. " " .. path .. " HTTP/1.1\r\n"
+    local request_headers = "Host: " .. host .. ":" .. port .. "\r\n"
+
+    for key, value in pairs(headers) do
+        request_headers = request_headers .. key .. ": " .. tostring(value) .. "\r\n"
+    end
+
+    if not headers["Content-Type"] and body then
+        request_headers = request_headers .. "Content-Type: application/json\r\n"
+    end
+
+    if body then
+        request_headers = request_headers .. "Content-Length: " .. #body .. "\r\n"
+    end
+
+    request_headers = request_headers .. "Connection: close\r\n\r\n"
+
+    local bytes, err = sock:send(request_line .. request_headers)
+    if not bytes then
+        sock:close()
+        return nil, "Send request failed: " .. err
+    end
+
+    if body then
+        local bytes, err = sock:send(body)
+        if not bytes then
+            sock:close()
+            return nil, "Send body failed: " .. err
+        end
+    end
+
+    -- 接收响应
+    local reader = sock:receiveuntil("\r\n\r\n")
+    local headers_line, err = reader()
+    if not headers_line then
+        sock:close()
+        return nil, "Receive headers failed: " .. err
+    end
+
+    local status_code = tonumber(headers_line:match("HTTP/%d%.%d (%d+)"))
+    local response_headers = {}
+
+    -- 解析响应头
+    local line, err = reader()
+    while line and line ~= "" do
+        local key, value = line:match("^([^:]+):%s*(.+)$")
+        if key and value then
+            key = key:lower()
+            response_headers[key] = value
+        end
+        line, err = reader()
+    end
+
+    -- 读取响应体
+    local response_body
+    if response_headers["transfer-encoding"] == "chunked" then
+        -- Chunked 编码处理
+        response_body = ""
+        while true do
+            local chunk_size_line = sock:receiveuntil("\r\n")
+            local chunk_size, err = chunk_size_line()
+            if not chunk_size then break end
+            local size = tonumber(chunk_size, 16)
+            if not size or size == 0 then break end
+            local chunk = sock:receive(size + 2)
+            if chunk then
+                response_body = response_body .. chunk:sub(1, -3)
+            end
+        end
+    else
+        local content_length = tonumber(response_headers["content-length"]) or 0
+        if content_length > 0 then
+            response_body, err = sock:receive(content_length)
+        else
+            response_body, err = sock:receive("*a")
+        end
+    end
+
+    sock:close()
+
+    return {
+        status = status_code or 500,
+        body = response_body or "",
+        headers = response_headers,
+        success = (status_code or 500) >= 200 and (status_code or 500) < 300
+    }, nil
+end
+```
+
+---
+
+## 16. 请求处理最佳实践 / Request Handling Best Practices
+
+### 16.1 请求数据解析 / Request Data Parsing
+
+```lua
+-- request_helper.lua 模式
+local function _get_request_data(req, fields, custom_rules, source)
+    local result = {}
+    local errors = {}
+
+    if type(fields) == "string" then
+        fields = { fields }
+    end
+
+    for _, field in ipairs(fields) do
+        local rules = {}
+        if custom_rules and type(custom_rules) == "table" then
+            rules = custom_rules[field] or {}
+        end
+
+        local value
+        if source == "get" then
+            value = req:get[field]
+        elseif source == "post" then
+            value = req:post[field]
+        elseif source == "json" then
+            value = req.json and req.json[field]
+        else
+            value = req:input(field)
+        end
+
+        -- 类型转换
+        local convert_type = rules.type
+        if convert_type and type(value) == "string" then
+            if convert_type == "number" then
+                local num = tonumber(value)
+                value = num or value
+            elseif convert_type == "integer" then
+                local num = tonumber(value)
+                value = num and math.floor(num) or value
+            elseif convert_type == "boolean" then
+                if value == "true" or value == "1" or value == "yes" then
+                    value = true
+                elseif value == "false" or value == "0" or value == "no" then
+                    value = false
+                end
+            elseif convert_type == "array" then
+                value = { value }
+            end
+        end
+
+        -- 验证必填
+        if rules.required and (value == nil or value == "") then
+            table.insert(errors, {
+                field = field,
+                message = rules.message or ("The " .. field .. " field is required.")
+            })
+        end
+
+        result[field] = value
+    end
+
+    return result, errors
+end
+```
+
+### 16.2 分页参数处理 / Pagination Parameters
+
+```lua
+function RequestHelper:get_pagination_params(default_per_page)
+    default_per_page = default_per_page or 10
+
+    local page = tonumber(self:get('page')) or 1
+    local per_page = tonumber(self:get('per_page')) or default_per_page
+
+    -- 边界检查
+    if page < 1 then page = 1 end
+    if per_page < 1 then per_page = default_per_page end
+    if per_page > 100 then per_page = 100 end  -- 最大限制
+
+    local sort_by = self:get('sort_by') or 'id'
+    local sort_order = self:get('sort_order') or 'DESC'
+    if sort_order ~= "ASC" and sort_order ~= "DESC" then
+        sort_order = "DESC"
+    end
+
+    return {
+        page = page,
+        per_page = per_page,
+        sort_by = sort_by,
+        sort_order = sort_order,
+        offset = (page - 1) * per_page,
+        limit = per_page
+    }
+end
+```
+
+### 16.3 搜索参数处理 / Search Parameters
+
+```lua
+function RequestHelper:get_search_params(search_fields)
+    local params = {}
+    local keyword = self:get('keyword') or self:get('q') or ""
+
+    if keyword ~= "" then
+        for _, field in ipairs(search_fields or {}) do
+            params[field] = keyword
+        end
+    end
+
+    -- 支持 Base64 编码的过滤器
+    local filters = self:get('filters')
+    if type(filters) == "string" then
+        local ok, decoded = pcall(function()
+            return ngx.decode_base64(filters)
+        end)
+        if ok and decoded then
+            local ok2, filter_tbl = pcall(function()
+                return ngx.decode_json(decoded)
+            end)
+            if ok2 and type(filter_tbl) == "table" then
+                filters = filter_tbl
+            end
+        end
+    end
+
+    if type(filters) == "table" then
+        for k, v in pairs(filters) do
+            params[k] = v
+        end
+    end
+
+    return params, keyword
+end
+```
+
+---
+
+## 17. 文件处理安全 / File Handling Security
+
+### 17.1 安全路径处理 / Safe Path Handling
+
+```lua
+-- file_helper.lua 模式
+local function safe_path(base_path, filename)
+    if not filename or filename == '' then
+        return nil, 'Empty filename'
+    end
+
+    -- 移除危险字符
+    local sanitized = filename:gsub('[\\:]', '_')
+
+    -- 移除 .. 防止目录遍历
+    while sanitized:find('%.%.') do
+        sanitized = sanitized:gsub('%.%.', '.')
+    end
+
+    -- 防止绝对路径
+    if sanitized:find('^/') or sanitized:find('^\\') then
+        return nil, 'Absolute path not allowed'
+    end
+
+    -- 防止 NULL 字节
+    if sanitized:find('%z') then
+        return nil, 'Invalid characters in path'
+    end
+
+    local full_path = base_path .. '/' .. sanitized
+
+    -- 确保路径在允许的目录内
+    local resolved = full_path:gsub('/+', '/'):gsub('/%.$', ''):gsub('/%./', '/')
+    local base_resolved = base_path:gsub('/+', '/'):gsub('/%.$', ''):gsub('/%./', '/')
+
+    if not resolved:find('^' .. base_resolved) then
+        return nil, 'Path outside allowed directory'
+    end
+
+    return resolved, nil
+end
+```
+
+### 17.2 文件名净化 / Filename Sanitization
+
+```lua
+local function sanitize_filename(filename)
+    if not filename or filename == '' then
+        return 'file_' .. os.time()
+    end
+
+    local sanitized = filename:gsub('[^a-zA-Z0-9._-]', '_')
+    sanitized = sanitized:gsub('_+', '_')
+
+    -- 移除危险字符
+    sanitized = sanitized:gsub('[\\/:]', '_')
+
+    -- 移除 .. 防止目录遍历
+    while sanitized:find('%.%.') do
+        sanitized = sanitized:gsub('%.%.', '.')
+    end
+
+    -- 限制文件名长度
+    if #sanitized > 255 then
+        local ext = sanitized:match('%.(%w+)$') or ''
+        local name = sanitized:match('(.+)%..+$') or sanitized
+        if #name > 250 then
+            name = name:sub(1, 250)
+        end
+        sanitized = name .. '.' .. ext
+    end
+
+    return sanitized
+end
+```
+
+### 17.3 MIME 类型检查 / MIME Type Checking
+
+```lua
+local function is_image(mime)
+    local image_mimes = {
+        ['image/jpeg'] = true,
+        ['image/png'] = true,
+        ['image/gif'] = true,
+        ['image/webp'] = true,
+        ['image/svg+xml'] = true,
+        ['image/bmp'] = true,
+    }
+    return image_mimes[mime] == true
+end
+
+local function is_document(mime)
+    local doc_mimes = {
+        ['application/pdf'] = true,
+        ['application/msword'] = true,
+        ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] = true,
+        ['application/vnd.ms-excel'] = true,
+        ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] = true,
+        ['text/plain'] = true,
+        ['text/csv'] = true,
+    }
+    return doc_mimes[mime] == true
+end
+```
+
+---
+
+## 18. 中间件模式 / Middleware Patterns
+
+### 18.1 认证中间件 / Auth Middleware
+
+```lua
+-- auth.lua 模式
+local Auth = {}
+
+Auth.options = {
+    mode = 'session',  -- session, token, both
+    token_header = 'Authorization',
+    token_prefix = 'Bearer',
+    session_name = 'myresty_session',
+    login_url = '/auth/login',
+    unauthorized_msg = 'Unauthorized',
+    allow_guest = false,
+}
+
+function Auth:setup(options)
+    self.options = vim.tbl_deep_extend('force', self.options, options or {})
+    return self
+end
+
+function Auth:handle(options)
+    options = vim.tbl_deep_extend('force', self.options, options or {})
+
+    local user_id, user_data, auth_type
+
+    -- 1. 尝试 API Token 认证
+    if options.mode == 'token' or options.mode == 'both' then
+        user_id, user_data, auth_type = self:check_token(options)
+    end
+
+    -- 2. 尝试 Session 认证
+    if not user_id and (options.mode == 'session' or options.mode == 'both') then
+        user_id, user_data, auth_type = self:check_session(options)
+    end
+
+    -- 3. 游客模式
+    if options.allow_guest then
+        ngx.ctx.auth_user = user_id
+        ngx.ctx.auth_data = user_data
+        ngx.ctx.auth_type = auth_type or 'guest'
+        return true
+    end
+
+    -- 4. 未登录处理
+    if not user_id then
+        ngx.status = 401
+        ngx.header['Content-Type'] = 'application/json'
+        ngx.say('{"success":false,"error":"' .. options.unauthorized_msg .. '","code":401}')
+        ngx.exit(401)
+        return false
+    end
+
+    -- 5. 角色检查
+    if options.roles and #options.roles > 0 then
+        local has_role = false
+        local user_role = user_data and user_data.role or 'user'
+
+        for _, role in ipairs(options.roles) do
+            if user_role == role or user_role == 'admin' then
+                has_role = true
+                break
+            end
+        end
+
+        if not has_role then
+            ngx.status = 403
+            ngx.header['Content-Type'] = 'application/json'
+            ngx.say('{"success":false,"error":"Forbidden","code":403}')
+            ngx.exit(403)
+            return false
+        end
+    end
+
+    -- 注入用户信息到请求上下文
+    ngx.ctx.auth_user = user_id
+    ngx.ctx.auth_data = user_data
+    ngx.ctx.auth_type = auth_type or 'session'
+
+    return true
+end
+```
+
+### 18.2 限流中间件 / Rate Limit Middleware
+
+```lua
+-- rate_limit.lua 模式
+local RateLimit = {}
+
+RateLimit.options = {
+    zones = {},
+    default_limit = 60,
+    default_window = 60,
+    response_status = 429,
+    response_message = 'Too Many Requests',
+    headers = true,
+    key_by_ip = true,
+    key_by_user = false,
+    log_blocked = true
+}
+
+RateLimit.zones = {
+    api = { limit = 60, window = 60 },
+    login = { limit = 5, window = 300 },
+    upload = { limit = 10, window = 60 },
+    default = { limit = 100, window = 60 }
+}
+
+function RateLimit:handle(options)
+    options = vim.tbl_deep_extend('force', self.options, options or {})
+
+    local zone_name = options.zone or 'default'
+    local zone = options.zones and options.zones[zone_name] or self.options.zones[zone_name]
+
+    if not zone then
+        zone = {
+            limit = options.default_limit,
+            window = options.default_window
+        }
+    end
+
+    local key = self:get_key(options, zone_name)
+
+    local Limit = require('app.lib.limit')
+    local limit = Limit:new({
+        strategy = 'sliding_window',
+        default_limit = zone.limit,
+        default_window = zone.window,
+        log_blocked = options.log_blocked
+    })
+
+    local success, info = limit:check(key, ngx.var.uri, zone.limit, zone.window, zone.burst or 0)
+
+    if options.headers then
+        self:set_headers(info)
+    end
+
+    if not success then
+        if options.log_blocked then
+            ngx.log(ngx.WARN, 'Rate limit exceeded: ' .. key .. ' (' .. info.current .. '/' .. info.limit .. ')')
+        end
+
+        ngx.status = options.response_status
+        ngx.header['Content-Type'] = 'application/json'
+        ngx.header['Retry-After'] = tostring(info.reset - ngx.now())
+        ngx.say('{"success":false,"error":"' .. options.response_message .. '","code":' .. options.response_status .. ',"retry_after":' .. info.reset .. '}')
+        ngx.exit(options.response_status)
+        return false
+    end
+
+    return true
+end
+
+function RateLimit:get_key(options, zone_name)
+    local key_parts = {}
+
+    if options.key_by_ip ~= false then
+        table.insert(key_parts, ngx.var.remote_addr or 'unknown')
+    end
+
+    if options.key_by_user then
+        local Session = require('app.lib.session')
+        local session = Session:new()
+        local user_id = session:get('user_id')
+        if user_id then
+            table.insert(key_parts, 'user:' .. user_id)
+        end
+    end
+
+    table.insert(key_parts, 'zone:' .. zone_name)
+
+    return table.concat(key_parts, ':')
+end
+
+function RateLimit:set_headers(info)
+    if not info then return end
+
+    ngx.header['X-RateLimit-Limit'] = info.limit
+    ngx.header['X-RateLimit-Remaining'] = info.remaining
+    ngx.header['X-RateLimit-Reset'] = info.reset
+    ngx.header['X-RateLimit-Window'] = info.window
+end
+```
+
+---
+
+## 19. 参考资源 / References
 
 - [OpenResty 官方文档](http://openresty.org)
 - [LuaJIT 官方文档](http://luajit.org)
@@ -934,10 +1668,11 @@ local s = table.concat(parts, ", ")  -- 大量时更快
 - [lua-resty-redis](https://github.com/openresty/lua-resty-redis)
 - [lua-resty-lrucache](https://github.com/openresty/lua-resty-lrucache)
 - [Nginx Lua 模块文档](https://github.com/openresty/lua-nginx-module)
+- [OpenSSL EVP API](https://www.openssl.org/docs/man1.1.1/man3/EVP_EncryptInit.html)
 
 ---
 
-## 15. 快速参考表 / Quick Reference
+## 20. 快速参考表 / Quick Reference
 
 | 场景 | 推荐做法 | 避免 |
 |------|----------|------|
@@ -950,8 +1685,13 @@ local s = table.concat(parts, ", ")  -- 大量时更快
 | 热点代码 | 局部变量 | 全局查找 |
 | 错误处理 | `pcall` / `xpcall` | 无防护 |
 | 性能监控 | `ngx.now()` | `os.time()` |
+| 加密 | AES-256-CBC + RAND_bytes | 自定义加密 |
+| HTTP 客户端 | Cosocket + SSL | 阻塞调用 |
+| 文件路径 | safe_path + sanitize_filename | 直接拼接 |
+| 认证 | 中间件模式 | 硬编码检查 |
 
 ---
 
-*文档版本: 1.0.0*  
-*最后更新: 2026-02-03*
+*文档版本: 2.0.0*  
+*最后更新: 2026-02-03*  
+*新增章节: 加密与安全、HTTP 客户端实现、请求处理最佳实践、文件处理安全、中间件模式*
