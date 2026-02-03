@@ -1,8 +1,8 @@
 -- QueryBuilder Library Unit Tests
 -- tests/unit/query_builder_spec.lua
 
-package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
-package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 

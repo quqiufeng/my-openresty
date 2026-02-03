@@ -20,7 +20,7 @@ local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
 local config = nil
-local config_path = '/var/www/web/my-resty/app/config/config.lua'
+local config_path = '/var/www/web/my-openresty/app/config/config.lua'
 local loaded = false
 
 local function _load_file(path)

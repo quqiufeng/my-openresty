@@ -1,8 +1,8 @@
 -- File Utility Unit Tests
 -- tests/unit/file_spec.lua
 
-package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
-package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 
@@ -25,8 +25,8 @@ describe('File Module', function()
                 return false
             end
 
-            assert.is_true(file_exists('/var/www/web/my-resty/bootstrap.lua'))
-            assert.is_false(file_exists('/var/www/web/my-resty/nonexistent_file.lua'))
+            assert.is_true(file_exists('/var/www/web/my-openresty/bootstrap.lua'))
+            assert.is_false(file_exists('/var/www/web/my-openresty/nonexistent_file.lua'))
         end)
     end)
 
@@ -40,7 +40,7 @@ describe('File Module', function()
                 return content
             end
 
-            local content = file_read('/var/www/web/my-resty/bootstrap.lua')
+            local content = file_read('/var/www/web/my-openresty/bootstrap.lua')
             assert.is_string(content)
             assert.matches('package.path', content)
         end)
@@ -166,7 +166,7 @@ describe('File Module', function()
                 return files
             end
 
-            local files = file_list('/var/www/web/my-resty')
+            local files = file_list('/var/www/web/my-openresty')
             assert.is_table(files)
             assert.True(#files > 0)
         end)

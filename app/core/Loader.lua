@@ -129,7 +129,7 @@ function _M.config(self, name)
 end
 
 function _M.view(self, template, data)
-    local view_path = '/var/www/web/my-resty/app/views/' .. template .. '.html'
+    local view_path = '/var/www/web/my-openresty/app/views/' .. template .. '.html'
     local f = io.open(view_path, 'r')
     if not f then
         ngx_log(ngx_ERR, 'View not found: ', view_path)

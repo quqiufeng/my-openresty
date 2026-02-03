@@ -1,2 +1,1651 @@
-# my-openresty
-ai生成的基于openresty的 web框架 设计参考php CodeIgniter框架
+# MyResty Framework
+
+基于 OpenResty 的 Web 框架，设计参考 PHP CodeIgniter 框架。
+
+AI-generated Web framework based on OpenResty, designed with reference to PHP CodeIgniter framework.
+
+---
+
+## Requirements / 系统要求
+
+### Operating System / 操作系统
+
+- **OS**: Ubuntu 24.04.3 LTS / Ubuntu 24.04.3 LTS
+
+### Nginx Configuration / Nginx 配置
+
+参考 `nginx/conf/` 目录下的配置文件：
+
+Reference nginx configuration files in the `nginx/conf/` directory:
+
+```bash
+# 主 nginx 配置模板 / Main nginx configuration template
+nginx/conf/nginx.conf
+
+# MyResty 服务器配置 / MyResty server configuration
+nginx/conf/myresty.conf
+
+# FastCGI 配置 / FastCGI configuration
+nginx/conf/fcgi.conf
+```
+
+**注意**：生产环境的实际配置位于服务器上的 `/usr/local/web/nginx/conf/nginx.conf`，该文件会 include 本项目中的 `myresty.conf`。
+
+**Note**: The actual production configuration is located at `/usr/local/web/nginx/conf/nginx.conf` on the server, which includes the `myresty.conf` file from this project.
+
+### System Dependencies / 系统依赖包
+
+运行前需要安装 Lua FFI 调用所需的系统包（验证码、图像处理、加密）：
+
+Before running, install the required system packages for Lua FFI calls (captcha, image processing, encryption):
+
+```bash
+apt-get update && apt-get install -y build-essential libc6-dev libgd-dev libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libfontconfig1-dev libssl-dev zlib1g-dev
+```
+
+**依赖说明 / Dependencies included:**
+
+| 包名 | 用途 | Package | Purpose |
+|------|------|---------|---------|
+| `libgd-dev` | 验证码和图像处理 (FFI: `libgd`) | Captcha and image processing (FFI: `libgd`) |
+| `libpng-dev` | PNG 图像支持 | PNG image support |
+| `libjpeg-dev` | JPEG 图像支持 | JPEG image support |
+| `libfreetype6-dev` | 验证码字体支持 | TrueType font support for captcha |
+| `libwebp-dev` | WebP 图像支持 | WebP image support |
+| `libfontconfig1-dev` | 字体配置 | Font configuration |
+| `libssl-dev` | 会话加密 (FFI: `libcrypto`) | AES encryption for sessions (FFI: `libcrypto`) |
+| `libc6-dev` | 文件操作的 C 库 | Standard C library for file operations |
+| `zlib1g-dev` | 压缩库 | Compression library |
+
+---
+
+## Quick Start / 快速开始
+
+```bash
+# 安装依赖 / Install dependencies (if not already installed)
+apt-get update && apt-get install -y build-essential libc6-dev libgd-dev libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libfontconfig1-dev libssl-dev zlib1g-dev
+
+# 启动 nginx / Start nginx
+/usr/local/web/nginx/sbin/nginx
+
+# 测试 API / Test API
+curl http://localhost:8080/
+```
+
+---
+
+## Architecture / 项目架构
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Nginx Server                               │
+│                         (OpenResty 1.27.1)                         │
+├─────────────────────────────────────────────────────────────────────┤
+│  Request Flow / 请求流程:                                            │
+│                                                                     │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    │
+│  │ rewrite  │ -> │ access   │ -> │ content  │ -> │  log     │    │
+│  │   phase  │    │   phase  │    │   phase  │    │  phase   │    │
+│  └──────────┘    └──────────┘    └──────────┘    └──────────┘    │
+│       │                │                │              │           │
+│       v                v                v              v           │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    │
+│  │ rewrite  │    │  auth    │    │ bootstrap │    │  logger  │    │
+│  │  .lua    │    │ cors     │    │  .lua     │    │  .lua    │    │
+│  │          │    │ rate_lim │    │           │    │          │    │
+│  └──────────┘    └──────────┘    └──────────┘    └──────────┘    │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                       Application Layer / 应用层                      │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                      Bootstrap / 启动入口                     │    │
+│  │                   bootstrap.lua                             │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              │                                     │
+│              ┌───────────────┼───────────────┐                    │
+│              ▼               ▼               ▼                    │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
+│  │      Router      │ │     Loader       │ │     Config       │ │
+│  │    路由分发      │ │    自动加载      │ │     配置加载     │ │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘ │
+│              │               │               │                    │
+│              └───────────────┼───────────────┘                    │
+│                              ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    Controller / 控制器                       │    │
+│  │              app/controllers/*.lua                          │    │
+│  │  (user.lua, session.lua, cache.lua, etc.)                  │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              │                                     │
+│              ┌───────────────┼───────────────┐                    │
+│              ▼               ▼               ▼                    │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
+│  │      Models      │ │      Library     │ │     Helpers     │ │
+│  │      数据模型     │ │      库函数      │ │     辅助函数    │ │
+│  │  user_model.lua  │ │  mysql, redis,   │ │  url, file,    │ │
+│  │                  │ │  session, cache │ │  string, etc.  │ │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘ │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                     External Services / 外部服务                      │
+│                                                                     │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐     │
+│  │  MySQL   │    │  Redis   │    │  Files   │    │  Cache   │     │
+│  │ :3306    │    │ :6379    │    │  System  │    │  Shared  │     │
+│  └──────────┘    └──────────┘    └──────────┘    └──────────┘     │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Request Lifecycle / 请求生命周期
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    API Request Lifecycle / API 请求生命周期               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Client                                                                   │
+│      │                                                                    │
+│      ▼                                                                    │
+│  ┌─────────────────┐                                                     │
+│  │ HTTP Request    │  GET /users/123                                     │
+│  │ localhost:8080  │                                                     │
+│  └────────┬────────┘                                                     │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 1. nginx.conf → include myresty.conf                              │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 2. rewrite phase / URL 重写阶段                                    │  │
+│  │    middleware/rewrite.lua                                          │  │
+│  │    - URL normalization                                            │  │
+│  │    - Path rewrite                                                │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 3. access phase / 访问控制阶段                                    │  │
+│  │    middleware/access.lua → Middleware:run_phase('access')         │  │
+│  │                                                                     │  │
+│  │    ┌─────────────┐  ┌─────────────┐  ┌─────────────┐               │  │
+│  │    │ auth.lua    │  │ cors.lua    │  │ rate_limit │               │  │
+│  │    │ 认证检查    │  │ 跨域处理    │  │   限流     │               │  │
+│  │    └─────────────┘  └─────────────┘  └─────────────┘               │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼ (if allowed)                                                 │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 4. content phase / 内容处理阶段                                    │  │
+│  │    content_by_lua_file → bootstrap.lua                             │  │
+│  │                                                                     │  │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
+│  │  │                    bootstrap.lua                              │  │  │
+│  │  │                                                              │  │  │
+│  │  │  ┌──────────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ Config:load()                                        │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ Middleware:setup()                                  │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ Middleware:run_phase('init')                        │   │  │  │
+│  │  │  └──────────────────────────────────────────────────────┘   │  │  │
+│  │  │                           ↓                                   │  │  │
+│  │  │  ┌──────────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ Router:match(ngx.var.uri, ngx.var.request_method)   │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │         "user:show" → {controller="user", action="show"}│ │
+│  │  │  └──────────────────────────────────────────────────────┘   │  │  │
+│  │  │                           ↓                                   │  │  │
+│  │  │  ┌──────────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ Loader:controller('user')                            │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ user_controller:new() → create instance              │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ Loader:library('request') → Loader:library('response')│ │  │  │
+│  │  │  └──────────────────────────────────────────────────────┘   │  │  │
+│  │  │                           ↓                                   │  │  │
+│  │  │  ┌──────────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ controller:before_action()                           │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ controller:show()  ←  execute user:show action      │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ response:json(data)                                  │   │  │  │
+│  │  │  │         ↓                                            │   │  │  │
+│  │  │  │ controller:after_action()                            │   │  │  │
+│  │  │  └──────────────────────────────────────────────────────┘   │  │  │
+│  │  │                                                              │  │  │
+│  │  └──────────────────────────────────────────────────────────────┘  │  │
+│  │                                                                     │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 5. header_filter / 响应头过滤                                     │  │
+│  │    middleware/header_filter.lua                                   │  │
+│  │    - Add CORS headers                                             │  │
+│  │    - Add rate limit headers                                       │  │
+│  │    - Set Content-Type                                             │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 6. body_filter / 响应体过滤                                       │  │
+│  │    middleware/body_filter.lua                                     │  │
+│  │    - Response body processing                                     │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 7. log phase / 日志记录                                          │  │
+│  │    middleware/log.lua                                             │  │
+│  │    - Request logging                                             │  │
+│  │    - Error logging                                               │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│           │                                                              │
+│           ▼                                                              │
+│  ┌─────────────┐                                                      │
+│  │ HTTP Response│  {"success":true,"data":{...}}                      │
+│  └─────────────┘                                                      │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Module Introduction / 模块功能介绍
+
+### Core Modules / 核心模块
+
+| 模块 | 文件 | 功能 | Features |
+|------|------|------|----------|
+| **Config** | `app/core/Config.lua` | 配置加载和管理 | Load and manage application configuration (MySQL, Redis, session, middleware settings) |
+| **Router** | `app/core/Router.lua` | 路由分发 | RESTful routing, URI to controller/action mapping, resource routing |
+| **Request** | `app/core/Request.lua` | 请求处理 | GET/POST/JSON parsing, file upload, input validation, client info |
+| **Response** | `app/core/Response.lua` | 响应处理 | JSON/XML/HTML responses, redirects, file downloads, pagination |
+| **Controller** | `app/core/Controller.lua` | 控制器基类 | Base controller with helpers (json, success, fail, redirect methods) |
+| **Loader** | `app/core/Loader.lua` | 自动加载 | Auto-load libraries, models, helpers, views |
+| **Model** | `app/core/Model.lua` | 数据模型 | Base model for database operations |
+| **QueryBuilder** | `app/core/QueryBuilder.lua` | 查询构建器 | Chainable query builder (select, where, join, insert, update, delete) |
+
+### Library Modules / 库模块
+
+| 模块 | 文件 | 功能 | FFI 依赖 | Dependencies |
+|------|------|------|----------|--------------|
+| **MySQL** | `app/lib/mysql.lua` | MySQL 连接池 | - | MySQL client library |
+| **Redis** | `app/lib/redis.lua` | Redis 连接池 | - | Redis client library |
+| **Session** | `app/lib/session.lua` | 会话管理 | `libcrypto` | AES-256 encrypted sessions |
+| **Cache** | `app/lib/cache.lua` | 共享字典缓存 | - | ngx.shared_dict |
+| **Limit** | `app/lib/limit.lua` | 限流控制 | C library | Rate limiting strategies |
+| **Validation** | `app/lib/validation.lua` | 数据验证 | - | 35+ validation rules |
+| **Logger** | `app/lib/logger.lua` | 日志管理 | C library | File-based logging |
+| **HTTP** | `app/lib/http.lua` | HTTP 客户端 | - | Internal HTTP requests |
+| **Crypto** | `app/lib/crypto.lua` | 加密工具 | `libcrypto` | AES-256 encryption, RAND_bytes |
+| **Test** | `app/lib/test.lua` | 测试工具 | - | Unit testing helper |
+
+### Utility Modules / 工具模块
+
+| 模块 | 文件 | 功能 |
+|------|------|------|
+| **Captcha** | `app/utils/captcha.lua` | 图形验证码生成 (FFI: `libgd`) |
+| **Image** | `app/utils/image.lua` | 图像处理：缩略图、裁剪、旋转、水印 |
+| **File** | `app/utils/file.lua` | 文件操作：复制、移动、删除 (FFI: libc) |
+
+### Middleware Modules / 中间件模块
+
+| 模块 | 文件 | 阶段 | 功能 |
+|------|------|------|------|
+| **Auth** | `app/middleware/auth.lua` | access | 用户认证和授权 |
+| **CORS** | `app/middleware/cors.lua` | header_filter | 跨域资源共享 |
+| **Logger** | `app/middleware/logger.lua` | log | 请求日志记录 |
+| **Rate Limit** | `app/middleware/rate_limit.lua` | access | API 限流 |
+
+### Nginx Middleware / Nginx 中间件
+
+| 文件 | 阶段 | 功能 |
+|------|------|------|
+| `middleware/rewrite.lua` | rewrite | URL 重写 |
+| `middleware/access.lua` | access | 访问控制入口 |
+| `middleware/header_filter.lua` | header_filter | 响应头处理 |
+| `middleware/body_filter.lua` | body_filter | 响应体处理 |
+| `middleware/log.lua` | log | 日志记录 |
+| `middleware/set.lua` | set | 变量设置 |
+
+### Controllers / 控制器
+
+| 控制器 | 功能 |
+|--------|------|
+| `welcome.lua` | 默认首页控制器 |
+| `user.lua` | 用户 CRUD 操作 |
+| `session.lua` | 会话管理 |
+| `cache.lua` | 缓存操作 |
+| `captcha.lua` | 验证码 |
+| `upload.lua` | 文件上传 |
+| `image.lua` | 图像处理 |
+| `validate.lua` | 数据验证 |
+| `rate_limit.lua` | 限流测试 |
+| `http_client.lua` | HTTP 客户端测试 |
+| `demo.lua` | 功能演示 |
+| `request_demo.lua` | 请求处理演示 |
+| `middleware_demo.lua` | 中间件演示 |
+
+---
+
+## API Reference / API 参考
+
+### Controller / 控制器
+
+控制器是所有业务控制器的基类，提供常用方法。
+
+Controller is the base class for all business controllers, providing common methods.
+
+```lua
+local BaseController = require('app.core.Controller')
+local UserController = {}
+
+function UserController:new()
+    local instance = BaseController:new()
+    instance.user_model = self:load_model('user')
+    return setmetatable(instance, { __index = UserController })
+end
+```
+
+#### 控制器方法 / Controller Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **load_model(name, alias)** | `name`: 模型名, `alias`: 别名(可选) | 模型实例 | 加载数据模型 |
+| **load_library(name)** | `name`: 库名 | 库实例 | 加载库文件 |
+| **load_helper(name)** | `name`: 助手名 | 无 | 加载辅助函数 |
+| **json(data, status)** | `data`: 数据, `status`: HTTP状态码(可选) | 无 | 返回 JSON 响应 |
+| **success(data, message)** | `data`: 数据, `message`: 消息(可选) | 无 | 返回成功响应 |
+| **fail(message, data, status)** | `message`: 错误消息, `data`: 数据(可选), `status`: 状态码(可选) | 无 | 返回失败响应 |
+| **redirect(uri, code)** | `uri`: 跳转地址, `code`: HTTP状态码(默认302) | 无 | 重定向 |
+| **paginate(data, total, page, per_page)** | `data`: 数据列表, `total`: 总数, `page`: 当前页, `per_page`: 每页数 | 无 | 返回分页响应 |
+| **is_ajax()** | 无 | boolean | 判断是否为 AJAX 请求 |
+| **is_post()** | 无 | boolean | 判断是否为 POST 请求 |
+| **is_get()** | 无 | boolean | 判断是否为 GET 请求 |
+| **get_post(key, default)** | `key`: 键名, `default`: 默认值(可选) | 值 | 获取 POST 参数 |
+| **get_get(key, default)** | `key`: 键名, `default`: 默认值(可选) | 值 | 获取 GET 参数 |
+| **uri_segment(n)** | `n`: 段索引(从1开始) | 字符串 | 获取 URL 片段 |
+| **site_url(uri)** | `uri`: 相对路径 | 完整URL | 生成站点URL |
+
+---
+
+### Request / 请求处理
+
+Request 模块用于解析 HTTP 请求。
+
+Request module is used to parse HTTP requests.
+
+```lua
+local Request = require('app.core.Request')
+local req = Request:new()
+req:fetch()
+```
+
+#### Request 方法 / Request Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **fetch(force)** | `force`: 是否强制刷新(可选,默认false) | self | 解析请求数据 |
+| **param(name, default)** | `name`: 参数名, `default`: 默认值(可选) | 值 | 获取参数(GET/POST/JSON合并) |
+| **get_input()** | 无 | table | 获取所有输入 |
+| **get_post(key, default)** | `key`: 键名, `default`: 默认值 | 值 | 获取 POST 参数 |
+| **get_input()** | 无 | table | 获取 GET 参数 |
+| **json_input()** | 无 | table | 获取 JSON Body |
+| **only(...)** | `...`: 字段名列表 | table | 只获取指定字段 |
+| **except(...)** | `...`: 要排除的字段名列表 | table | 排除指定字段 |
+| **file(name)** | `name`: 文件字段名 | table | 获取上传文件信息 |
+| **has(name)** | `name`: 参数名 | boolean | 检查参数是否存在 |
+| **is_ajax()** | 无 | boolean | 检查是否为 AJAX 请求 |
+| **is_json()** | 无 | boolean | 检查是否为 JSON 请求 |
+| **is_post()** | 无 | boolean | 检查是否为 POST 方法 |
+| **is_get()** | 无 | boolean | 检查是否为 GET 方法 |
+| **segment(n)** | `n`: 索引 | 字符串 | 获取 URI 片段 |
+| **ip()** | 无 | 字符串 | 获取客户端 IP |
+| **user_agent()** | 无 | 字符串 | 获取 User-Agent |
+| **cookie(name)** | `name`: Cookie 名 | 字符串 | 获取 Cookie 值 |
+| **header(name)** | `name`: 头部名 | 字符串 | 获取请求头部 |
+
+#### 请求数据示例 / Request Data Example
+
+```lua
+-- GET 请求: /users?name=john&age=25
+req:get        -- { name = "john", age = "25" }
+req:segment(1) -- "users"
+
+-- POST 请求 (JSON): {"name":"john","email":"john@example.com"}
+req:post       -- { name = "john", email = "john@example.com" }
+req:json       -- { name = "john", email = "john@example.com" }
+req:all_input  -- 合并后的所有输入
+```
+
+---
+
+### Response / 响应处理
+
+Response 模块用于构建 HTTP 响应。
+
+Response module is used to build HTTP responses.
+
+```lua
+local Response = require('app.core.Response')
+local res = Response:new()
+```
+
+#### Response 方法 / Response Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **json(data, status)** | `data`: 数据, `status`: 状态码(可选) | self | 设置 JSON 响应 |
+| **jsonp(data, callback, status)** | `data`: 数据, `callback`: 回调函数名, `status`: 状态码 | self | 设置 JSONP 响应 |
+| **xml(data, status)** | `data`: 数据(table或字符串), `status`: 状态码 | self | 设置 XML 响应 |
+| **html(content, status)** | `content`: HTML内容, `status`: 状态码 | self | 设置 HTML 响应 |
+| **text(content, status)** | `content`: 文本内容, `status`: 状态码 | self | 设置纯文本响应 |
+| **redirect(uri, code)** | `uri`: 跳转地址, `code`: 状态码(默认302) | 无 | 重定向 |
+| **success(data, message)** | `data`: 数据, `message`: 消息 | self | 成功响应 |
+| **fail(message, data, status)** | `message`: 错误消息, `data`: 数据, `status`: 状态码 | self | 失败响应 |
+| **paginate(data, total, page, per_page)** | `data`: 数据, `total`: 总数, `page`: 页码, `per_page`: 每页数 | self | 分页响应 |
+| **set_status(status)** | `status`: HTTP状态码 | self | 设置状态码 |
+| **set_header(name, value)** | `name`: 头部名, `value`: 值 | self | 设置响应头部 |
+| **set_headers(headers)** | `headers`: 头部表 | self | 批量设置响应头部 |
+| **send()** | 无 | 无 | 发送响应 |
+| **not_found(message)** | `message`: 错误消息 | self | 404 响应 |
+| **error(message, status)** | `message`: 错误消息, `status`: 状态码 | self | 错误响应 |
+| **download(file_path, file_name)** | `file_path`: 文件路径, `file_name`: 下载文件名 | self | 文件下载 |
+
+#### 响应示例 / Response Examples
+
+```lua
+-- JSON 响应
+res:json({ success = true, data = { id = 1, name = "John" } })
+res:send()
+
+-- 成功响应
+res:success({ id = 1 }, "操作成功")
+res:send()
+
+-- 失败响应
+res:fail("参数错误", { field = "email" }, 400)
+res:send()
+
+-- 分页响应
+res:paginate(users, 100, 1, 10)
+res:send()
+
+-- 重定向
+res:redirect("/home")
+```
+
+---
+
+### Session / 会话管理
+
+Session 模块提供基于加密 Cookie 的会话管理。
+
+Session module provides encrypted cookie-based session management.
+
+```lua
+local Session = require('app.lib.session')
+local session = Session:new()
+session:start()
+```
+
+#### Session 方法 / Session Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **new(options)** | `options`: 配置选项 | 实例 | 创建会话实例 |
+| **start()** | 无 | self | 启动会话 |
+| **get(key)** | `key`: 键名 | 值 | 获取会话值 |
+| **set(key, value)** | `key`: 键名, `value`: 值 | self | 设置会话值 |
+| **has(key)** | `key`: 键名 | boolean | 检查键是否存在 |
+| **remove(key)** | `key`: 键名 | self | 删除键 |
+| **clear()** | 无 | self | 清空会话 |
+| **get_id()** | 无 | 字符串 | 获取会话 ID |
+| **is_new_session()** | 无 | boolean | 是否为新会话 |
+| **count()** | 无 | 数字 | 会话数据数量 |
+| **get_all_data()** | 无 | table | 获取所有会话数据 |
+| **save()** | 无 | self | 保存会话 |
+| **destroy()** | 无 | self | 销毁会话 |
+| **regenerate_id()** | 无 | self | 重新生成会话ID |
+
+#### Session 配置选项 / Session Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `cookie_name` | "session" | Cookie 名称 |
+| `cookie_path` | "/" | Cookie 路径 |
+| `cookie_max_age` | 86400 | Cookie 有效期(秒) |
+
+#### Session 使用示例 / Session Example
+
+```lua
+local session = Session:new()
+session:start()
+
+-- 存储用户信息
+session:set('user_id', 123)
+session:set('username', 'john')
+
+-- 获取用户信息
+local user_id = session:get('user_id')
+local username = session:get('username')
+
+-- 检查是否存在
+if session:has('user_id') then
+    -- 用户已登录
+end
+
+-- 销毁会话
+session:destroy()
+```
+
+---
+
+### Cache / 缓存管理
+
+Cache 模块基于 Nginx shared_dict 提供高性能缓存。
+
+Cache module provides high-performance caching based on Nginx shared_dict.
+
+```lua
+local Cache = require('app.lib.cache')
+local cache = Cache:new({
+    dict_name = 'my_resty_cache',
+    default_ttl = 3600,
+    prefix = 'cache:'
+})
+```
+
+#### Cache 方法 / Cache Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **new(options)** | `options`: 配置选项 | 实例 | 创建缓存实例 |
+| **get(key)** | `key`: 缓存键 | 值 | 获取缓存 |
+| **get_multi(...)** | `...`: 键列表 | table | 批量获取缓存 |
+| **set(key, value, ttl)** | `key`: 键, `value`: 值, `ttl`: 过期时间(秒) | boolean | 设置缓存 |
+| **add(key, value, ttl)** | 同上 | boolean | 仅当键不存在时设置 |
+| **replace(key, value, ttl)** | 同上 | boolean | 仅当键存在时替换 |
+| **delete(key)** | `key`: 键 | boolean | 删除缓存 |
+| **delete_multi(...)** | `...`: 键列表 | boolean | 批量删除 |
+| **delete_all()** | 无 | boolean | 清空所有缓存 |
+| **delete_expired()** | 无 | boolean | 删除过期缓存 |
+| **exists(key)** | `key`: 键 | boolean | 检查缓存是否存在 |
+| **incr(key, step)** | `key`: 键, `step`: 增量 | number | 增值 |
+| **decr(key, step)** | `key`: 键, `step`: 减量 | number | 减值 |
+| **ttl(key)** | `key`: 键 | number | 获取剩余生存时间 |
+| **stats()** | 无 | table | 获取缓存统计 |
+
+#### Cache 使用示例 / Cache Example
+
+```lua
+local cache = Cache:new()
+
+-- 设置缓存
+cache:set('user:123', { name = 'John', age = 25 }, 3600)
+
+-- 获取缓存
+local user = cache:get('user:123')
+
+-- 检查是否存在
+if cache:exists('user:123') then
+    -- 缓存存在
+end
+
+-- 删除缓存
+cache:delete('user:123')
+
+-- 批量操作
+cache:set('key1', 'value1')
+cache:set('key2', 'value2')
+local values = cache:get_multi('key1', 'key2')
+```
+
+---
+
+### Validation / 数据验证
+
+Validation 模块提供 35+ 数据验证规则。
+
+Validation module provides 35+ data validation rules.
+
+```lua
+local Validation = require('app.lib.validation')
+local validator = Validation:new()
+```
+
+#### 验证规则 / Validation Rules
+
+| 规则 | 参数 | 说明 |
+|------|------|------|
+| `required` | 无 | 必填 |
+| `optional` | 无 | 可选 |
+| `string` | 无 | 必须是字符串 |
+| `number` | 无 | 必须是数字 |
+| `integer` | 无 | 必须是整数 |
+| `boolean` | 无 | 必须是布尔值 |
+| `email` | 无 | 有效邮箱格式 |
+| `url` | 无 | 有效 URL 格式 |
+| `ip` | 无 | 有效 IP 地址 |
+| `min:value` | `value`: 最小值 | 最小值限制 |
+| `max:value` | `value`: 最大值 | 最大值限制 |
+| `length_min:value` | `value`: 最小长度 | 最小长度限制 |
+| `length_max:value` | `value`: 最大长度 | 最大长度限制 |
+| `length:value` | `value`: 固定长度 | 固定长度限制 |
+| `regex:pattern` | `pattern`: 正则表达式 | 正则匹配 |
+| `in:value1,value2` | 值列表 | 必须在列表中 |
+| `not_in:value1,value2` | 值列表 | 不能在列表中 |
+| `date` | 无 | 有效日期格式 |
+| `alpha` | 无 | 只能是字母 |
+| `alpha_num` | 无 | 字母和数字 |
+| `alpha_dash` | 无 | 字母、数字、下划线 |
+| `match:field` | `field`: 字段名 | 与字段匹配 |
+| `different:field` | `field`: 字段名 | 与字段不同 |
+| `unique:table` | `table`: 表名 | 数据库中唯一 |
+| `exists:table` | `table`: 表名 | 数据库中存在 |
+| `array` | 无 | 必须是数组 |
+| `image` | 无 | 必须是图片 |
+| `mime_type:type1,type2` | MIME类型列表 | MIME 类型限制 |
+
+#### Validation 方法 / Validation Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **new(config)** | `config`: 配置 | 实例 | 创建验证器 |
+| **make(data, rules)** | `data`: 数据, `rules`: 规则 | self | 创建验证实例 |
+| **set_data(data)** | `data`: 数据 | self | 设置验证数据 |
+| **set_rules(rules)** | `rules`: 规则 | self | 设置验证规则 |
+| **with_messages(messages)** | `messages`: 错误消息 | self | 设置自定义消息 |
+| **with_labels(labels)** | `labels`: 字段标签 | self | 设置字段标签 |
+| **bail_on_first_fail(bail)** | `bail`: 是否遇错即停 | self | 设置遇错即停 |
+| **validate()** | 无 | boolean | 执行验证 |
+| **fails()** | 无 | boolean | 检查是否失败 |
+| **passes()** | 无 | boolean | 检查是否通过 |
+| **errors()** | 无 | table | 获取错误信息 |
+| **get_error(field)** | `field`: 字段名 | 字符串 | 获取字段错误 |
+
+#### Validation 使用示例 / Validation Example
+
+```lua
+local validator = Validation:new()
+local data = {
+    email = "john@example.com",
+    password = "password123",
+    confirm_password = "password123",
+    age = 25
+}
+
+local rules = {
+    email = { "required", "email" },
+    password = { "required", "length_min:6" },
+    confirm_password = { "required", "match:password" },
+    age = { "required", "number", "min:18", "max:120" }
+}
+
+validator:make(data, rules)
+
+if validator:validate() then
+    -- 验证通过
+else
+    local errors = validator:errors()
+    -- 处理错误
+end
+```
+
+---
+
+### Router / 路由
+
+Router 模块负责将 URL 映射到控制器方法。
+
+Router module maps URLs to controller methods.
+
+```lua
+local Router = require('app.core.Router')
+local route = Router:new()
+```
+
+#### 路由方法 / Router Methods
+
+| 方法 | 参数 | 说明 |
+|------|------|------|
+| **get(path, handler)** | `path`: 路径, `handler`: 处理器 | GET 请求 |
+| **post(path, handler)** | `path`: 路径, `handler`: 处理器 | POST 请求 |
+| **put(path, handler)** | `path`: 路径, `handler`: 处理器 | PUT 请求 |
+| **delete(path, handler)** | `path`: 路径, `handler`: 处理器 | DELETE 请求 |
+| **patch(path, handler)** | `path`: 路径, `handler`: 处理器 | PATCH 请求 |
+| **options(path, handler)** | `path`: 路径, `handler`: 处理器 | OPTIONS 请求 |
+| **any(path, handler)** | `path`: 路径, `handler`: 处理器 | 任意方法 |
+| **match(method, path)** | `method`: 方法, `path`: 路径 | 匹配路由 |
+| **resource(name, controller)** | `name`: 资源名, `controller`: 控制器 | RESTful 资源路由 |
+| **group(options, callback)** | `options`: 分组配置, `callback`: 回调 | 路由分组 |
+| **prefix(prefix)** | `prefix`: 前缀 | 设置路由前缀 |
+
+#### 路由参数 / Route Parameters
+
+| 模式 | 说明 | 示例 |
+|------|------|------|
+| `{id}` | 必填参数 | `/users/{id}` → `/users/123` |
+| `{id?}` | 可选参数 | `/posts/{slug?}` → `/posts/` 或 `/posts/abc` |
+| `{name:pattern}` | 带正则的参数 | `{id:[0-9]+}` |
+
+#### Router 使用示例 / Router Example
+
+```lua
+-- 静态路由
+route:get('/users', 'user:list')
+route:post('/users', 'user:create')
+route:get('/users/{id}', 'user:show')
+route:put('/users/{id}', 'user:update')
+route:delete('/users/{id}', 'user:destroy')
+
+-- 参数路由
+route:get('/posts/{slug}', 'post:view')
+route:get('/users/{id}/posts/{post_id}', 'user_post:show')
+
+-- RESTful 资源路由
+route:resource('users', 'user')
+-- 自动生成:
+-- GET    /users           -> user:index
+-- GET    /users/new       -> user:new
+-- GET    /users/{id}      -> user:show
+-- GET    /users/{id}/edit -> user:edit
+-- POST   /users           -> user:create
+-- PUT    /users/{id}      -> user:update
+-- DELETE /users/{id}      -> user:destroy
+
+-- 路由分组
+route:group({ prefix = '/api/v1', middleware = { 'auth' } }, function()
+    route:get('/users', 'api_user:list')
+    route:get('/orders', 'api_order:list')
+end)
+```
+
+---
+
+### Loader / 自动加载
+
+Loader 模块提供模块自动加载功能。
+
+Loader module provides automatic module loading.
+
+```lua
+local Loader = require('app.core.Loader')
+```
+
+#### Loader 方法 / Loader Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **library(name)** | `name`: 库名 | 库实例 | 加载库 |
+| **model(name)** | `name`: 模型名 | 模型实例 | 加载模型 |
+| **controller(name)** | `name`: 控制器名 | 控制器实例 | 加载控制器 |
+| **helper(name)** | `name`: 助手名 | table | 加载助手函数 |
+| **view(template, data)** | `template`: 模板, `data`: 数据 | 渲染结果 | 加载视图 |
+| **config(name)** | `name`: 配置名 | table | 加载配置 |
+
+---
+
+### Config / 配置管理
+
+Config 模块加载和管理应用配置。
+
+Config module loads and manages application configuration.
+
+```lua
+local Config = require('app.core.Config')
+Config.load()
+```
+
+#### Config 方法 / Config Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **load()** | 无 | table | 加载配置 |
+| **get(key)** | `key`: 配置键 | 值 | 获取配置 |
+| **get_all()** | 无 | table | 获取全部配置 |
+| **reload()** | 无 | boolean | 重新加载 |
+| **get_mysql()** | 无 | table | 获取 MySQL 配置 |
+| **get_redis()** | 无 | table | 获取 Redis 配置 |
+| **get_session()** | 无 | table | 获取会话配置 |
+
+#### Config 配置结构 / Config Structure
+
+```lua
+-- app/config/config.lua
+return {
+    app = {
+        host = '0.0.0.0',
+        port = 8080,
+        base_url = '',
+        log_threshold = 4,
+    },
+    mysql = {
+        host = '127.0.0.1',
+        port = 3306,
+        user = 'root',
+        password = '',
+        database = '',
+        pool_size = 100,
+    },
+    redis = {
+        host = '127.0.0.1',
+        port = 6379,
+        password = '',
+        pool_size = 100,
+    },
+    session = {
+        cookie_name = 'session',
+        cookie_max_age = 86400,
+    },
+    autoload = {},  -- 自动加载的模型
+    middleware = {
+        { name = 'cors', phase = 'header_filter' },
+        { name = 'rate_limit', phase = 'access' },
+    },
+}
+```
+
+---
+
+### Middleware / 中间件
+
+Middleware 模块管理系统中间件。
+
+Middleware module manages application middleware.
+
+```lua
+local Middleware = require('app.middleware')
+```
+
+#### Middleware 方法 / Middleware Methods
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| **setup(config)** | `config`: 中间件配置 | 无 | 设置中间件 |
+| **run(name, options)** | `name`: 中间件名, `options`: 选项 | boolean | 运行中间件 |
+| **run_phase(phase, options)** | `phase`: 阶段, `options`: 选项 | boolean | 运行阶段中间件 |
+| **register(name, phase, handler)** | `name`: 名, `phase`: 阶段, `handler`: 处理器 | self | 注册中间件 |
+| **disable(name)** | `name`: 中间件名 | self | 禁用中间件 |
+| **enable(name)** | `name`: 中间件名 | self | 启用中间件 |
+| **list()** | 无 | table | 列出所有中间件 |
+
+#### 内置中间件 / Built-in Middleware
+
+| 中间件 | 阶段 | 功能 |
+|--------|------|------|
+| `auth` | access | 用户认证 |
+| `cors` | header_filter | 跨域处理 |
+| `rate_limit` | access | 请求限流 |
+| `logger` | log | 日志记录 |
+
+---
+
+## Configuration / 配置说明
+
+配置文件位于 `app/config/config.lua`，包含应用的所有可配置参数。
+
+Configuration file is located at `app/config/config.lua`, containing all configurable parameters.
+
+### 配置文件结构 / Config File Structure
+
+```lua
+-- app/config/config.lua
+return {
+    -- 应用基础配置
+    app = { ... },
+    -- MySQL 数据库配置
+    mysql = { ... },
+    -- Redis 配置
+    redis = { ... },
+    -- 文件上传配置
+    upload = { ... },
+    -- 图像处理配置
+    image = { ... },
+    -- 验证码配置
+    captcha = { ... },
+    -- 会话配置
+    session = { ... },
+    -- 日志配置
+    logger = { ... },
+    -- 限流配置
+    limit = { ... },
+    -- 数据验证配置
+    validation = { ... },
+    -- 中间件配置
+    middleware = { ... }
+}
+```
+
+---
+
+### App / 应用基础配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `base_url` | `''` | 应用基础 URL，留空自动生成 |
+| `index_page` | `'index.php'` | 入口文件名 |
+| `uri_protocol` | `'PATH_INFO'` | URI 解析协议 |
+| `url_suffix` | `''` | URL 后缀，如 `.html` |
+| `url_protocol` | `'http'` | URL 协议 |
+| `host` | `'localhost'` | 服务监听地址 |
+| `port` | `8080` | 服务监听端口 |
+| `charset` | `'UTF-8'` | 字符编码 |
+| `app_path` | 应用路径 | 应用根目录 |
+| `cache_path` | 缓存目录 | 缓存文件路径 |
+| `log_path` | 日志目录 | 日志文件路径 |
+| `log_threshold` | `4` | 日志级别 (1-5) |
+| `autoload` | 自动加载列表 | 启动时自动加载的模块 |
+
+---
+
+### MySQL / 数据库配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `host` | `'127.0.0.1'` | 数据库地址 |
+| `port` | `3306` | 数据库端口 |
+| `user` | `'root'` | 用户名 |
+| `password` | `''` | 密码 |
+| `database` | `''` | 数据库名 |
+| `charset` | `'utf8mb4'` | 字符集 |
+| `pool_size` | `100` | 连接池大小 |
+| `idle_timeout` | `10000` | 空闲超时(ms) |
+
+---
+
+### Redis / 缓存配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `host` | `'127.0.0.1'` | Redis 地址 |
+| `port` | `6379` | Redis 端口 |
+| `password` | `''` | 密码 |
+| `db` | `0` | 数据库编号 |
+| `pool_size` | `100` | 连接池大小 |
+| `idle_timeout` | `10000` | 空闲超时(ms) |
+
+---
+
+### Upload / 文件上传配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `path` | 上传目录 | 文件上传保存路径 |
+| `max_size` | `10` | 最大上传大小(MB) |
+| `allowed_types` | 扩展名列表 | 允许的文件扩展名 |
+| `allowed_mimes` | MIME类型列表 | 允许的 MIME 类型 |
+| `images_only` | `false` | 是否仅允许图片 |
+| `preserve_extension` | `true` | 是否保留原始扩展名 |
+| `sanitize_filename` | `true` | 是否净化文件名 |
+| `create_subdirs` | `true` | 是否创建子目录 |
+
+```lua
+-- 默认允许的文件类型
+allowed_types = {
+    'jpg', 'jpeg', 'png', 'gif', 'webp',  -- 图片
+    'pdf',                                 -- 文档
+    'doc', 'docx',                         -- Word
+    'xls', 'xlsx',                         -- Excel
+    'zip'                                  -- 压缩包
+}
+```
+
+---
+
+### Image / 图像处理配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `quality` | `85` | JPEG 质量 (1-100) |
+| `thumbnail_size` | `150` | 缩略图尺寸 |
+| `avatar_size` | `200` | 头像尺寸 |
+| `medium_size` | `800` | 中等尺寸 |
+| `large_size` | `1920` | 大尺寸 |
+| `webp_quality` | `80` | WebP 质量 |
+| `preserve_format` | `true` | 是否保留原始格式 |
+
+---
+
+### Captcha / 验证码配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `length` | `5` | 验证码字符长度 |
+| `expires` | `300` | 有效期(秒) |
+| `width` | `120` | 图片宽度 |
+| `height` | `80` | 图片高度 |
+
+**安全说明**: 验证码加密密钥与会话使用相同的 `session.secret_key`，无需单独配置。
+
+---
+
+### Session / 会话配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `cookie_name` | `'myresty_session'` | Cookie 名称 |
+| `secret_key` | 32位十六进制密钥 | AES-256 加密密钥 |
+| `expires` | `86400` | 会话有效期(秒) |
+| `cookie_path` | `'/'` | Cookie 路径 |
+| `cookie_domain` | `''` | Cookie 域名 |
+| `cookie_secure` | `true` | 仅 HTTPS 传输 |
+| `cookie_httponly` | `true` | 禁止 JS 访问 |
+| `cookie_samesite` | `'Strict'` | SameSite 策略 |
+
+**安全警告**:
+- `secret_key` 必须保持机密，泄露后攻击者可伪造任意 session
+- 生成新密钥命令: `openssl rand -hex 16`
+- 修改密钥会导致所有现有 session 失效
+
+**配置优先级**:
+1. 环境变量 `SESSION_SECRET` (最高)
+2. 环境变量 `MYRESTY_SESSION_SECRET`
+3. `config.session.secret_key`
+
+---
+
+### Logger / 日志配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `level` | `2` | 日志级别 (1-5) |
+| `handlers.console` | `true` | 控制台输出 |
+| `handlers.file` | `true` | 文件输出 |
+| `log_dir` | 日志目录 | 日志文件路径 |
+| `max_size` | `10485760` | 单文件最大(bytes) |
+| `max_files` | `5` | 保留文件数 |
+| `async` | `true` | 异步写入 |
+
+**日志级别**:
+| 级别 | 值 | 说明 |
+|------|------|------|
+| DEBUG | 1 | 调试信息 |
+| INFO | 2 | 普通信息 |
+| WARNING | 3 | 警告 |
+| ERROR | 4 | 错误 |
+| CRITICAL | 5 | 严重错误 |
+
+---
+
+### Limit / 限流配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `dict_name` | `"limit_dict"` | 共享字典名称 |
+| `strategy` | `"sliding_window"` | 限流策略 |
+| `default_limit` | `100` | 默认请求限制 |
+| `default_window` | `60` | 默认时间窗口(秒) |
+| `default_burst` | `0` | 默认突发值 |
+| `action` | `"deny"` | 超出限制动作 |
+| `redirect_url` | `"/rate-limited"` | 跳转地址 |
+| `response_status` | `429` | HTTP 状态码 |
+| `response_message` | `"Too Many Requests"` | 响应消息 |
+| `log_blocked` | `true` | 记录被拦截请求 |
+
+#### 限流策略 / Limit Strategies
+
+| 策略 | 说明 |
+|------|------|
+| `sliding_window` | 滑动窗口 |
+| `fixed_window` | 固定窗口 |
+| `token_bucket` | 令牌桶 |
+| `leaky_bucket` | 漏桶 |
+
+#### 限流区域 / Limit Zones
+
+| 区域 | 说明 |
+|------|------|
+| `api` | API 接口限流 |
+| `login` | 登录接口限流 |
+| `upload` | 文件上传限流 |
+| `default` | 默认限流 |
+
+```lua
+limit = {
+    zones = {
+        api = { limit = 60, window = 60, burst = 10 },
+        login = { limit = 5, window = 300, burst = 0 },
+        upload = { limit = 10, window = 60, burst = 2 },
+        default = { limit = 100, window = 60, burst = 20 }
+    }
+}
+```
+
+---
+
+### Validation / 数据验证配置
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `bail` | `true` | 遇错即停 |
+| `throw_exception` | `false` | 抛出异常 |
+| `default_messages` | 消息模板 | 默认错误消息 |
+| `default_labels` | 字段标签 | 默认字段标签 |
+
+#### 默认错误消息 / Default Messages
+
+| 规则 | 默认消息 |
+|------|----------|
+| `required` | The :field field is required. |
+| `email` | The :field must be a valid email address. |
+| `min` | The :field must be at least :param. |
+| `max` | The :field must not exceed :param. |
+| `length_min` | The :field must be at least :param characters. |
+| `length_max` | The :field must not exceed :param characters. |
+| `numeric` | The :field must be a numeric value. |
+| `integer` | The :field must be an integer. |
+| `alpha` | The :field may only contain letters. |
+| `alpha_num` | The :field may only contain letters and numbers. |
+| `alpha_dash` | The :field may only contain letters, numbers, and dashes. |
+| `in` | The :field must be one of: :param. |
+| `match` | The :field must match :param. |
+| `date` | The :field must be a valid date. |
+| `url` | The :field must be a valid URL. |
+| `regex` | The :field format is invalid. |
+| `unique` | The :field has already been taken. |
+
+#### 默认字段标签 / Default Labels
+
+| 字段 | 标签 |
+|------|------|
+| `username` | Username |
+| `email` | Email Address |
+| `password` | Password |
+| `password_confirmation` | Password Confirmation |
+| `name` | Name |
+| `title` | Title |
+| `description` | Description |
+| `phone` | Phone Number |
+| `age` | Age |
+| `price` | Price |
+| `quantity` | Quantity |
+
+---
+
+### Middleware / 中间件配置
+
+中间件配置是一个数组，每个元素包含：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 中间件名称 |
+| `phase` | string | 执行阶段 |
+| `options` | table | 中间件选项 |
+| `routes` | table | 应用的路由 |
+| `exclude` | table | 排除的路由 |
+
+#### 内置中间件 / Built-in Middleware
+
+| 中间件 | 阶段 | 功能 |
+|--------|------|------|
+| `logger` | log | 请求日志 |
+| `cors` | header_filter | 跨域处理 |
+| `rate_limit` | access | 请求限流 |
+| `auth` | access | 用户认证 |
+
+#### CORS 中间件选项 / CORS Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `origin` | `'*'` | 允许的源 |
+| `methods` | 方法列表 | 允许的 HTTP 方法 |
+| `credentials` | `true` | 是否允许凭证 |
+| `max_age` | `86400` | 预检缓存时间(秒) |
+
+#### Rate Limit 中间件选项 / Rate Limit Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `zone` | `'default'` | 限流区域 |
+| `headers` | `true` | 输出限流头 |
+| `log_blocked` | `true` | 记录被拦截 |
+
+#### Auth 中间件选项 / Auth Options
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `mode` | `'session'` | 认证模式 |
+| `allow_guest` | `true` | 允许游客访问 |
+
+#### 中间件配置示例 / Middleware Config Example
+
+```lua
+middleware = {
+    -- 日志中间件
+    {
+        name = 'logger',
+        phase = 'log',
+        options = {
+            level = 'info',
+            format = 'combined',
+            request_id = true,
+            timing = true,
+            exclude_paths = {'/health', '/favicon.ico'}
+        }
+    },
+    -- CORS 中间件
+    {
+        name = 'cors',
+        phase = 'header_filter',
+        options = {
+            origin = '*',
+            methods = {'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'},
+            credentials = true,
+            max_age = 86400
+        }
+    },
+    -- 限流中间件
+    {
+        name = 'rate_limit',
+        phase = 'access',
+        options = {
+            zone = 'default',
+            headers = true,
+            log_blocked = true
+        },
+        routes = {'/api/*', '/upload/*'}
+    },
+    -- 认证中间件
+    {
+        name = 'auth',
+        phase = 'access',
+        options = {
+            mode = 'session',
+            allow_guest = true
+        },
+        exclude = {'/health', '/captcha', '/static/*', '/middleware/*'}
+    }
+}
+```
+
+---
+
+## Project Structure / 项目结构
+├── app/                           # 应用核心代码
+│   ├── core/                      # 核心类模块
+│   │   ├── Config.lua             # 配置加载器
+│   │   ├── Controller.lua         # 控制器基类
+│   │   ├── Loader.lua             # 自动加载器
+│   │   ├── Model.lua              # 数据模型基类
+│   │   ├── QueryBuilder.lua       # 查询构建器
+│   │   ├── Request.lua            # 请求处理
+│   │   ├── Response.lua           # 响应处理
+│   │   └── Router.lua             # 路由分发
+│   │
+│   ├── controllers/               # 控制器 (18个)
+│   │   ├── welcome.lua            # 默认首页
+│   │   ├── user.lua              # 用户管理
+│   │   ├── session.lua           # 会话管理
+│   │   ├── cache.lua             # 缓存控制
+│   │   ├── captcha.lua           # 验证码
+│   │   ├── upload.lua            # 文件上传
+│   │   ├── image.lua             # 图像处理
+│   │   ├── validate.lua           # 数据验证
+│   │   ├── rate_limit.lua        # 限流控制
+│   │   ├── http_client.lua       # HTTP 客户端
+│   │   ├── demo.lua              # 功能演示
+│   │   ├── request_demo.lua      # 请求演示
+│   │   ├── middleware_demo.lua   # 中间件演示
+│   │   ├── request_test.lua      # 请求测试
+│   │   └── example.lua           # 示例控制器
+│   │
+│   ├── lib/                       # 库文件 (11个)
+│   │   ├── mysql.lua             # MySQL 客户端
+│   │   ├── redis.lua             # Redis 客户端
+│   │   ├── session.lua           # 会话管理
+│   │   ├── cache.lua             # 缓存管理
+│   │   ├── limit.lua             # 限流控制
+│   │   ├── validation.lua        # 数据验证
+│   │   ├── logger.lua            # 日志管理
+│   │   ├── http.lua              # HTTP 客户端
+│   │   ├── crypto.lua            # 加密工具
+│   │   ├── test.lua             # 测试工具
+│   │   └── validator.lua         # 验证辅助
+│   │
+│   ├── middleware/                # 应用中间件
+│   │   ├── auth.lua             # 认证中间件
+│   │   ├── cors.lua             # 跨域中间件
+│   │   ├── logger.lua           # 日志中间件
+│   │   └── rate_limit.lua       # 限流中间件
+│   │
+│   ├── helpers/                   # 辅助函数
+│   │   ├── url_helper.lua        # URL 辅助
+│   │   ├── file_helper.lua       # 文件辅助
+│   │   ├── string_helper.lua     # 字符串辅助
+│   │   ├── captcha_helper.lua    # 验证码辅助
+│   │   ├── request_helper.lua    # 请求辅助
+│   │   └── query_helper.lua      # 查询辅助
+│   │
+│   ├── utils/                     # 工具函数
+│   │   ├── captcha.lua          # 验证码生成 (FFI)
+│   │   ├── image.lua            # 图像处理 (FFI)
+│   │   ├── file.lua             # 文件操作 (FFI)
+│   │   ├── helper.lua           # 通用辅助
+│   │   └── test.lua             # 测试工具
+│   │
+│   ├── models/                    # 数据模型
+│   │   └── user_model.lua       # 用户模型
+│   │
+│   ├── routes/                    # 路由配置
+│   │   └── routes.lua            # 路由定义
+│   │
+│   ├── config/                    # 应用配置
+│   │   └── config.lua           # 主配置
+│   │
+│   └── middleware.lua            # 中间件管理
+│
+├── middleware/                    # Nginx 中间件
+│   ├── rewrite.lua              # URL 重写
+│   ├── access.lua               # 访问控制
+│   ├── header_filter.lua        # 响应头过滤
+│   ├── body_filter.lua          # 响应体过滤
+│   ├── log.lua                  # 日志记录
+│   └── set.lua                  # 变量设置
+│
+├── nginx/conf/                   # Nginx 配置模板
+│   ├── myresty.conf             # MyResty 服务器配置
+│   ├── nginx.conf               # 主配置模板
+│   └── fcgi.conf                # FastCGI 配置
+│
+├── config/                       # 配置目录
+│   └── validation/              # 验证规则配置
+│       ├── users.lua            # 用户验证规则
+│       ├── products.lua         # 产品验证规则
+│       ├── orders.lua           # 订单验证规则
+│       └── common.lua           # 通用验证规则
+│
+├── tests/                        # 测试套件
+│   ├── integration/             # 集成测试
+│   │   ├── test.sh             # 测试脚本
+│   │   └── README.md           # 测试说明
+│   │
+│   ├── unit/                    # 单元测试
+│   │   ├── all.lua             # 测试入口
+│   │   ├── run.lua             # 测试运行器
+│   │   ├── config_spec.lua     # 配置测试
+│   │   ├── request_spec.lua    # 请求测试
+│   │   ├── response_spec.lua   # 响应测试
+│   │   ├── router_spec.lua     # 路由测试
+│   │   ├── validation_spec.lua  # 验证测试
+│   │   └── ...
+│   │
+│   └── api.lua                  # API 测试
+│
+├── fonts/                        # 字体文件
+├── logs/                        # 日志目录
+├── static/                      # 静态文件
+│
+├── bootstrap.lua                # 应用启动入口
+├── init.lua                     # 初始化脚本
+├── init_worker.lua              # Worker 初始化
+├── generate_readme_pdf.py       # PDF 生成脚本
+├── generate_pdf.py              # PDF 生成工具
+└── README.md                    # 项目说明
+```
+
+---
+
+## Testing / 测试
+
+MyResty 框架提供完整的测试体系，包括单元测试和集成测试。
+
+MyResty framework provides a complete testing system, including unit tests and integration tests.
+
+---
+
+### Unit Tests / 单元测试
+
+单元测试位于 `tests/unit/` 目录，用于测试框架核心模块。
+
+Unit tests are located in `tests/unit/`, used to test framework core modules.
+
+#### 单元测试目录结构 / Unit Test Structure
+
+```
+tests/unit/
+├── all.lua              # 测试入口，运行所有测试套件
+├── run.lua              # 测试运行器
+├── config_spec.lua      # 配置模块测试
+├── router_spec.lua      # 路由模块测试
+├── helper_spec.lua      # 辅助函数测试
+├── request_spec.lua     # 请求模块测试
+├── response_spec.lua    # 响应模块测试
+├── query_builder_spec.lua  # 查询构建器测试
+├── cache_spec.lua       # 缓存模块测试
+├── session_spec.lua     # 会话模块测试
+├── http_spec.lua        # HTTP 客户端测试
+└── ...
+```
+
+#### 测试工具 / Test Framework
+
+测试框架位于 `app/utils/test.lua`，提供 BDD 风格的测试 API。
+
+Test framework is located at `app/utils/test.lua`, providing BDD-style testing API.
+
+```lua
+local Test = require('app.utils.test')
+```
+
+#### 测试工具 API / Test Framework API
+
+| 函数 | 参数 | 说明 |
+|------|------|------|
+| **describe(name, fn)** | `name`: 测试套件名, `fn`: 测试函数 | 定义测试套件 |
+| **it(name, fn)** | `name`: 测试名, `fn`: 测试函数 | 定义测试用例 |
+| **before_each(fn)** | `fn`: 前置函数 | 每个测试前执行 |
+| **after_each(fn)** | `fn`: 后置函数 | 每个测试后执行 |
+| **pending(name, reason)** | `name`: 测试名, `reason`: 原因 | 标记待完成测试 |
+| **run(options)** | `options`: 选项 | 运行所有测试 |
+| **reset()** | 无 | 重置测试状态 |
+
+#### 断言函数 / Assertions
+
+| 断言 | 说明 |
+|------|------|
+| `assert.equals(expected, actual, msg)` | 期望值等于实际值 |
+| `assert.not_equals(expected, actual)` | 期望值不等于实际值 |
+| `assert.is_true(value, msg)` | 值为 true |
+| `assert.is_false(value, msg)` | 值为 false |
+| `assert.is_nil(value, msg)` | 值为 nil |
+| `assert.not_nil(value, msg)` | 值不为 nil |
+| `assert.is_function(value, msg)` | 值是函数 |
+| `assert.is_table(value, msg)` | 值是表 |
+| `assert.is_string(value, msg)` | 值是字符串 |
+| `assert.has_key(key, table, msg)` | 表包含键 |
+| `assert.error(fn, msg, expected_err)` | 函数抛出错误 |
+| `assert.no_error(fn, msg)` | 函数不抛出错误 |
+| `assert.matches(pattern, value, msg)` | 值匹配模式 |
+| `assert.approx(actual, expected, tolerance)` | 近似值比较 |
+
+#### 运行单元测试 / Run Unit Tests
+
+```bash
+# 运行所有测试
+lua tests/unit/all.lua
+
+# 安静模式（最小输出）
+lua tests/unit/all.lua --quiet
+
+# JSON 格式输出
+lua tests/unit/all.lua --json
+
+# 运行单个测试套件
+lua tests/unit/run.lua
+```
+
+#### 编写单元测试 / Write Unit Tests
+
+```lua
+-- tests/unit/my_feature_spec.lua
+
+package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;;'
+package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+
+local Test = require('app.utils.test')
+
+describe = Test.describe
+it = Test.it
+pending = Test.pending
+before_each = Test.before_each
+after_each = Test.after_each
+assert = Test.assert
+
+describe('MyFeature', function()
+    local feature
+
+    before_each(function()
+        -- 每个测试前创建新实例
+        feature = { value = 0 }
+    end)
+
+    after_each(function()
+        -- 每个测试后清理
+        feature = nil
+    end)
+
+    it('should initialize with zero value', function()
+        assert.equals(0, feature.value)
+    end)
+
+    it('should increment value', function()
+        feature.value = feature.value + 1
+        assert.equals(1, feature.value)
+    end)
+
+    it('should handle string operations', function()
+        local result = string.upper('hello')
+        assert.equals('HELLO', result)
+        assert.is_string(result)
+    end)
+
+    it('should match pattern', function()
+        local email = 'user@example.com'
+        assert.matches('@', email)
+        assert.matches('example', email)
+    end)
+
+    pending('should handle error cases', 'Not implemented yet')
+end)
+```
+
+---
+
+### Integration Tests / 集成测试
+
+集成测试位于 `tests/integration/`，通过 curl 命令测试 API 端点。
+
+Integration tests are located in `tests/integration/`, testing API endpoints via curl commands.
+
+#### 集成测试目录 / Integration Test Directory
+
+```
+tests/integration/
+├── test.sh              # 集成测试脚本
+├── nginx_test.conf      # 测试用 Nginx 配置
+└── README.md           # 测试说明文档
+```
+
+#### 运行集成测试 / Run Integration Tests
+
+```bash
+# 进入测试目录
+cd /var/www/web/my-openresty
+
+# 确保 nginx 已启动
+/usr/local/web/nginx/sbin/nginx
+
+# 运行所有集成测试
+./tests/integration/test.sh
+
+# 自定义测试服务器地址
+BASE_URL=http://localhost:8080 ./tests/integration/test.sh
+
+# 详细输出模式
+VERBOSE=true ./tests/integration/test.sh
+```
+
+#### 测试脚本命令 / Test Script Commands
+
+| 命令 | 说明 |
+|------|------|
+| `./tests/integration/test.sh` | 运行所有测试 |
+| `BASE_URL=http://localhost:8080` | 自定义测试服务器 |
+| `VERBOSE=true` | 显示详细输出 |
+| `COOKIE_JAR=/tmp/cookies.txt` | 自定义 Cookie 文件 |
+
+#### 集成测试脚本函数 / Test Script Functions
+
+| 函数 | 参数 | 说明 |
+|------|------|------|
+| **curl_get(endpoint, description)** | `endpoint`: 端点, `description`: 描述 | GET 请求测试 |
+| **curl_post(endpoint, data, description, content_type)** | `endpoint`: 端点, `data`: 数据, `description`: 描述, `content_type`: 内容类型 | POST 请求测试 |
+| **curl_put(endpoint, data, description)** | `endpoint`: 端点, `data`: 数据, `description`: 描述 | PUT 请求测试 |
+| **curl_delete(endpoint, description)** | `endpoint`: 端点, `description`: 描述 | DELETE 请求测试 |
+
+#### 集成测试输出示例 / Integration Test Output
+
+```
+========================================
+  MyResty API Integration Test Suite
+========================================
+
+Base URL: http://localhost:8080
+
+--- Health Check ---
+[PASS] GET / - Root endpoint (HTTP 200)
+[PASS] GET /test - Test endpoint (HTTP 200)
+
+--- User Routes ---
+[PASS] GET /users - List users (HTTP 200)
+[PASS] GET /users/123 - Get user by ID (HTTP 200)
+[PASS] POST /users - Create user (HTTP 201)
+[PASS] PUT /users/123 - Update user (HTTP 200)
+[PASS] DELETE /users/123 - Delete user (HTTP 200)
+
+--- Session Routes ---
+[PASS] GET /session - Session index (HTTP 200)
+[PASS] POST /session/set - Set session value (HTTP 200)
+[PASS] POST /session/get - Get session value (HTTP 200)
+[PASS] POST /session/clear - Clear session (HTTP 200)
+
+========================================
+  Test Results Summary
+========================================
+
+Total tests: 50
+Passed: 50
+Failed: 0
+
+All tests passed!
+```
+
+---
+
+## Features / 功能特性
+
+- MVC 架构（CodeIgniter 风格）/ MVC architecture (CodeIgniter style)
+- RESTful 路由 / RESTful routing
+- MySQL 和 Redis 连接池 / MySQL & Redis connection pools
+- 带 AES 加密的会话管理 / Session management with AES encryption
+- 共享字典缓存 / Shared dictionary caching
+- 限流 / Rate limiting
+- 数据验证（35+ 规则）/ Data validation (35+ rules)
+- 验证码生成 / Captcha generation
+- 文件上传和图像处理 / File upload & image processing
+- HTTP 客户端 / HTTP client
+- 全面的中间件系统 / Comprehensive middleware system
+
+---
+
+## License / 许可证
+
+MIT

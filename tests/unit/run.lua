@@ -9,8 +9,8 @@ Usage:
     lua tests/unit/run.lua --help             -- Show help
 ]]
 
-package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;;'
-package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 local args = {...}
@@ -62,7 +62,7 @@ end
 -- Find and load spec files
 local function find_specs()
     local specs = {}
-    local spec_dir = '/var/www/web/my-resty/tests/unit'
+    local spec_dir = '/var/www/web/my-openresty/tests/unit'
 
     -- Check if spec directory exists
     local ok, err = io.open(spec_dir)
@@ -106,7 +106,7 @@ end
 
 -- Load a spec file
 local function load_spec(name)
-    local spec_file = '/var/www/web/my-resty/tests/unit/' .. name .. '_spec.lua'
+    local spec_file = '/var/www/web/my-openresty/tests/unit/' .. name .. '_spec.lua'
 
     local ok, err = io.open(spec_file)
     if not ok then

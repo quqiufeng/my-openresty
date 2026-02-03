@@ -23,13 +23,13 @@ end
 
 function ImageController:get_image_path()
     local upload_config = self.config.upload or {}
-    local base_path = upload_config.path or '/var/www/web/my-resty/uploads'
+    local base_path = upload_config.path or '/var/www/web/my-openresty/uploads'
     return base_path .. '/images'
 end
 
 function ImageController:get_avatar_path()
     local upload_config = self.config.upload or {}
-    local base_path = upload_config.path or '/var/www/web/my-resty/uploads'
+    local base_path = upload_config.path or '/var/www/web/my-openresty/uploads'
     return base_path .. '/avatars'
 end
 
@@ -188,7 +188,7 @@ function ImageController:info()
     end
 
     local upload_config = self.config.upload or {}
-    local app_path = self.config.app_path or '/var/www/web/my-resty'
+    local app_path = self.config.app_path or '/var/www/web/my-openresty'
     local full_path = app_path .. '/' .. path
 
     if not FileUtil.exists(full_path) then
@@ -215,7 +215,7 @@ function ImageController:thumbnail()
         return self:json({error = 'Image path required'}, 400)
     end
 
-    local app_path = self.config.app_path or '/var/www/web/my-resty'
+    local app_path = self.config.app_path or '/var/www/web/my-openresty'
     local full_path = app_path .. '/' .. path
 
     if not FileUtil.exists(full_path) then
@@ -223,7 +223,7 @@ function ImageController:thumbnail()
     end
 
     local upload_config = self.config.upload or {}
-    local base_path = upload_config.path or '/var/www/web/my-resty/uploads'
+    local base_path = upload_config.path or '/var/www/web/my-openresty/uploads'
     local thumb_dir = base_path .. '/thumbnails'
     FileUtil.mkdir(thumb_dir, 493)
 
@@ -255,7 +255,7 @@ function ImageController:optimize()
         return self:json({error = 'Image path required'}, 400)
     end
 
-    local app_path = self.config.app_path or '/var/www/web/my-resty'
+    local app_path = self.config.app_path or '/var/www/web/my-openresty'
     local full_path = app_path .. '/' .. path
 
     if not FileUtil.exists(full_path) then
@@ -263,7 +263,7 @@ function ImageController:optimize()
     end
 
     local upload_config = self.config.upload or {}
-    local base_path = upload_config.path or '/var/www/web/my-resty/uploads'
+    local base_path = upload_config.path or '/var/www/web/my-openresty/uploads'
     local opt_dir = base_path .. '/optimized'
     FileUtil.mkdir(opt_dir, 493)
 

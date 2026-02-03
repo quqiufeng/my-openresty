@@ -332,7 +332,7 @@ function _M.save_file(self, name, save_path, new_name)
 
     local config = self.config or {}
     local upload_config = config.upload or {}
-    local upload_path = save_path or upload_config.path or '/var/www/web/my-resty/uploads'
+    local upload_path = save_path or upload_config.path or '/var/www/web/my-openresty/uploads'
 
     local FileHelper = require('app.helpers.file_helper')
     local FileUtil = require('app.utils.file')
@@ -367,7 +367,7 @@ function _M.move_file(self, name, save_path, new_name)
 
     local config = self.config or {}
     local upload_config = config.upload or {}
-    local upload_path = save_path or upload_config.path or '/var/www/web/my-resty/uploads'
+    local upload_path = save_path or upload_config.path or '/var/www/web/my-openresty/uploads'
 
     local FileHelper = require('app.helpers.file_helper')
     local FileUtil = require('app.utils.file')

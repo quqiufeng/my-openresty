@@ -8,8 +8,8 @@ Usage:
     lua tests/unit/all.lua --json       -- JSON output
 ]]
 
-package.path = '/var/www/web/my-resty/?.lua;/var/www/web/my-resty/?/init.lua;/usr/local/web/?.lua;;'
-package.cpath = '/var/www/web/my-resty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 
@@ -64,7 +64,7 @@ local test_specs = {
 }
 
 local function load_spec(filename)
-    local spec_file = '/var/www/web/my-resty/tests/unit/' .. filename
+    local spec_file = '/var/www/web/my-openresty/tests/unit/' .. filename
 
     local ok, err = io.open(spec_file)
     if not ok then

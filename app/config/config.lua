@@ -7,9 +7,9 @@ local config = {
     host = 'localhost',
     port = 8080,
     charset = 'UTF-8',
-    app_path = '/var/www/web/my-resty',
-    cache_path = '/var/www/web/my-resty/logs/cache',
-    log_path = '/var/www/web/my-resty/logs',
+    app_path = '/var/www/web/my-openresty',
+    cache_path = '/var/www/web/my-openresty/logs/cache',
+    log_path = '/var/www/web/my-openresty/logs',
     log_threshold = 4,
     autoload = {
         'helper',
@@ -35,7 +35,7 @@ local config = {
         idle_timeout = 10000
     },
     upload = {
-        path = '/var/www/web/my-resty/uploads',
+        path = '/var/www/web/my-openresty/uploads',
         max_size = 10,
         allowed_types = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'},
         allowed_mimes = {
@@ -114,7 +114,7 @@ local config = {
             console = true,
             file = true
         },
-        log_dir = '/var/www/web/my-resty/logs',
+        log_dir = '/var/www/web/my-openresty/logs',
         max_size = 10485760,
         max_files = 5,
         async = true

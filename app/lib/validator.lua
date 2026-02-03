@@ -29,7 +29,7 @@ function Validator:load_table_rules(table_name)
         return loaded_rules[table_name]
     end
 
-    local base_path = '/var/www/web/my-resty/config/validation'
+    local base_path = '/var/www/web/my-openresty/config/validation'
     local file_path = base_path .. '/' .. table_name .. '.lua'
 
     local rules, err = load_file(file_path)
@@ -46,7 +46,7 @@ function Validator:load_common_rules()
         return loaded_common
     end
 
-    local base_path = '/var/www/web/my-resty/config/validation'
+    local base_path = '/var/www/web/my-openresty/config/validation'
     local file_path = base_path .. '/common.lua'
 
     local rules, err = load_file(file_path)
@@ -218,7 +218,7 @@ function Validator:get_table_info(table_name)
 end
 
 function Validator:list_tables()
-    local base_path = '/var/www/web/my-resty/config/validation'
+    local base_path = '/var/www/web/my-openresty/config/validation'
     local tables = {}
 
     local ok, files = pcall(function()

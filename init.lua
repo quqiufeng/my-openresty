@@ -1,4 +1,4 @@
-package.path = '/var/www/web/my-resty/app/?.lua;/var/www/web/my-resty/app/core/?.lua;/var/www/web/my-resty/app/libraries/?.lua;/var/www/web/my-resty/app/middleware/?.lua;;'
+package.path = '/var/www/web/my-openresty/app/?.lua;/var/www/web/my-openresty/app/core/?.lua;/var/www/web/my-openresty/app/libraries/?.lua;/var/www/web/my-openresty/app/middleware/?.lua;;'
 
 local ok, vim = pcall(require, 'vim')
 if not ok then
