@@ -1657,3 +1657,38 @@ All tests passed!
 ## License / 许可证
 
 MIT
+
+---
+
+## LuaJIT Best Practices / LuaJIT 最佳实践
+
+本项目包含一份详细的 LuaJIT 最佳实践指南，基于 OpenResty 源码分析编写。
+
+This project includes a detailed LuaJIT best practices guide, based on OpenResty source code analysis.
+
+**查看文档**: [LUAJIT_BEST_PRACTICES.md](./LUAJIT_BEST_PRACTICES.md)
+
+**主要内容包括**:
+- 模块加载与代码缓存
+- 连接池使用（MySQL、Redis）
+- Lua FFI 使用最佳实践
+- Lua Cosocket 使用指南
+- Table 性能优化（table.new、table.clear）
+- Shared Dictionary 使用
+- 代码组织模式
+- 性能优化建议
+- 错误处理模式
+- 安全实践
+
+**Topics Covered**:
+- Module loading & code caching
+- Connection pool usage (MySQL, Redis)
+- Lua FFI best practices
+- Lua Cosocket usage guide
+- Table performance optimization (table.new, table.clear)
+- Shared Dictionary usage
+- Code organization patterns
+- Performance optimization tips
+- Error handling patterns
+- Security practices
+
