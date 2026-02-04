@@ -13,6 +13,13 @@
 **Tribute to OpenResty** - Thanks to OpenResty for providing such an excellent Web platform.
 
 ---
+
+## 让AI正确理解项目的提示词
+
+本项目是基于openresty的web开发框架，使用lua语言。遵循openresty最佳开发实践，代码风格参考 /usr/local/web 下的 lua lib实现 nginx 安装目录在 /usr/local/web/nginx ，该目录下的 conf/nginx.conf 是主配置文件 本目录下的 nginx/conf/myresty.conf 是本框架用到的配置文件。 分析下项目所有lua文件和shell 脚本，理解项目架构和各模块的功能
+
+---
+
 ## LuaJIT Best Practices / LuaJIT 最佳实践
 
 本项目包含一份详细的 LuaJIT 最佳实践指南，基于 OpenResty 源码分析编写。
