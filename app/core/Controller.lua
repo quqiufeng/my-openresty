@@ -36,10 +36,15 @@ function _M.__construct(self)
     local Response = require('app.core.Response')
     local Config = require('app.core.Config')
 
-    self.request = Request:new()
-    self.request:fetch()
+    if not self.request then
+        self.request = Request:new()
+        self.request:fetch()
+    end
 
-    self.response = Response:new()
+    if not self.response then
+        self.response = Response:new()
+    end
+    
     self.config = Config
 
     self:load_helper('url')

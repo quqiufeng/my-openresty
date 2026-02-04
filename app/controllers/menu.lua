@@ -12,7 +12,6 @@ function _M:list()
     local menu_tree, err = menu_model:get_menu_tree()
 
     if err then
-        ngx.log(ngx.ERR, 'Failed to get menu list: ', err)
         self:json({
             success = false,
             status = 500,

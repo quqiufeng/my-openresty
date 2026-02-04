@@ -172,8 +172,7 @@ local function _read_packet(self)
     local len = tonumber(string.byte(data, 1)) + bit.lshift(tonumber(string.byte(data, 2)), 8) + bit.lshift(tonumber(string.byte(data, 3)), 16)
     if len == 0 then return nil, nil, "empty packet" end
 
-    local num = tonumber(string.byte(data, 4))
-    self.packet_no = num
+    self.packet_no = tonumber(string.byte(data, 4))
 
     data, err = sock:receive(len)
     if not data then return nil, nil, err end
@@ -240,7 +239,9 @@ function _M.connect(self, opts)
     if not opts or not opts.host then
         local Config = require('app.core.Config')
         Config.load()
-        opts = Config.get('mysql') or _Pool.config
+
+        local full_config = Config.get()
+        opts = full_config and full_config.mysql or _Pool.config
     end
     local sock = self.sock
     if not sock then return nil, "not initialized" end
@@ -283,10 +284,12 @@ function _M.connect(self, opts)
     local reused = sock:getreusedtimes()
     if reused and reused > 0 then
         self.state = STATE_CONNECTED
+        self.packet_no = -1
         return 1
     end
 
     self.state = STATE_CONNECTED
+    self.packet_no = -1
     return 1
 end
 

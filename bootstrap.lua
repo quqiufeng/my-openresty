@@ -18,6 +18,9 @@ router:get('/test', function(req, res)
 end)
 
 local function run()
+    local Request = require('app.core.Request')
+    Request:reset_cache()
+
     local request = Request:new()
     request:fetch()
     local response = Response:new()
