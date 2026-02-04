@@ -240,6 +240,7 @@ test_query_builder() {
     curl_post "/query/delete" '{"table":"users","where":{"id":1}}' "POST /query/delete - Delete query"
     curl_get "/query/complex" "GET /query/complex - Complex query"
     curl_get "/query/raw" "GET /query/raw - Raw expressions"
+    curl_get "/query/select" "GET /query/select - Select query with MySQL"
 }
 
 # ==================== Request Routes ====================

@@ -237,6 +237,11 @@ end
 
 function _M.connect(self, opts)
     opts = opts or _Pool.config
+    if not opts or not opts.host then
+        local Config = require('app.core.Config')
+        Config.load()
+        opts = Config.get('mysql') or _Pool.config
+    end
     local sock = self.sock
     if not sock then return nil, "not initialized" end
 

@@ -1,5 +1,6 @@
 local Controller = require('app.core.Controller')
-local QueryBuilder = require('app.core.QueryBuilder')
+local QueryBuilder = require('app.db.query')
+local Mysql = require('app.lib.mysql')
 
 local _M = {}
 
@@ -144,6 +145,46 @@ function _M:raw_expressions()
 
     self:json({
         raw_expressions = sql
+    })
+end
+
+function _M:select()
+    local builder = QueryBuilder.new('users')
+    local sql = builder
+        :select('id', 'name', 'email', 'status', 'created_at')
+        :where('status', 'active')
+        :order_by('created_at', 'DESC')
+        :limit(10)
+        :to_sql()
+
+    local db = Mysql:new()
+    local ok, err = db:connect()
+
+    if not ok then
+        return self:json({
+            success = false,
+            error = 'Database connection failed',
+            message = err
+        }, 500)
+    end
+
+    local rows, err, errno = db:query(sql)
+    db:set_keepalive()
+
+    if err then
+        return self:json({
+            success = false,
+            error = 'Query failed',
+            message = err,
+            errno = errno
+        }, 500)
+    end
+
+    return self:json({
+        success = true,
+        data = rows or {},
+        sql = sql,
+        count = #rows or 0
     })
 end
 

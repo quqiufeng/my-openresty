@@ -25,6 +25,7 @@ function M(route)
     route:get('/query/delete', 'example:delete_example')
     route:get('/query/complex', 'example:complex_query')
     route:get('/query/raw', 'example:raw_expressions')
+    route:get('/query/select', 'example:select')
 
     -- Request Test API
     route:get('/request', 'request_test:index')
