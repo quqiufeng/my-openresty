@@ -106,6 +106,9 @@ function M(route)
     route:get('/test/cache', 'test:cache')
     route:get('/test/captcha', 'test:captcha')
 
+    -- Menu API (Ant Design Pro)
+    route:get('/menu/list', 'menu:list')
+
     -- Logger Demo API
     route:get('/demo', 'demo:index')
     route:get('/demo/log-levels', 'demo:log_levels')
