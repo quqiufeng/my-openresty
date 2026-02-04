@@ -1,18 +1,15 @@
-local Model = require('app.core.Model')
 local mysql = require('app.lib.mysql')
 
 local _M = {}
 
-function _M.new()
-    local model = Model:new()
-    _M.model = model
-    return model
+function _M:new()
+    return setmetatable({}, {__index = _M})
 end
 
 function _M:get_all_menus()
     local db = mysql:new()
     local ok, err = db:connect({
-        host = '192.168.124.10',
+        host = '127.0.0.1',
         port = 3306,
         user = 'root',
         password = '123456',
@@ -24,15 +21,10 @@ function _M:get_all_menus()
         return nil, err
     end
 
-    local sql = [[
-        SELECT id, parent_id, path, name, title, icon, component, keep_alive, sort_order, status
-        FROM system_menu
-        WHERE status = 1
-        ORDER BY parent_id ASC, sort_order ASC
-    ]]
+    local sql = "SELECT id, parent_id, path, name, title, icon, component, keep_alive, sort_order, status FROM system_menu WHERE status = 1 ORDER BY parent_id ASC, sort_order ASC"
 
     local rows, err = db:query(sql)
-    db:set_keepalive(10000, 10)
+    db:close()
 
     if err then
         return nil, err

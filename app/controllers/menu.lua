@@ -1,14 +1,15 @@
 local Controller = require('app.core.Controller')
+local MenuModel = require('app.models.menu_model')
 
 local _M = {}
 
 function _M:__construct()
     Controller.__construct(self)
-    self:load('menu_model')
 end
 
 function _M:list()
-    local menu_tree, err = self.menu_model:get_menu_tree()
+    local menu_model = MenuModel:new()
+    local menu_tree, err = menu_model:get_menu_tree()
 
     if err then
         ngx.log(ngx.ERR, 'Failed to get menu list: ', err)
