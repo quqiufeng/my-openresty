@@ -77,10 +77,15 @@ end
 
 function QueryBuilder:select(fields)
     if type(fields) == 'table' then
-        -- 支持 table 格式: {'id', 'name', 'users.email as user_email'}
+        -- 支持 table 格式: {'id', 'name', 'orders.total as order_amount'}
+        -- 主表字段不带表名（自动添加），join 表字段需要带表名
         local parts = {}
         for _, field in ipairs(fields) do
             local field_part, alias = parse_field(field)
+            -- 如果不包含 . 且不是 *，添加主表名前缀
+            if not has_table_prefix(field) and field_part ~= '*' then
+                field_part = self.table .. '.' .. field_part
+            end
             if alias then
                 table.insert(parts, field_part .. ' AS ' .. alias)
             else
@@ -106,7 +111,7 @@ function QueryBuilder:auto_prefix_fields()
         for field in string.gmatch(self.fields, '[^,]+') do
             field = field:gsub('^%s+', ''):gsub('%s+$', '')
             local field_part, alias = parse_field(field)
-            -- 如果没有表前缀且不是 *，添加主表前缀
+            -- 如果不包含 . 且不是 *，添加主表名前缀
             if not has_table_prefix(field) and field_part ~= '*' then
                 field_part = self.table .. '.' .. field_part
             end
@@ -122,7 +127,7 @@ function QueryBuilder:auto_prefix_fields()
         local parts = {}
         for _, field in ipairs(self.fields) do
             local field_part, alias = parse_field(field)
-            -- 如果没有表前缀且不是 *，添加主表前缀
+            -- 如果不包含 . 且不是 *，添加主表名前缀
             if not has_table_prefix(field) and field_part ~= '*' then
                 field_part = self.table .. '.' .. field_part
             end
