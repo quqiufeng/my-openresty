@@ -52,6 +52,57 @@ This project includes a detailed LuaJIT best practices guide, based on OpenResty
 - Error handling patterns
 - Security practices
 
+## MVC Best Practices / MVC 最佳实践
+
+本项目提供三份详细的开发最佳实践文档，帮助开发者理解和遵循项目架构规范。
+
+This project provides three detailed development best practice guides to help developers understand and follow project architecture standards.
+
+### 文档列表 / Documentation List
+
+| 文档 | 说明 | Description |
+|------|------|-------------|
+| **[best-practices.md](./docs/best-practices.md)** | MVC 架构、路由注册、Controller/Model 最佳实践 | MVC architecture, routing, Controller/Model best practices |
+| **[database-guide.md](./docs/database-guide.md)** | Model 与 QueryBuilder 使用指南、system_menu CRUD 示例 | Model & QueryBuilder guide, system_menu CRUD examples |
+| **[inheritance.md](./docs/inheritance.md)** | MVC 三层架构继承关系、类图、代码示例 | MVC inheritance relationships, class diagrams, code examples |
+
+### 快速入门 / Quick Start
+
+```
+1. 先阅读 inheritance.md 了解整体架构
+   Read inheritance.md first to understand the architecture
+
+2. 再阅读 best-practices.md 掌握开发规范
+   Then read best-practices.md to learn development standards
+
+3. 最后参考 database-guide.md 进行数据操作
+   Finally reference database-guide.md for data operations
+```
+
+### 核心要点 / Key Points
+
+**架构分层 / Architecture Layers:**
+```
+Controller (请求处理) → Model (数据访问) → MySQL (数据库)
+    ↑                   ↑
+  继承              继承
+app.core.Controller  app.core.Model
+                         ↓
+                   app.lib.mysql → resty.mysql
+```
+
+**数据访问原则 / Data Access Principles:**
+- **简单操作** → 使用 Model 自带方法 (`get_all`, `insert`, `update`, `delete`)
+- **复杂查询** → 使用 QueryBuilder (`where`, `order_by`, `limit`, `offset`)
+- **禁止** 在 Controller 中直接写 SQL
+
+**Key Points:**
+- **Simple operations** → Use Model built-in methods
+- **Complex queries** → Use QueryBuilder
+- **Never** write raw SQL in Controllers
+
+---
+
 ## Requirements / 系统要求
 
 ### Operating System / 操作系统
