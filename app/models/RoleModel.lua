@@ -1,80 +1,63 @@
 -- RoleModel Model
--- 角色模型
-
-local Model = require('app.core.Model')
-local QueryBuilder = require('app.db.query')
-
-local _M = setmetatable({}, { __index = Model })
-_M._TABLE = 'role'
+local M=require("app.core.Model")
+local QB=require("app.db.query")
+local _M=setmetatable({},{__index=M})
+_M._TABLE="role"
 
 function _M.new()
-    local model = Model:new()
-    model:set_table(_M._TABLE)
-    return model
+  local o=M:new()o:set_table(_M._TABLE)return o
 end
 
-function _M:list(options)
-    options = options or {}
-    local page = tonumber(options.page) or 1
-    local pageSize = tonumber(options.pageSize) or 10
-    local offset = (page - 1) * pageSize
-
-    local builder = QueryBuilder:new('role')
-    builder.fields = 'id, name, description, status, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time'
-
-    local sorter = options.sorter or 'id'
-    local sortOrder = options.order == 'ascend' and 'ASC' or 'DESC'
-    builder:order_by(sorter, sortOrder)
-    builder:limit(pageSize)
-    builder:offset(offset)
-
-    local sql = builder:to_sql()
-    return self:query(sql)
+function _M.list(o)
+  o=o or{}local p=tonumber(o.page)or 1
+  local sz=tonumber(o.pageSize)or 10
+  local b=QB:new("role")
+  b:select("role.id, role.name")
+  local sf={"name"}
+  if o.keyword and o.keyword~="" then
+    local c={}for _,f in ipairs(sf)do c[#c+1]="role."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
+  end
+    -- 无 JOIN
+  b:order_by("role.id","DESC")
+  b:limit(sz)
+  b:offset((p-1)*sz)
+  return self:query(b:to_sql())
 end
 
-function _M:count()
-    return self:count(nil)
+function _M.count_all(o)
+  local b=QB:new("role")b:select("COUNT(*)as cnt")
+  local sf={"name"}
+  if o and o.keyword and o.keyword~="" then
+    local c={}for _,f in ipairs(sf)do c[#c+1]="role."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
+  end
+  local r=self:query(b:to_sql())
+  return r and r[1]and r[1].cnt or 0
 end
 
-function _M:get_by_id(id)
-    if not id then return nil end
-
-    local builder = QueryBuilder:new('role')
-    builder.fields = 'id, name, description, status, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time'
-    builder:where('id', '=', tonumber(id))
-    builder:limit(1)
-
-    local sql = builder:to_sql()
-    local rows = self:query(sql)
-    return rows and rows[1] or nil
+function _M.get_by_id(id)
+  if not id then return nil end
+  local b=QB:new("role")
+  b:select("role.id, role.name")
+  b:where("role.id","=",tonumber(id))
+  b:limit(1)
+  local r=self:query(b:to_sql())
+  return r and r[1]
 end
 
-function _M:create(data)
-    local insert_data = {
-        name = data.name,
-        description = data.description,
-        status = tonumber(data.status) or 1,
-        create_time = ngx.time(),
-        update_time = ngx.time()
-    }
-    return self:insert(insert_data)
+function _M.create(d)
+  local t=ngx and ngx.time()or os.time()
+  d.created_at=d.created_at or t
+  d.updated_at=t
+  return self:insert(d)
 end
 
-function _M:update(id, data)
-    if not id then return false end
-
-    local update_data = {}
-    if data.name then update_data.name = data.name end
-    if data.description ~= nil then update_data.description = data.description end
-    if data.status ~= nil then update_data.status = tonumber(data.status) end
-    update_data.update_time = ngx.time()
-
-    return self:update(update_data, { id = tonumber(id) })
+function _M.update_data(id,d)
+  d.updated_at=ngx and ngx.time()or os.time()
+  return self:update(d,{id=id})
 end
 
-function _M:delete(id)
-    if not id then return false end
-    return self:delete({ id = tonumber(id) })
-end
+function _M.delete_data(id)return self:delete({id=id})end
 
 return _M

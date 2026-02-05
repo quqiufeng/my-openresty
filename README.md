@@ -227,7 +227,7 @@ luajit myresty --help
 | Command | Description | Description |
 |---------|-------------|-------------|
 | `make:<type> <name>` | Generate code files | 生成代码文件 |
-| `curd <table_name>` | Generate full CRUD for a table | 为表生成完整 CRUD |
+| `curd <config.json>` | Generate CRUD from JSON config | 从 JSON 配置生成完整 CRUD |
 
 ### Make Types / 生成类型
 
@@ -262,56 +262,66 @@ luajit myresty --help
 # 生成数据填充
 ./myresty make:seeder Users
 
-# 为指定表生成完整 CRUD
-./myresty curd users
-./myresty curd products
-./myresty curd orders
+# 从 JSON 配置生成 CRUD（推荐）
+luajit myresty curd /home/quqiufeng/my-ant-design-pro/scripts/admin.json
+luajit myresty curd /home/quqiufeng/my-ant-design-pro/scripts/role.json
+
+# 输入重定向语法
+luajit myresty curd < /home/quqiufeng/my-ant-design-pro/scripts/admin.json
 ```
 
 ### CRUD Generation / CRUD 生成
 
-`curd` 命令为指定表生成完整的 CRUD 代码：
+#### 新一代 JSON 配置生成器
 
-`curd` command generates complete CRUD code for a specified table:
+基于 Ant Design Pro 前端配置自动生成后端 CRUD 代码：
 
 ```bash
+cd /var/www/web/my-openresty
+
+# 方式一：标准语法
+luajit myresty curd /home/quqiufeng/my-ant-design-pro/scripts/admin.json
+
+# 方式二：输入重定向语法
+luajit myresty curd < /home/quqiufeng/my-ant-design-pro/scripts/admin.json
+```
+
+**生成的文件**：
+
+| 文件 | 说明 |
+|------|------|
+| `app/models/{Name}Model.lua` | 数据模型（含 list/detail/create/update/delete/count 方法） |
+| `app/controllers/{Name}.lua` | 统一接口控制器（支持 GET/POST/PUT/DELETE） |
+
+**自动生成的 API 端点**：
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/list` | ANY | 管理员列表（分页） |
+| `/admin/detail` | ANY | 管理员详情 |
+| `/admin/create` | ANY | 新建管理员 |
+| `/admin/update` | ANY | 更新管理员 |
+| `/admin/delete` | ANY | 删除管理员 |
+
+**路由配置**（已自动添加到 `app/routes.lua`）：
+
+```lua
+-- Admin CRUD
+route:any('/admin/list', 'admin:list')
+route:any('/admin/detail', 'admin:detail')
+route:any('/admin/create', 'admin:create')
+route:any('/admin/update', 'admin:update')
+route:any('/admin/delete', 'admin:delete')
+```
+
+#### 旧版表名生成器（已废弃）
+
+```bash
+# 旧版语法（仍兼容）
 ./myresty curd users
 ```
 
-生成的文件:
-
-Generated files:
-
-| File | Type | Description |
-|------|------|-------------|
-| `app/models/UserModel.lua` | Model | 数据模型 |
-| `app/controllers/User.lua` | Controller | 控制器 |
-| `tests/unit/controllers/UserSpec.lua` | Unit Test | 单元测试 |
-| `tests/integration/crud/User.sh` | Integration Test | 集成测试 |
-
-生成的 API 端点:
-
-Generated API endpoints:
-
-| Method | Endpoint | Action |
-|--------|----------|--------|
-| `GET` | `/users` | List (列表) |
-| `GET` | `/users/{id}` | Show (详情) |
-| `POST` | `/users` | Create (创建) |
-| `PUT` | `/users/{id}` | Update (更新) |
-| `DELETE` | `/users/{id}` | Delete (删除) |
-
-需要添加到 `app/routes.lua`:
-
-Add to `app/routes.lua`:
-
-```lua
-route:get('/users', 'User:index')
-route:get('/users/{id}', 'User:show')
-route:post('/users', 'User:create')
-route:put('/users/{id}', 'User:update')
-route:delete('/users/{id}', 'User:delete')
-```
+详细文档：[crud-generator.md](./docs/crud-generator.md)
 
 ### Run Tests / 运行测试
 
@@ -341,13 +351,13 @@ BASE_URL=http://localhost:8080 ./tests/integration/crud/User.sh
 输出:
 
 ```
-MyResty CLI v1.0.0
+MyResty CLI v1.0
 
 Usage: myresty <command> [options]
 
 Commands:
   make:<type> <name>   Generate code files
-  curd <table_name>    Generate CRUD for a table
+  curd <config.json>   Generate CRUD from JSON config
 
 Options:
   --help, -h           Show help
@@ -356,7 +366,8 @@ Options:
 Examples:
   myresty make:controller User
   myresty make:model Article
-  myresty curd users
+  luajit myresty curd /path/to/admin.json
+  luajit myresty curd < /path/to/admin.json
 ```
 
 ---
