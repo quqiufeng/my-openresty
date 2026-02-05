@@ -14,9 +14,15 @@
 
 ---
 
-## 让AI正确理解项目的提示词
+## AI 开发指南
 
-本项目是基于openresty的web开发框架，使用lua语言。遵循openresty最佳开发实践，代码风格参考 /usr/local/web 下的 lua lib实现 nginx 安装目录在 /usr/local/web/nginx ，该目录下的 conf/nginx.conf 是主配置文件 本目录下的 nginx/conf/myresty.conf 是本框架用到的配置文件。 分析下项目所有lua文件和shell 脚本，理解项目架构和各模块的功能
+**请阅读 [CLAUDE.md](./CLAUDE.md)** - 本项目的完整 AI 开发指南，包含：
+
+- 项目架构和技术栈信息
+- 开发规范和命名约定
+- 历史 bug 修复记录
+- 代码生成器使用说明
+- 测试要求和检查清单
 
 ---
 
