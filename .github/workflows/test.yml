@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup LuaJIT
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luajit
+
+      - name: Run QueryBuilder Tests
+        run: luajit tests/unit/query_builder_test.lua
+
+      - name: Run Model Tests
+        run: |
+          luajit tests/unit/models/admin_spec.lua
+          luajit tests/unit/models/role_spec.lua
+          luajit tests/unit/models/user_spec.lua
+          luajit tests/unit/models/menu_spec.lua
+
+      - name: Run Controller Tests
+        run: |
+          luajit tests/unit/controllers/AdminSpec.lua
+          luajit tests/unit/controllers/RoleSpec.lua
+          luajit tests/unit/controllers/UserSpec.lua
+          luajit tests/unit/controllers/MenuSpec.lua
+
+      - name: Run Integration Tests
+        run: |
+          echo "Integration tests require running services"
+          echo "Skipped in CI environment"
