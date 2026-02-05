@@ -1,4 +1,4 @@
-name: Tests
+# MyResty CI/CD Pipeline - Auto-run tests on push/PR
 
 on:
   push:
