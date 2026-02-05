@@ -1,19 +1,19 @@
--- User Controller (统一接口)
+-- Menu Controller (统一接口)
 -- 支持 GET/POST/PUT/DELETE 方式
 -- 接口:
---   /user/list - 列表查询(分页)
---   /user/detail - 详情查询
---   /user/create - 新建
---   /user/update - 更新
---   /user/delete - 删除
+--   /menu/list - 列表查询(分页)
+--   /menu/detail - 详情查询
+--   /menu/create - 新建
+--   /menu/update - 更新
+--   /menu/delete - 删除
 
 local C=require("app.core.Controller")
-local M=require("app.models.UserModel")
+local M=require("app.models.MenuModel")
 local _M={}
 
 function _M.__construct()
   C.__construct(self)
-  self.user_model=M:new()
+  self.menu_model=M:new()
 end
 
 -- 获取请求参数(支持GET/POST/JSON)
@@ -26,48 +26,48 @@ function _M.get_params()
   return p
 end
 
--- /user/list - 列表查询(分页)
+-- /menu/list - 列表查询(分页)
 function _M.list()
   local p=self:get_params()
   local page=tonumber(p.page)or 1
   local pageSize=tonumber(p.pageSize)or 10
-  local data=self.user_model:list({
+  local data=self.menu_model:list({
     page=page,
     pageSize=pageSize,
     keyword=p.keyword
   })
-  local total=self.user_model:count({keyword=p.keyword})
+  local total=self.menu_model:count({keyword=p.keyword})
   self:json({success=true,data=data or{},total=total,page=page,pageSize=pageSize})
 end
 
--- /user/detail - 详情查询
+-- /menu/detail - 详情查询
 function _M.detail()
   local p=self:get_params()
   if not p.id then self:json({success=false,message="id required"},400)return end
-  local data=self.user_model:detail(p)
+  local data=self.menu_model:detail(p)
   if data then self:json({success=true,data=data})else self:json({success=false,message="Not Found"},404)end
 end
 
--- /user/create - 新建
+-- /menu/create - 新建
 function _M.create()
   local p=self:get_params()
-  local id=self.user_model:create(p)
+  local id=self.menu_model:create(p)
   self:json({success=true,message="Created",data={id=id}},201)
 end
 
--- /user/update - 更新
+-- /menu/update - 更新
 function _M.update()
   local p=self:get_params()
   if not p.id then self:json({success=false,message="id required"},400)return end
-  self.user_model:update(p)
+  self.menu_model:update(p)
   self:json({success=true,message="Updated"})
 end
 
--- /user/delete - 删除
+-- /menu/delete - 删除
 function _M.delete()
   local p=self:get_params()
   if not p.id then self:json({success=false,message="id required"},400)return end
-  self.user_model:delete(p)
+  self.menu_model:delete(p)
   self:json({success=true,message="Deleted"})
 end
 

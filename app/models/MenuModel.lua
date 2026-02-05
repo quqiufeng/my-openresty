@@ -1,116 +1,79 @@
 -- MenuModel Model
--- 菜单模型
-
-local Model = require('app.core.Model')
-local QueryBuilder = require('app.db.query')
-
-local _M = setmetatable({}, { __index = Model })
-_M._TABLE = 'system_menu'
+local M=require("app.core.Model")
+local QB=require("app.db.query")
+local _M=setmetatable({},{__index=M})
+_M._TABLE="menu"
 
 function _M.new()
-    local model = Model:new()
-    model:set_table(_M._TABLE)
-    return model
+  local o=M:new()o:set_table(_M._TABLE)return o
 end
 
-function _M:get_all_menus()
-    return self:get_all({ status = 1 }, nil, nil)
+-- /menu/list - 列表查询
+function _M.list(o)
+  o=o or{}local page=tonumber(o.page)or 1
+  local pageSize=tonumber(o.pageSize)or 10
+  local b=QB:new("menu")
+  b:select("menu.id, menu.name, menu.path, menu.parent_id, menu.sort")
+  local sf={"name"}
+  if o.keyword and o.keyword~="" then
+    local c={}for _,f in ipairs(sf)do c[#c+1]="menu."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
+  end
+    -- 无 JOIN
+  b:order_by("menu.id","DESC")
+  b:limit(pageSize)
+  b:offset((page-1)*pageSize)
+  return self:query(b:to_sql())
 end
 
-function _M:get_menu_tree()
-    local menus = self:get_all_menus()
-    if not menus or #menus == 0 then
-        return {}
-    end
-
-    local function get_parent_path(path)
-        local last_slash = path:match('/([^/]+)$')
-        if not last_slash then
-            return nil
-        end
-        local parent = path:sub(1, #path - #last_slash - 1)
-        if parent == '' then
-            return nil
-        end
-        return parent
-    end
-
-    local function build_tree(menu_list)
-        local menu_map = {}
-        local roots = {}
-
-        for _, menu in ipairs(menu_list) do
-            menu.routes = {}
-            menu_map[menu.path] = menu
-        end
-
-        for _, menu in ipairs(menu_list) do
-            local parent_path = get_parent_path(menu.path)
-
-            if not parent_path then
-                table.insert(roots, menu)
-            else
-                local parent = menu_map[parent_path]
-                if parent then
-                    table.insert(parent.routes, menu)
-                else
-                    table.insert(roots, menu)
-                end
-            end
-        end
-
-        return roots
-    end
-
-    return build_tree(menus)
+-- /menu/detail - 详情查询
+function _M.detail(o)
+  local id=o and o.id
+  if not id then return nil end
+  local b=QB:new("menu")
+  b:select("menu.id, menu.name, menu.path, menu.parent_id, menu.sort")
+  b:where("menu.id","=",tonumber(id))
+  b:limit(1)
+  local r=self:query(b:to_sql())
+  return r and r[1]
 end
 
-function _M:format_menus_for_antd(menu_tree)
-    local function get_parent_path(path)
-        local last_slash = path:match('/([^/]+)$')
-        if not last_slash then
-            return nil
-        end
-        local parent = path:sub(1, #path - #last_slash - 1)
-        if parent == '' then
-            return nil
-        end
-        return parent
-    end
+-- /menu/create - 新建
+function _M.create(o)
+  local d=o or{}
+  local t=ngx and ngx.time()or os.time()
+  d.created_at=d.created_at or t
+  d.updated_at=t
+  return self:insert(d)
+end
 
-    local function format_item(menu)
-        local is_leaf = get_parent_path(menu.path) ~= nil
+-- /menu/update - 更新
+function _M.update(o)
+  local id=o and o.id
+  if not id then return false end
+  local d=o or{}
+  d.updated_at=ngx and ngx.time()or os.time()
+  return self:update(d,{id=tonumber(id)})
+end
 
-        local component = ''
-        if is_leaf then
-            component = '.' .. menu.path
-        end
+-- /menu/delete - 删除
+function _M.delete(o)
+  local id=o and o.id
+  if not id then return false end
+  return self:delete({id=tonumber(id)})
+end
 
-        local item = {
-            path = menu.path,
-            name = menu.name or '',
-            title = menu.title or '',
-            icon = menu.icon or '',
-            keepAlive = menu.keep_alive == 1,
-            component = component
-        }
-
-        if menu.routes and #menu.routes > 0 then
-            item.routes = {}
-            for _, child in ipairs(menu.routes) do
-                table.insert(item.routes, format_item(child))
-            end
-        end
-
-        return item
-    end
-
-    local result = {}
-    for _, menu in ipairs(menu_tree) do
-        table.insert(result, format_item(menu))
-    end
-
-    return result
+-- /menu/count - 统计
+function _M.count(o)
+  local b=QB:new("menu")
+  b:select("COUNT(*)as cnt")
+  local sf={"name"}
+  if o and o.keyword and o.keyword~="" then
+    local c={}for _,f in ipairs(sf)do c[#c+1]="menu."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
+  end
+  local r=self:query(b:to_sql())
+  return r and r[1]and r[1].cnt or 0
 end
 
 return _M
