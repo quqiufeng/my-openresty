@@ -5,6 +5,8 @@
 --]]
 
 local Controller = require('app.core.Controller')
+local MenuModel = require('app.models.MenuModel')
+
 local _M = {}
 
 function _M:__construct()
@@ -12,26 +14,10 @@ function _M:__construct()
 end
 
 function _M:list()
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
+    local menu_model = MenuModel:new()
 
-    if not db then
-        self:json({
-            success = false,
-            status = 500,
-            message = '连接数据库失败',
-            data = nil
-        }, 500)
-        return
-    end
-
-    local sql = "SELECT id, path, name, title, icon, component, keep_alive, sort FROM system_menu WHERE status = 1 ORDER BY sort ASC, path ASC"
-    local res, err = mysql.query(db, sql)
-
-    mysql.set_keepalive(db)
-
-    if not res then
+    local menu_tree, err = menu_model:get_menu_tree()
+    if err then
         self:json({
             success = false,
             status = 500,
@@ -41,7 +27,7 @@ function _M:list()
         return
     end
 
-    if not res or #res == 0 then
+    if not menu_tree or #menu_tree == 0 then
         self:json({
             success = true,
             status = 200,
@@ -51,75 +37,7 @@ function _M:list()
         return
     end
 
-    local function get_parent_path(path)
-        local last_slash = path:match('/([^/]+)$')
-        if not last_slash then
-            return nil
-        end
-        local parent = path:sub(1, #path - #last_slash - 1)
-        if parent == '' then
-            return nil
-        end
-        return parent
-    end
-
-    local function build_tree(menus)
-        local menu_map = {}
-        local roots = {}
-
-        for _, menu in ipairs(menus) do
-            menu.routes = {}
-            menu_map[menu.path] = menu
-        end
-
-        for _, menu in ipairs(menus) do
-            local parent_path = get_parent_path(menu.path)
-
-            if not parent_path then
-                table.insert(roots, menu)
-            else
-                local parent = menu_map[parent_path]
-                if parent then
-                    table.insert(parent.routes, menu)
-                else
-                    table.insert(roots, menu)
-                end
-            end
-        end
-
-        return roots
-    end
-
-    local function format_menus(menus)
-        local result = {}
-        for _, menu in ipairs(menus) do
-            local is_leaf = get_parent_path(menu.path) ~= nil
-
-            local component = ''
-            if is_leaf then
-                component = '.' .. menu.path
-            end
-
-            local item = {
-                path = menu.path,
-                name = menu.name or '',
-                title = menu.title or '',
-                icon = menu.icon or '',
-                keepAlive = menu.keep_alive == 1,
-                component = component
-            }
-
-            if menu.routes and #menu.routes > 0 then
-                item.routes = format_menus(menu.routes)
-            end
-
-            table.insert(result, item)
-        end
-        return result
-    end
-
-    local menu_tree = build_tree(res)
-    local formatted_menus = format_menus(menu_tree)
+    local formatted_menus = menu_model:format_menus_for_antd(menu_tree)
 
     self:json({
         success = true,

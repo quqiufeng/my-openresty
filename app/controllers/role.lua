@@ -4,6 +4,8 @@
 --]]
 
 local Controller = require('app.core.Controller')
+local RoleModel = require('app.models.RoleModel')
+
 local _M = {}
 
 function _M:__construct()
@@ -11,35 +13,29 @@ function _M:__construct()
 end
 
 function _M:list()
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
-
-    if not db then
-        self:json({ success = false, message = '连接失败', data = nil, total = 0 }, 500)
-        return
-    end
+    local role_model = RoleModel:new()
 
     local page = tonumber(self.request.get and self.request.get['page']) or 1
     local pageSize = tonumber(self.request.get and self.request.get['pageSize']) or 10
-    local offset = (page - 1) * pageSize
 
     local sorter = self.request.get and self.request.get['sorter'] or 'id'
     local order = self.request.get and self.request.get['order'] or ''
-    local sort_order = order == 'ascend' and 'ASC' or 'DESC'
 
-    local sql = "SELECT id, name, description, status, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time FROM role ORDER BY " .. sorter .. " " .. sort_order .. " LIMIT " .. pageSize .. " OFFSET " .. offset
-    local data, err = mysql.query(db, sql)
-
-    local count_sql = "SELECT COUNT(*) as total FROM role"
-    local count_res = mysql.query(db, count_sql)
-    local total = count_res and count_res[1] and tonumber(count_res[1].total) or 0
-
-    mysql.set_keepalive(db)
+    local data, err = role_model:list({
+        page = page,
+        pageSize = pageSize,
+        sorter = sorter,
+        order = order
+    })
 
     if err then
         self:json({ success = false, message = '查询失败: ' .. tostring(err), data = nil, total = 0 }, 500)
         return
+    end
+
+    local total, count_err = role_model:count()
+    if count_err then
+        total = 0
     end
 
     self:json({ success = true, message = 'success', data = data or {}, total = total })
@@ -54,21 +50,16 @@ function _M:get_one(id)
         return
     end
 
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
+    local role_model = RoleModel:new()
+    local res, err = role_model:get_by_id(id)
 
-    if not db then
-        self:json({ success = false, message = '连接失败', data = nil }, 500)
+    if err then
+        self:json({ success = false, message = '查询失败: ' .. tostring(err), data = nil }, 500)
         return
     end
 
-    local sql = "SELECT id, name, description, status, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time FROM role WHERE id = " .. tonumber(id)
-    local res, err = mysql.query(db, sql)
-    mysql.set_keepalive(db)
-
-    if res and res[1] then
-        self:json({ success = true, message = 'success', data = res[1] })
+    if res then
+        self:json({ success = true, message = 'success', data = res })
     else
         self:json({ success = false, message = '不存在', data = nil }, 404)
     end
@@ -85,24 +76,15 @@ function _M:create()
         return
     end
 
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
+    local role_model = RoleModel:new()
+    local id, err = role_model:create(data)
 
-    if not db then
-        self:json({ success = false, message = '连接失败', data = nil }, 500)
+    if err then
+        self:json({ success = false, message = '创建失败: ' .. tostring(err), data = nil }, 500)
         return
     end
 
-    local name = "'" .. string.gsub(tostring(data.name), "'", "''") .. "'"
-    local description = data.description and "'" .. string.gsub(tostring(data.description), "'", "''") .. "'" or "''"
-    local status = tonumber(data.status) or 1
-
-    local sql = "INSERT INTO role (name, description, status, create_time, update_time) VALUES (" .. name .. ", " .. description .. ", " .. status .. ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())"
-    mysql.query(db, sql)
-    mysql.set_keepalive(db)
-
-    self:json({ success = true, message = '创建成功', data = nil })
+    self:json({ success = true, message = '创建成功', data = { id = id } })
 end
 
 function _M:update(id)
@@ -115,27 +97,14 @@ function _M:update(id)
         return
     end
 
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
+    local role_model = RoleModel:new()
+    local success, err = role_model:update(tonumber(id), data)
 
-    if not db then
-        self:json({ success = false, message = '连接失败', data = nil }, 500)
+    if not success then
+        self:json({ success = false, message = '更新失败: ' .. tostring(err), data = nil }, 500)
         return
     end
 
-    local updates = {}
-    if data.name then table.insert(updates, "name = '" .. string.gsub(tostring(data.name), "'", "''") .. "'") end
-    if data.description ~= nil then table.insert(updates, "description = '" .. string.gsub(tostring(data.description or ''), "'", "''") .. "'") end
-    if data.status ~= nil then table.insert(updates, "status = " .. tonumber(data.status)) end
-
-    if #updates > 0 then
-        table.insert(updates, "update_time = UNIX_TIMESTAMP()")
-        local sql = "UPDATE role SET " .. table.concat(updates, ", ") .. " WHERE id = " .. tonumber(id)
-        mysql.query(db, sql)
-    end
-
-    mysql.set_keepalive(db)
     self:json({ success = true, message = '更新成功', data = nil })
 end
 
@@ -148,18 +117,13 @@ function _M:delete(id)
         return
     end
 
-    local mysql = require('app.lib.mysql')
-    local db = mysql.new()
-    mysql.connect(db)
+    local role_model = RoleModel:new()
+    local success, err = role_model:delete(tonumber(id))
 
-    if not db then
-        self:json({ success = false, message = '连接失败', data = nil }, 500)
+    if not success then
+        self:json({ success = false, message = '删除失败: ' .. tostring(err), data = nil }, 500)
         return
     end
-
-    local sql = "DELETE FROM role WHERE id = " .. tonumber(id)
-    mysql.query(db, sql)
-    mysql.set_keepalive(db)
 
     self:json({ success = true, message = '删除成功', data = nil })
 end

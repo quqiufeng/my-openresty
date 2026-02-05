@@ -1,6 +1,5 @@
 local Controller = require('app.core.Controller')
 local QueryBuilder = require('app.db.query')
-local Mysql = require('app.lib.mysql')
 
 local _M = {}
 
@@ -10,7 +9,7 @@ function _M:index()
         :where('status', 'active')
         :order_by('created_at', 'DESC')
         :limit(10)
-        :get_sql()
+        :to_sql()
 
     self:json({
         example = 'basic_select',
@@ -26,7 +25,7 @@ function _M:joins()
         :where('users.status', 'active')
         :where('orders.status', 'pending')
         :order_by('users.name')
-        :get_sql()
+        :to_sql()
 
     self:json({
         example = 'join',
@@ -41,10 +40,9 @@ function _M:where_conditions()
         :where('category_id', 1)
         :or_where('category_id', 2)
         :where_in('status', {'active', 'pending'})
-        :where_null('deleted_at')
         :like('name', '%test%')
         :order_by('price', 'ASC')
-        :get_sql()
+        :to_sql()
 
     self:json({
         example = 'where_conditions',
@@ -129,7 +127,7 @@ function _M:complex_query()
         :having('orders.total', '>', 100)
         :order_by('orders.created_at', 'DESC')
         :limit(20)
-        :get_sql()
+        :to_sql()
 
     self:json({
         complex_query = sql
@@ -141,7 +139,7 @@ function _M:raw_expressions()
         :select('*')
         :where_raw('DATE(created_at) = CURDATE()')
         :order_by_raw('FIELD(priority, "high", "medium", "low")')
-        :get_sql()
+        :to_sql()
 
     self:json({
         raw_expressions = sql
