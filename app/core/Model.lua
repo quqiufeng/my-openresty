@@ -54,16 +54,38 @@ end
 function _M.new(self)
     local Mysql = require('app.lib.mysql')
     local db, config = Mysql.new()
+    
+    -- 读取配置中的表前缀
+    local ok, config_module = pcall(require, 'app.config.config')
+    local table_prefix = ''
+    if ok and config_module and config_module.table_prefix then
+        table_prefix = config_module.table_prefix
+    end
+    
     return setmetatable({
         _db = db,
         _config = config,
-        table_name = nil
+        table_name = nil,
+        _prefix = table_prefix
     }, mt)
 end
 
 function _M.set_table(self, name)
     self.table_name = name
     return self
+end
+
+function _M.table_prefix(self, prefix)
+    self._prefix = prefix or ''
+    return self
+end
+
+function _M.get_prefix(self)
+    return self._prefix or ''
+end
+
+function _M.get_full_table_name(self)
+    return (self._prefix or '') .. (self.table_name or '')
 end
 
 function _M.connect(self)
@@ -100,9 +122,10 @@ function _M.query(self, query, est_nrows)
 end
 
 function _M.get_all(self, where, limit, offset)
+    local full_table = self:get_full_table_name()
     local sql_parts = new_tab(4, 0)
     sql_parts[1] = "SELECT * FROM "
-    sql_parts[2] = self.table_name or ""
+    sql_parts[2] = full_table
     sql_parts[3] = _build_where_clause(where)
 
     if limit then
@@ -116,7 +139,8 @@ function _M.get_all(self, where, limit, offset)
 end
 
 function _M.get_by_id(self, id)
-    local sql = "SELECT * FROM " .. (self.table_name or "") ..
+    local full_table = self:get_full_table_name()
+    local sql = "SELECT * FROM " .. full_table ..
                 " WHERE id = " .. tonumber(id)
     local result = self:query(sql, 1)
     return result and result[1] or nil
@@ -139,9 +163,10 @@ function _M.insert(self, data)
         end
     end
 
+    local full_table = self:get_full_table_name()
     local sql_parts = new_tab(4, 0)
     sql_parts[1] = "INSERT INTO "
-    sql_parts[2] = self.table_name or ""
+    sql_parts[2] = full_table
     sql_parts[3] = " ("
     sql_parts[4] = table.concat(fields, ",")
     sql_parts[5] = ") VALUES ("
@@ -168,9 +193,10 @@ function _M.update(self, data, where)
         end
     end
 
+    local full_table = self:get_full_table_name()
     local sql_parts = new_tab(4, 0)
     sql_parts[1] = "UPDATE "
-    sql_parts[2] = self.table_name or ""
+    sql_parts[2] = full_table
     sql_parts[3] = " SET "
     sql_parts[4] = table.concat(set_parts, ",")
     sql_parts[5] = _build_where_clause(where)
@@ -181,9 +207,10 @@ function _M.update(self, data, where)
 end
 
 function _M.delete(self, where)
+    local full_table = self:get_full_table_name()
     local sql_parts = new_tab(3, 0)
     sql_parts[1] = "DELETE FROM "
-    sql_parts[2] = self.table_name or ""
+    sql_parts[2] = full_table
     sql_parts[3] = _build_where_clause(where)
 
     local sql = table.concat(sql_parts, '')
@@ -192,9 +219,10 @@ function _M.delete(self, where)
 end
 
 function _M.count(self, where)
+    local full_table = self:get_full_table_name()
     local sql_parts = new_tab(3, 0)
     sql_parts[1] = "SELECT COUNT(*) as cnt FROM "
-    sql_parts[2] = self.table_name or ""
+    sql_parts[2] = full_table
     sql_parts[3] = _build_where_clause(where)
 
     local sql = table.concat(sql_parts, '')
@@ -205,6 +233,76 @@ end
 function _M.query_one(self, query)
     local result = self:query(query, 1)
     return result and result[1] or nil
+end
+
+-- ========== JOIN 关联查询方法 ==========
+
+function _M.join(self, table_name)
+    if not self._query_builder then
+        self._query_builder = require('app.db.query'):new(self.table_name)
+    end
+    self._query_builder:join(table_name)
+    return self
+end
+
+function _M.left_join(self, table_name)
+    if not self._query_builder then
+        self._query_builder = require('app.db.query'):new(self.table_name, self._prefix)
+    end
+    self._query_builder:left_join(table_name)
+    return self
+end
+
+function _M.right_join(self, table_name)
+    if not self._query_builder then
+        self._query_builder = require('app.db.query'):new(self.table_name, self._prefix)
+    end
+    self._query_builder:right_join(table_name)
+    return self
+end
+
+function _M.on(self, left_field, right_field)
+    if self._query_builder then
+        self._query_builder:on(left_field, right_field)
+    end
+    return self
+end
+
+function _M.get_all_join(self, options)
+    options = options or {}
+    local prefix = self._prefix or ''
+    local builder = self._query_builder or require('app.db.query'):new(self.table_name, prefix)
+
+    -- 设置字段
+    if options.fields and options.fields ~= '' then
+        builder:select(options.fields)
+    end
+
+    -- WHERE 条件
+    if options.where then
+        for k, v in pairs(options.where) do
+            builder:where(k, '=', v)
+        end
+    end
+
+    -- 排序
+    if options.order_by then
+        builder:order_by(options.order_by, options.order or 'DESC')
+    end
+
+    -- 分页
+    if options.limit then
+        builder:limit(options.limit)
+        if options.offset then
+            builder:offset(options.offset)
+        end
+    end
+
+    -- 重置 QueryBuilder
+    self._query_builder = nil
+
+    local sql = builder:to_sql()
+    return self:query(sql)
 end
 
 return _M

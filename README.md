@@ -109,6 +109,24 @@ app.core.Controller  app.core.Model
 
 - **OS**: Ubuntu 24.04.3 LTS / Ubuntu 24.04.3 LTS
 
+### LuaJIT Interpreter / LuaJIT 解释器
+
+本项目需要 LuaJIT 2.1 运行单元测试。默认路径为 `/usr/local/web/luajit/bin/luajit`。
+
+This project requires LuaJIT 2.1 to run unit tests. Default path is `/usr/local/web/luajit/bin/luajit`.
+
+```bash
+# 创建软链接（推荐 /usr/local/bin/luajit）
+sudo ln -s /usr/local/web/luajit/bin/luajit /usr/local/bin/luajit
+
+# 验证 LuaJIT 安装
+luajit -v
+
+# 输出 / Expected output:
+# LuaJIT 2.1.ROLLING -- Copyright (C) 2005-2025 Mike Pall.
+# https://luajit.org/
+```
+
 ### Nginx Configuration / Nginx 配置
 
 参考 `nginx/conf/` 目录下的配置文件：
@@ -159,13 +177,23 @@ apt-get update && apt-get install -y build-essential libc6-dev libgd-dev libpng-
 ## Quick Start / 快速开始
 
 ```bash
-# 安装依赖 / Install dependencies (if not already installed)
+# 1. 创建 LuaJIT 软链接（用于运行单元测试）
+sudo ln -s /usr/local/web/luajit/bin/luajit /usr/local/bin/luajit
+
+# 2. 验证 LuaJIT
+luajit -v
+
+# 3. 运行单元测试
+luajit tests/unit/query_builder_test.lua
+luajit tests/unit/model_join_test.lua
+
+# 4. 安装依赖 / Install dependencies (if not already installed)
 apt-get update && apt-get install -y build-essential libc6-dev libgd-dev libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev libfontconfig1-dev libssl-dev zlib1g-dev
 
-# 启动 nginx / Start nginx
+# 5. 启动 nginx / Start nginx
 /usr/local/web/nginx/sbin/nginx
 
-# 测试 API / Test API
+# 6. 测试 API / Test API
 curl http://localhost:8080/
 ```
 
@@ -288,6 +316,15 @@ route:delete('/users/{id}', 'User:delete')
 ### Run Tests / 运行测试
 
 ```bash
+# 运行 QueryBuilder 单元测试
+luajit tests/unit/query_builder_test.lua
+
+# 运行 Model JOIN 单元测试
+luajit tests/unit/model_join_test.lua
+
+# 运行 Model Prefix 单元测试
+luajit tests/unit/model_prefix_test.lua
+
 # 运行集成测试
 ./tests/integration/crud/User.sh
 

@@ -32,6 +32,24 @@ local function validate_identifier(identifier)
     return identifier
 end
 
+-- 验证字段名（允许 table.field 格式）
+local function validate_field_name(field_name)
+    if not field_name or type(field_name) ~= 'string' then
+        return nil
+    end
+    -- 允许简单字段名或 table.field 格式
+    if not field_name:match('^[a-zA-Z_.][a-zA-Z0-9_.]*$') then
+        return nil
+    end
+    return field_name
+end
+
+-- 清理字符串首尾空白
+local function trim(str)
+    if not str then return nil end
+    return str:gsub('^%s+', ''):gsub('%s+$', '')
+end
+
 -- 处理字段名，支持 table.field 和 table.field as alias 格式
 local function parse_field(field)
     if not field or type(field) ~= 'string' then
@@ -39,20 +57,15 @@ local function parse_field(field)
     end
 
     -- 检查是否包含 AS 别名 (不区分大小写)
-    local alias_start = field:upper():find('%s+AS%s+', 1, true)
+    local upper_field = field:upper()
+    local alias_start = upper_field:find('%s+AS%s+', 1, false)
     if alias_start then
-        local field_part = field:sub(1, alias_start - 1):trim()
-        local alias = field:sub(alias_start + 4):trim()
+        local field_part = trim(field:sub(1, alias_start - 1))
+        local alias = trim(field:sub(alias_start + 3))
         return field_part, alias
     end
 
     return field, nil
-end
-
--- 清理字符串首尾空白
-local function trim(str)
-    if not str then return nil end
-    return str:gsub('^%s+', ''):gsub('%s+$', '')
 end
 
 -- 检查字段是否已有表名前缀
@@ -63,29 +76,51 @@ local function has_table_prefix(field)
     return field:find('%.'), nil
 end
 
-function QueryBuilder:new(table_name)
+function QueryBuilder:new(table_name, prefix)
     local self = setmetatable({}, QueryBuilder)
     self.table = table_name or ''
+    self._prefix = prefix or ''
     self.fields = '*'
     self.wheres = {}
     self.joins = {}
     self.orders = {}
     self.limit_val = nil
     self.offset_val = nil
+    self._last_join_table = nil
     return self
+end
+
+function QueryBuilder:prefix(p)
+    self._prefix = p or ''
+    return self
+end
+
+function QueryBuilder:table_prefix(tp)
+    self._prefix = tp or ''
+    return self
+end
+
+function QueryBuilder:from_config(config)
+    local prefix = config.table_prefix or ''
+    return self:new(self.table, prefix)
+end
+
+function QueryBuilder:prefix(p)
+    self._prefix = p or ''
+    return self
+end
+
+function QueryBuilder:get_prefix()
+    return self._prefix or ''
 end
 
 function QueryBuilder:select(fields)
     if type(fields) == 'table' then
         -- 支持 table 格式: {'id', 'name', 'orders.total as order_amount'}
-        -- 主表字段不带表名（自动添加），join 表字段需要带表名
+        -- 字段直接存储，JOIN 时在 to_sql() 中自动添加表前缀
         local parts = {}
         for _, field in ipairs(fields) do
             local field_part, alias = parse_field(field)
-            -- 如果不包含 . 且不是 *，添加主表名前缀
-            if not has_table_prefix(field) and field_part ~= '*' then
-                field_part = self.table .. '.' .. field_part
-            end
             if alias then
                 table.insert(parts, field_part .. ' AS ' .. alias)
             else
@@ -106,13 +141,13 @@ function QueryBuilder:auto_prefix_fields()
     end
 
     if type(self.fields) == 'string' and self.fields ~= '*' then
-        -- 处理字符串格式: 'id, name, email'
+        -- 处理字符串格式: 'id, name, email' 或 'id, users.name as user_name, orders.total'
         local parts = {}
         for field in string.gmatch(self.fields, '[^,]+') do
             field = field:gsub('^%s+', ''):gsub('%s+$', '')
             local field_part, alias = parse_field(field)
             -- 如果不包含 . 且不是 *，添加主表名前缀
-            if not has_table_prefix(field) and field_part ~= '*' then
+            if not has_table_prefix(field_part) and field_part ~= '*' then
                 field_part = self.table .. '.' .. field_part
             end
             if alias then
@@ -128,7 +163,7 @@ function QueryBuilder:auto_prefix_fields()
         for _, field in ipairs(self.fields) do
             local field_part, alias = parse_field(field)
             -- 如果不包含 . 且不是 *，添加主表名前缀
-            if not has_table_prefix(field) and field_part ~= '*' then
+            if not has_table_prefix(field_part) and field_part ~= '*' then
                 field_part = self.table .. '.' .. field_part
             end
             if alias then
@@ -141,30 +176,48 @@ function QueryBuilder:auto_prefix_fields()
     end
 end
 
-function QueryBuilder:join(table_name, first_key, operator, second_key)
-    if not table_name or not first_key or not second_key then
+function QueryBuilder:join(table_name)
+    if not table_name then
         return self
     end
-    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
-    table.insert(self.joins, { type = 'JOIN', table = table_name, on = cond })
+    self._last_join_table = table_name
+    table.insert(self.joins, { type = 'JOIN', table = table_name, on = nil })
     return self
 end
 
-function QueryBuilder:left_join(table_name, first_key, operator, second_key)
-    if not table_name or not first_key or not second_key then
+function QueryBuilder:left_join(table_name)
+    if not table_name then
         return self
     end
-    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
-    table.insert(self.joins, { type = 'LEFT JOIN', table = table_name, on = cond })
+    self._last_join_table = table_name
+    table.insert(self.joins, { type = 'LEFT JOIN', table = table_name, on = nil })
     return self
 end
 
-function QueryBuilder:right_join(table_name, first_key, operator, second_key)
-    if not table_name or not first_key or not second_key then
+function QueryBuilder:right_join(table_name)
+    if not table_name then
         return self
     end
-    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
-    table.insert(self.joins, { type = 'RIGHT JOIN', table = table_name, on = cond })
+    self._last_join_table = table_name
+    table.insert(self.joins, { type = 'RIGHT JOIN', table = table_name, on = nil })
+    return self
+end
+
+function QueryBuilder:on(left_field, right_field)
+    if not left_field or not right_field then
+        return self
+    end
+    if #self.joins == 0 then
+        return self
+    end
+    local last_join = self.joins[#self.joins]
+    last_join.on = {
+        left = left_field,
+        right = right_field,
+        main_table = self.table,
+        join_table = last_join.table
+    }
+    self._last_join_table = nil
     return self
 end
 
@@ -187,11 +240,21 @@ function QueryBuilder:offset(n)
     return self
 end
 
+function QueryBuilder:where(key, operator, value)
+    table.insert(self.wheres, {
+        key = key,
+        operator = operator or '=',
+        value = value
+    })
+    return self
+end
+
 function QueryBuilder:to_sql()
-    -- 验证表名
+    local prefix = self._prefix or ''
+
+    -- 验证主表名
     local table_name = validate_identifier(self.table)
     if not table_name then
-        ngx.log(ngx.ERR, 'Invalid table name: ' .. tostring(self.table))
         return 'SELECT * FROM invalid_table'
     end
 
@@ -200,12 +263,38 @@ function QueryBuilder:to_sql()
         self:auto_prefix_fields()
     end
 
-    local sql = 'SELECT ' .. self.fields .. ' FROM ' .. table_name
+    local full_table_name = prefix .. table_name
+    local sql = 'SELECT ' .. self.fields .. ' FROM ' .. full_table_name
 
     -- JOIN 子句
     if #self.joins > 0 then
         for _, join in ipairs(self.joins) do
-            sql = sql .. ' ' .. join.type .. ' ' .. join.table .. ' ON ' .. join.on
+            local join_table = prefix .. join.table
+            local on_cond = join.on
+            if on_cond then
+                if type(on_cond) == 'table' then
+                    -- 新格式: { left, right, main_table, join_table }
+                    local left_field = on_cond.left
+                    local right_field = on_cond.right
+                    -- 添加表名前缀
+                    local left_table = on_cond.main_table
+                    local right_table = on_cond.join_table
+                    left_field = left_field:find('.', 1, true) and left_field or prefix .. left_table .. '.' .. left_field
+                    right_field = right_field:find('.', 1, true) and right_field or prefix .. right_table .. '.' .. right_field
+                    on_cond = left_field .. ' = ' .. right_field
+                else
+                    -- 旧格式: 字符串
+                    local equals_idx = on_cond:find(' = ', 1, true)
+                    if equals_idx then
+                        local left_part = trim(on_cond:sub(1, equals_idx - 1))
+                        local right_part = trim(on_cond:sub(equals_idx + 3))
+                        left_part = left_part:gsub('([^.]+)%.', prefix .. '%1.')
+                        right_part = right_part:gsub('([^.]+)%.', prefix .. '%1.')
+                        on_cond = left_part .. ' = ' .. right_part
+                    end
+                end
+            end
+            sql = sql .. ' ' .. join.type .. ' ' .. join_table .. ' ON ' .. (on_cond or '')
         end
     end
 
@@ -217,10 +306,9 @@ function QueryBuilder:to_sql()
             if w.raw then
                 table.insert(conditions, w.raw)
             else
-                -- 验证字段名
-                local field_name = validate_identifier(w.key)
+                -- 验证字段名（允许 table.field 格式）
+                local field_name = validate_field_name(w.key)
                 if not field_name then
-                    ngx.log(ngx.WARN, 'Invalid field name in where: ' .. tostring(w.key))
                     field_name = 'invalid_field'
                 end
 
@@ -276,11 +364,17 @@ function QueryBuilder:reset()
     self.orders = {}
     self.limit_val = nil
     self.offset_val = nil
+    self._last_join_table = nil
+    return self
+end
+
+function QueryBuilder:table_prefix(tp)
+    self._prefix = tp or ''
     return self
 end
 
 function QueryBuilder:clone()
-    local clone = QueryBuilder:new(self.table)
+    local clone = QueryBuilder:new(self.table, self._prefix)
     clone.fields = self.fields
     clone.wheres = {}
     clone.joins = {}

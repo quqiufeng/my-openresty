@@ -20,19 +20,28 @@ function _M:list(options)
     local offset = (page - 1) * pageSize
 
     local builder = QueryBuilder:new('admin')
-    builder.fields = 'id, username, phone, role_id, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time'
+    builder:select('admin.id, admin.username, admin.phone, admin.role_id, admin.status, ' ..
+                   'role.name as role_name, role.description as role_description, ' ..
+                   'FROM_UNIXTIME(admin.create_time) as create_time, ' ..
+                   'FROM_UNIXTIME(admin.update_time) as update_time')
+
+    -- LEFT JOIN role 表获取角色信息
+    builder:left_join('role'):on('role_id', 'id')
 
     if options.username and options.username ~= '' then
-        builder:where('username', 'LIKE', '%' .. options.username .. '%')
+        builder:where('admin.username', 'LIKE', '%' .. options.username .. '%')
     end
     if options.phone and options.phone ~= '' then
-        builder:where('phone', 'LIKE', '%' .. options.phone .. '%')
+        builder:where('admin.phone', 'LIKE', '%' .. options.phone .. '%')
     end
     if options.role_id and options.role_id ~= '' then
-        builder:where('role_id', '=', tonumber(options.role_id))
+        builder:where('admin.role_id', '=', tonumber(options.role_id))
+    end
+    if options.status and options.status ~= '' then
+        builder:where('admin.status', '=', tonumber(options.status))
     end
 
-    local sorter = options.sorter or 'id'
+    local sorter = options.sorter or 'admin.id'
     local sortOrder = options.order == 'ascend' and 'ASC' or 'DESC'
     builder:order_by(sorter, sortOrder)
     builder:limit(pageSize)
@@ -61,7 +70,19 @@ end
 
 function _M:get_by_id(id)
     if not id then return nil end
-    return Model.get_by_id(self, id)
+
+    local builder = QueryBuilder:new('admin')
+    builder:select('admin.id, admin.username, admin.phone, admin.role_id, admin.status, ' ..
+                   'role.name as role_name, role.description as role_description, ' ..
+                   'FROM_UNIXTIME(admin.create_time) as create_time, ' ..
+                   'FROM_UNIXTIME(admin.update_time) as update_time')
+    builder:left_join('role'):on('role_id', 'id')
+    builder:where('admin.id', '=', tonumber(id))
+    builder:limit(1)
+
+    local sql = builder:to_sql()
+    local rows = self:query(sql)
+    return rows and rows[1] or nil
 end
 
 function _M:get_by_username(username)

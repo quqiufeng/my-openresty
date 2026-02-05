@@ -1,4 +1,4 @@
--- QueryBuilder Library Unit Tests
+-- QueryBuilder Unit Tests
 -- tests/unit/query_builder_spec.lua
 
 package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
@@ -14,192 +14,395 @@ after_each = Test.after_each
 assert = Test.assert
 
 describe('QueryBuilder Module', function()
-    describe('creation', function()
+
+    describe('new()', function()
         it('should create query builder instance', function()
-            local QueryBuilder = {}
-            function QueryBuilder:new(table_name)
-                return setmetatable({
-                    table = table_name or 'users',
-                    wheres = {},
-                    orders = {},
-                    fields = '*',
-                    limit_val = nil,
-                    offset_val = nil
-                }, {__index = self})
-            end
+            local QueryBuilder = require('app.db.query')
             local qb = QueryBuilder:new('users')
-            assert.is_table(qb)
+            assert.is_not_nil(qb)
             assert.equals('users', qb.table)
+            assert.equals('*', qb.fields)
+            assert.is_table(qb.wheres)
+            assert.is_table(qb.joins)
+            assert.is_table(qb.orders)
+        end)
+
+        it('should create instance with empty table name', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new()
+            assert.is_not_nil(qb)
+            assert.equals('', qb.table)
         end)
     end)
 
-    describe('select', function()
-        it('should set select fields', function()
-            local qb = {fields = '*'}
-            function qb:select(fields)
-                self.fields = fields or '*'
-                return self
-            end
+    describe('select()', function()
+        it('should set select fields as string', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
             qb:select('id, name, email')
             assert.equals('id, name, email', qb.fields)
         end)
-    end)
 
-    describe('where', function()
-        it('should add where clause', function()
-            local qb = {wheres = {}}
-            function qb:where(field, operator, value)
-                table.insert(qb.wheres, {field = field, operator = operator, value = value})
-                return self
-            end
-            qb:where('id', '=', 1)
-            qb:where('status', '=', 'active')
-            assert.equals(2, #qb.wheres)
-            assert.equals('id', qb.wheres[1].field)
-            assert.equals('status', qb.wheres[2].field)
+        it('should set select fields as table', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'id', 'name', 'email'})
+            assert.equals('id, name, email', qb.fields)
+        end)
+
+        it('should handle table format with alias', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'id', 'users.name as user_name', 'email'})
+            assert.equals('id, users.name AS user_name, email', qb.fields)
+        end)
+
+        it('should set default * when no fields', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select()
+            assert.equals('*', qb.fields)
         end)
     end)
 
-    describe('where_in', function()
+    describe('where()', function()
+        it('should add where clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:where('status', '=', 'active')
+            qb:where('id', '>', 10)
+            assert.equals(2, #qb.wheres)
+            assert.equals('status', qb.wheres[1].key)
+            assert.equals('=', qb.wheres[1].operator)
+            assert.equals('active', qb.wheres[1].value)
+        end)
+
+        it('should support different operators', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:where('age', '>', 18)
+            qb:where('status', '!=', 'deleted')
+            qb:where('name', 'LIKE', '%john%')
+            assert.equals('>', qb.wheres[1].operator)
+            assert.equals('!=', qb.wheres[2].operator)
+            assert.equals('LIKE', qb.wheres[3].operator)
+        end)
+    end)
+
+    describe('or_where()', function()
+        it('should add OR where clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:where('status', '=', 'active')
+            qb:or_where('status', '=', 'pending')
+            assert.equals(2, #qb.wheres)
+            assert.is_true(qb.wheres[2].is_or)
+        end)
+    end)
+
+    describe('where_in()', function()
         it('should add WHERE IN clause', function()
-            local qb = {wheres = {}}
-            function qb:where_in(field, values)
-                table.insert(qb.wheres, {field = field, operator = 'IN', value = values})
-                return self
-            end
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
             qb:where_in('id', {1, 2, 3})
             assert.equals(1, #qb.wheres)
-            assert.same({1, 2, 3}, qb.wheres[1].value)
+            assert.is_not_nil(qb.wheres[1].raw)
+            assert.matches('IN', qb.wheres[1].raw)
         end)
     end)
 
-    describe('order_by', function()
+    describe('like()', function()
+        it('should add LIKE clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:like('name', 'john')
+            assert.equals(1, #qb.wheres)
+            assert.equals('LIKE', qb.wheres[1].operator)
+            assert.equals('john', qb.wheres[1].value)
+        end)
+    end)
+
+    describe('join()', function()
+        it('should add JOIN clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:join('orders', 'users.id', '=', 'orders.user_id')
+            assert.equals(1, #qb.joins)
+            assert.equals('JOIN', qb.joins[1].type)
+            assert.equals('orders', qb.joins[1].table)
+            assert.matches('users.id', qb.joins[1].on)
+            assert.matches('orders.user_id', qb.joins[1].on)
+        end)
+    end)
+
+    describe('left_join()', function()
+        it('should add LEFT JOIN clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            assert.equals(1, #qb.joins)
+            assert.equals('LEFT JOIN', qb.joins[1].type)
+        end)
+    end)
+
+    describe('right_join()', function()
+        it('should add RIGHT JOIN clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:right_join('orders', 'users.id', '=', 'orders.user_id')
+            assert.equals(1, #qb.joins)
+            assert.equals('RIGHT JOIN', qb.joins[1].type)
+        end)
+    end)
+
+    describe('order_by()', function()
         it('should add order clause', function()
-            local qb = {orders = {}}
-            function qb:order_by(field, direction)
-                direction = direction or 'ASC'
-                table.insert(qb.orders, field .. ' ' .. direction)
-                return self
-            end
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
             qb:order_by('created_at', 'DESC')
             qb:order_by('name', 'ASC')
             assert.equals(2, #qb.orders)
+            assert.equals('created_at', qb.orders[1].field)
+            assert.equals('DESC', qb.orders[1].direction)
+            assert.equals('name', qb.orders[2].field)
+            assert.equals('ASC', qb.orders[2].direction)
+        end)
+
+        it('should use default ASC direction', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:order_by('id')
+            assert.equals('ASC', qb.orders[1].direction)
         end)
     end)
 
-    describe('limit', function()
+    describe('limit()', function()
         it('should set limit', function()
-            local qb = {limit_val = nil}
-            function qb:limit(n)
-                self.limit_val = tonumber(n)
-                return self
-            end
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
             qb:limit(10)
             assert.equals(10, qb.limit_val)
         end)
     end)
 
-    describe('offset', function()
+    describe('offset()', function()
         it('should set offset', function()
-            local qb = {offset_val = nil}
-            function qb:offset(n)
-                self.offset_val = tonumber(n)
-                return self
-            end
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
             qb:offset(20)
             assert.equals(20, qb.offset_val)
         end)
     end)
 
-    describe('to_sql', function()
-        it('should generate SELECT SQL', function()
-            local qb = {
-                table = 'users',
-                fields = 'id, name',
-                wheres = {{field = 'status', operator = '=', value = 'active'}},
-                orders = {'created_at DESC'},
-                limit_val = 10,
-                offset_val = 0
-            }
-            function qb:to_sql()
-                local sql = 'SELECT ' .. self.fields .. ' FROM ' .. self.table
-                if #self.wheres > 0 then
-                    local conditions = {}
-                    for _, w in ipairs(self.wheres) do
-                        local val = tonumber(w.value) and w.value or "'" .. w.value .. "'"
-                        table.insert(conditions, w.field .. ' ' .. w.operator .. ' ' .. val)
-                    end
-                    sql = sql .. ' WHERE ' .. table.concat(conditions, ' AND ')
-                end
-                if #self.orders > 0 then
-                    sql = sql .. ' ORDER BY ' .. table.concat(self.orders, ', ')
-                end
-                if self.limit_val then sql = sql .. ' LIMIT ' .. self.limit_val end
-                if self.offset_val then sql = sql .. ' OFFSET ' .. self.offset_val end
-                return sql
-            end
-            
+    describe('to_sql()', function()
+        it('should generate basic SELECT SQL', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('id, name')
             local sql = qb:to_sql()
             assert.matches('SELECT id, name FROM users', sql)
+        end)
+
+        it('should generate SELECT with WHERE clause', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:where('status', '=', 'active')
+            local sql = qb:to_sql()
             assert.matches('WHERE status = .active', sql)
+        end)
+
+        it('should generate SELECT with multiple WHERE clauses', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:where('status', '=', 'active')
+            qb:where('age', '>', 18)
+            local sql = qb:to_sql()
+            assert.matches('WHERE status = .active', sql)
+            assert.matches('AND age > 18', sql)
+        end)
+
+        it('should generate SELECT with ORDER BY', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:order_by('created_at', 'DESC')
+            local sql = qb:to_sql()
+            assert.matches('ORDER BY created_at DESC', sql)
+        end)
+
+        it('should generate SELECT with LIMIT', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:limit(10)
+            local sql = qb:to_sql()
+            assert.matches('LIMIT 10', sql)
+        end)
+
+        it('should generate SELECT with OFFSET', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:offset(20)
+            local sql = qb:to_sql()
+            assert.matches('OFFSET 20', sql)
+        end)
+
+        it('should generate complete SQL with all clauses', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('id, name, email')
+            qb:where('status', '=', 'active')
+            qb:where('age', '>', 18)
+            qb:order_by('created_at', 'DESC')
+            qb:limit(10)
+            qb:offset(0)
+            local sql = qb:to_sql()
+            assert.matches('SELECT id, name, email FROM users', sql)
+            assert.matches('WHERE status = .active', sql)
+            assert.matches('AND age > 18', sql)
             assert.matches('ORDER BY created_at DESC', sql)
             assert.matches('LIMIT 10', sql)
             assert.matches('OFFSET 0', sql)
         end)
-    end)
 
-    describe('count', function()
-        it('should generate COUNT SQL', function()
-            local qb = {
-                table = 'users',
-                wheres = {{field = 'status', operator = '=', value = 'active'}}
-            }
-            function qb:count()
-                local sql = 'SELECT COUNT(*) as total FROM ' .. self.table
-                if #self.wheres > 0 then
-                    local conditions = {}
-                    for _, w in ipairs(self.wheres) do
-                        local val = tonumber(w.value) and w.value or "'" .. w.value .. "'"
-                        table.insert(conditions, w.field .. ' ' .. w.operator .. ' ' .. val)
-                    end
-                    sql = sql .. ' WHERE ' .. table.concat(conditions, ' AND ')
-                end
-                return sql
-            end
-            
-            local sql = qb:count()
-            assert.matches('SELECT COUNT%(%*%) as total FROM users', sql)
+        it('should generate JOIN SQL', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            assert.matches('LEFT JOIN orders ON users.id = orders.user_id', sql)
+        end)
+
+        it('should generate LEFT JOIN SQL', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            assert.matches('LEFT JOIN orders ON users.id = orders.user_id', sql)
         end)
     end)
 
-    describe('paginate', function()
-        it('should calculate pagination', function()
-            local qb = {}
-            function qb:paginate(page, per_page, total_count)
-                page = tonumber(page) or 1
-                per_page = tonumber(per_page) or 20
-                total_count = tonumber(total_count) or 0
-                local offset = (page - 1) * per_page
-                local total_pages = math.ceil(total_count / per_page)
-                return {
-                    page = page,
-                    per_page = per_page,
-                    total = total_count,
-                    total_pages = total_pages,
-                    offset = offset,
-                    has_next = page < total_pages,
-                    has_prev = page > 1
-                }
-            end
-            
-            local p = qb:paginate(2, 10, 100)
-            assert.equals(2, p.page)
-            assert.equals(10, p.per_page)
-            assert.equals(100, p.total)
-            assert.equals(10, p.total_pages)
-            assert.equals(10, p.offset)
-            assert.is_true(p.has_next)
-            assert.is_true(p.has_prev)
+    describe('to_sql() with JOIN - auto table prefix', function()
+        it('should auto-add table prefix for main table fields in JOIN', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'id', 'name', 'orders.total'})
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            -- 主表字段自动加前缀，join 表字段保持原样
+            assert.matches('SELECT users.id, users.name, orders.total FROM users', sql)
+        end)
+
+        it('should preserve AS alias with auto prefix', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'id', 'users.name as user_name', 'orders.total as amount'})
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            assert.matches('users.name AS user_name', sql)
+            assert.matches('orders.total AS amount', sql)
+        end)
+
+        it('should handle * in select with JOIN', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'*', 'orders.created_at'})
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            assert.matches('SELECT *, orders.created_at FROM users', sql)
+        end)
+
+        it('should work with string format select in JOIN', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('id, name, orders.total')
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            local sql = qb:to_sql()
+            assert.matches('SELECT users.id, users.name, orders.total FROM users', sql)
+        end)
+
+        it('should generate complete JOIN query with all features', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select({'users.id', 'users.name', 'orders.total as order_amount', 'orders.created_at'})
+            qb:left_join('orders', 'users.id', '=', 'orders.user_id')
+            qb:where('users.status', '=', 'active')
+            qb:order_by('orders.created_at', 'DESC')
+            qb:limit(10)
+            local sql = qb:to_sql()
+            assert.matches('SELECT users.id, users.name, orders.total AS order_amount, orders.created_at FROM users', sql)
+            assert.matches('LEFT JOIN orders ON users.id = orders.user_id', sql)
+            assert.matches('WHERE users.status = .active', sql)
+            assert.matches('ORDER BY orders.created_at DESC', sql)
+            assert.matches('LIMIT 10', sql)
+        end)
+
+        it('should handle multiple JOINs', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('orders')
+            qb:select({'orders.id', 'users.name as user_name', 'products.name as product_name'})
+            qb:left_join('users', 'orders.user_id', '=', 'users.id')
+            qb:left_join('order_items', 'orders.id', '=', 'order_items.order_id')
+            qb:left_join('products', 'order_items.product_id', '=', 'products.id')
+            local sql = qb:to_sql()
+            assert.matches('SELECT orders.id, users.name AS user_name, products.name AS product_name FROM orders', sql)
+            assert.matches('LEFT JOIN users ON orders.user_id = users.id', sql)
+            assert.matches('LEFT JOIN order_items ON orders.id = order_items.order_id', sql)
+            assert.matches('LEFT JOIN products ON order_items.product_id = products.id', sql)
         end)
     end)
+
+    describe('reset()', function()
+        it('should reset all query builder state', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('id, name')
+            qb:where('status', '=', 'active')
+            qb:order_by('id', 'DESC')
+            qb:limit(10)
+            qb:offset(5)
+            qb:join('orders', 'users.id', '=', 'orders.user_id')
+            qb:reset()
+            assert.equals('*', qb.fields)
+            assert.equals(0, #qb.wheres)
+            assert.equals(0, #qb.joins)
+            assert.equals(0, #qb.orders)
+            assert.is_nil(qb.limit_val)
+            assert.is_nil(qb.offset_val)
+        end)
+    end)
+
+    describe('clone()', function()
+        it('should clone query builder with same state', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('id, name')
+            qb:where('status', '=', 'active')
+            qb:order_by('id', 'DESC')
+            qb:limit(10)
+            
+            local cloned = qb:clone()
+            assert.equals(qb.fields, cloned.fields)
+            assert.equals(#qb.wheres, #cloned.wheres)
+            assert.equals(#qb.orders, #cloned.orders)
+            assert.equals(qb.limit_val, cloned.limit_val)
+        end)
+    end)
+
+    describe('String escaping', function()
+        it('should escape single quotes in values', function()
+            local QueryBuilder = require('app.db.query')
+            local qb = QueryBuilder:new('users')
+            qb:select('*')
+            qb:where('name', '=', "O'Reilly")
+            local sql = qb:to_sql()
+            assert.matches("WHERE name = 'O''Reilly'", sql)
+        end)
+    end)
+
 end)

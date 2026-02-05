@@ -6,7 +6,8 @@
 - [2. 搭配使用原则](#2-搭配使用原则)
 - [3. Model 自带方法详解](#3-model-自带方法详解)
 - [4. QueryBuilder 方法详解](#4-querybuilder-方法详解)
-- [5. system_menu 表 CRUD 完整示例](#5-system_menu-表-crud-完整示例)
+- [5. 表前缀配置](#5-表前缀配置)
+- [6. system_menu 表 CRUD 完整示例](#6-system_menu-表-crud-完整示例)
 
 ---
 
@@ -268,10 +269,14 @@ local sql = builder:to_sql()
 | 方法 | 用途 | 示例 | 生成 SQL |
 |------|------|------|----------|
 | `new(table)` | 创建实例 | `QueryBuilder.new('system_menu')` | - |
+| `new(table, prefix)` | 创建实例（带前缀） | `QueryBuilder.new('users', 'app_')` | - |
+| `prefix(p)` | 设置表前缀 | `prefix('app_')` | - |
+| `table_prefix(tp)` | 从配置设置前缀 | `table_prefix(config.table_prefix)` | - |
 | `select(fields)` | 指定字段 | `select('id, name, title')` | `SELECT id, name, title` |
-| `join(t, k1, op, k2)` | 内连接 | `join('orders', 'users.id', '=', 'orders.user_id')` | `JOIN orders ON users.id = orders.user_id` |
-| `left_join(t, k1, op, k2)` | 左连接 | `left_join('orders', 'users.id', '=', 'orders.user_id')` | `LEFT JOIN orders ON users.id = orders.user_id` |
-| `right_join(t, k1, op, k2)` | 右连接 | `right_join('orders', 'users.id', '=', 'orders.user_id')` | `RIGHT JOIN orders ON users.id = orders.user_id` |
+| `join(table)` | 内连接 | `join('orders')` | `JOIN orders` |
+| `left_join(table)` | 左连接 | `left_join('orders')` | `LEFT JOIN orders` |
+| `right_join(table)` | 右连接 | `right_join('orders')` | `RIGHT JOIN orders` |
+| `on(left_field, right_field)` | 连接条件 | `on('id', 'user_id')` | `ON table.id = join_table.user_id` |
 | `where(k, op, v)` | AND 条件 | `where('status', '=', 1)` | `WHERE status = 1` |
 | `or_where()` | OR 条件 | `or_where('a', '=', 1)` | `OR a = 1` |
 | `where_in(k, arr)` | IN 列表 | `where_in('id', {1,2,3})` | `WHERE id IN (1,2,3)` |
@@ -280,6 +285,7 @@ local sql = builder:to_sql()
 | `limit(n)` | 限制数量 | `limit(10)` | `LIMIT 10` |
 | `offset(n)` | 偏移量 | `offset(20)` | `OFFSET 20` |
 | `to_sql()` | 生成 SQL | `to_sql()` | 返回完整 SQL |
+| `reset()` | 重置查询 | `reset()` | - |
 
 ### 4.2 new - 创建实例
 
@@ -287,10 +293,27 @@ local sql = builder:to_sql()
 -- 引入 QueryBuilder
 local QueryBuilder = require('app.db.query')
 
--- 创建查询构建器
-local builder = QueryBuilder.new('system_menu')
--- 或在 Model 中
+-- 1. 基本创建
 local builder = QueryBuilder:new('system_menu')
+-- SQL: SELECT * FROM system_menu
+
+-- 2. 创建时指定表前缀
+local builder = QueryBuilder:new('system_menu', 'app_')
+-- SQL: SELECT * FROM app_system_menu
+
+-- 3. 使用配置中的表前缀
+local config = require('app.config.config')
+local builder = QueryBuilder:new('system_menu', config.table_prefix)
+-- SQL: SELECT * FROM cms_system_menu (假设 config.table_prefix = 'cms_')
+
+-- 4. 使用 table_prefix() 方法
+local builder = QueryBuilder:new('system_menu'):table_prefix('app_')
+-- SQL: SELECT * FROM app_system_menu
+
+-- 5. 链式调用
+local builder = QueryBuilder:new('system_menu', 'app_')
+    :select('id, path, name, title')
+    :where('status', '=', 1)
 ```
 
 ### 4.3 select - 指定查询字段
@@ -511,60 +534,73 @@ local sql = builder:to_sql()
 
 QueryBuilder 支持三种 JOIN 类型：`join`、`left_join`、`right_join`。
 
+**新语法**：使用 `on(left_field, right_field)` 方法指定连接条件，只需传字段名，表名自动推断。
+
 ```lua
 -- 1. INNER JOIN (只返回匹配的行)
-local builder = QueryBuilder:new('users')
-builder:select('users.id, users.name, orders.order_no, orders.total')
-builder:join('orders', 'users.id', '=', 'orders.user_id')
+local builder = QueryBuilder:new('admin')
+builder:select('admin.id, admin.username, admin.email, role.name as role_name')
+builder:join('role'):on('role_id', 'id')
 local sql = builder:to_sql()
--- SQL: SELECT users.id, users.name, orders.order_no, orders.total FROM users JOIN orders ON users.id = orders.user_id
+-- SQL: SELECT admin.id, admin.username, admin.email, role.name AS role_name
+--      FROM admin
+--      JOIN role ON admin.role_id = role.id
 
 -- 2. LEFT JOIN (返回左表所有行，右表无匹配为 NULL)
-local builder = QueryBuilder:new('users')
-builder:select('users.id, users.name, orders.order_no')
-builder:left_join('orders', 'users.id', '=', 'orders.user_id')
-builder:where('users.status', '=', 1)
+local builder = QueryBuilder:new('admin')
+builder:select('admin.id, admin.username, admin.email, role.name as role_name, role.description')
+builder:left_join('role'):on('role_id', 'id')
+builder:where('admin.status', '=', 1)
 local sql = builder:to_sql()
--- SQL: SELECT users.id, users.name, orders.order_no FROM users LEFT JOIN orders ON users.id = orders.user_id WHERE users.status = 1
+-- SQL: SELECT admin.id, admin.username, admin.email, role.name AS role_name, role.description
+--      FROM admin
+--      LEFT JOIN role ON admin.role_id = role.id
+--      WHERE admin.status = 1
 
 -- 3. RIGHT JOIN (返回右表所有行，左表无匹配为 NULL)
-local builder = QueryBuilder:new('users')
-builder:select('users.id, users.name, orders.order_no')
-builder:right_join('orders', 'users.id', '=', 'orders.user_id')
+local builder = QueryBuilder:new('admin')
+builder:select('admin.id, admin.username, role.name as role_name')
+builder:right_join('role'):on('admin.role_id', 'id')
 local sql = builder:to_sql()
--- SQL: SELECT users.id, users.name, orders.order_no FROM users RIGHT JOIN orders ON users.id = orders.user_id
+-- SQL: SELECT admin.id, admin.username, role.name AS role_name
+--      FROM admin
+--      RIGHT JOIN role ON admin.role_id = role.id
 
--- 4. 多表连接
-local builder = QueryBuilder:new('orders')
-builder:select('orders.id, orders.total, users.name as user_name, products.name as product_name')
-builder:left_join('users', 'orders.user_id', '=', 'users.id')
-builder:left_join('order_items', 'orders.id', '=', 'order_items.order_id')
-builder:left_join('products', 'order_items.product_id', '=', 'products.id')
-builder:where('orders.status', '=', 'completed')
-builder:order_by('orders.created_at', 'DESC')
-builder:limit(20)
+-- 4. 多表连接 (管理员-角色关联示例)
+local builder = QueryBuilder:new('admin')
+builder:select('admin.id, admin.username, admin.email, admin.last_login_at, role.name as role_name, role.status as role_status')
+builder:left_join('role'):on('role_id', 'id')
+builder:where('role.id', '=', 1)
+builder:where('admin.status', '=', 1)
+builder:order_by('admin.created_at', 'DESC')
+builder:limit(100)
 local sql = builder:to_sql()
 -- 生成的 SQL:
--- SELECT orders.id, orders.total, users.name as user_name, products.name as product_name 
--- FROM orders 
--- LEFT JOIN users ON orders.user_id = users.id 
--- LEFT JOIN order_items ON orders.id = order_items.order_id 
--- LEFT JOIN products ON order_items.product_id = products.id 
--- WHERE orders.status = 'completed' 
--- ORDER BY orders.created_at DESC 
--- LIMIT 20
+-- SELECT admin.id, admin.username, admin.email, admin.last_login_at, role.name AS role_name, role.status AS role_status
+-- FROM admin
+-- LEFT JOIN role ON admin.role_id = role.id
+-- WHERE role.id = 1
+-- AND admin.status = 1
+-- ORDER BY admin.created_at DESC
+-- LIMIT 100
 
--- 5. 自定义连接条件运算符
-local builder = QueryBuilder:new('products')
-builder:select('p.id, p.name, p.price, c.name as category_name')
-builder:join('categories c', 'p.category_id', '=', 'c.id')
--- 注意：复杂表名/别名需要在 to_sql 层面处理，此处仅支持简单标识符
+-- 5. 链式调用
+local builder = QueryBuilder:new('admin')
+    :select({'id', 'username', 'email', 'role_id'})
+    :left_join('role'):on('role_id', 'id')
+    :where('status', '=', 1)
+    :order_by('created_at', 'DESC')
+    :limit(50)
 
-local builder = QueryBuilder:new('products')
-builder:select('p.id, p.name')
-builder:left_join('categories', 'p.category_id', '>', 0)  -- 使用 >
+-- 6. 带表前缀的多表连接
+local config = require('app.config.config')
+local builder = QueryBuilder:new('admin', config.table_prefix)
+    :select({'admin.id', 'admin.username', 'role.name'})
+    :left_join('role'):on('role_id', 'id')
 local sql = builder:to_sql()
--- SQL: SELECT p.id, p.name FROM products LEFT JOIN categories ON p.category_id > 0
+-- 假设 config.table_prefix = 'cms_'
+-- SQL: SELECT admin.id, admin.username, role.name FROM cms_admin
+--      LEFT JOIN cms_role ON cms_admin.role_id = cms_role.id
 ```
 
 ### 4.13 完整查询示例
@@ -603,9 +639,86 @@ local rows = self:query(sql)
 
 ---
 
-## 5. system_menu 表 CRUD 完整示例
+## 5. 表前缀配置
 
-### 5.1 表结构假设
+### 5.1 配置项
+
+在 `app/config/config.lua` 中配置表前缀：
+
+```lua
+config = {
+    -- ... 其他配置 ...
+
+    table_prefix = '',  -- 表前缀，默认为空字符串
+
+    -- ... 其他配置 ...
+}
+```
+
+### 5.2 使用表前缀
+
+```lua
+-- 方式1: 在 new() 时指定前缀
+local QueryBuilder = require('app.db.query')
+local builder = QueryBuilder:new('system_menu', 'cms_')
+builder:select('id, path, name, title')
+builder:where('status', '=', 1)
+local sql = builder:to_sql()
+-- SQL: SELECT id, path, name, title FROM cms_system_menu WHERE status = 1
+
+-- 方式2: 使用 table_prefix() 方法
+local builder = QueryBuilder:new('system_menu'):table_prefix('cms_')
+-- 等同于上
+
+-- 方式3: 从配置读取
+local config = require('app.config.config')
+local builder = QueryBuilder:new('system_menu', config.table_prefix)
+
+-- 方式4: 使用 prefix() 方法
+local builder = QueryBuilder:new('system_menu'):prefix('cms_')
+```
+
+### 5.3 带前缀的 JOIN 查询
+
+```lua
+local config = require('app.config.config')
+local QueryBuilder = require('app.db.query')
+
+-- 创建带前缀的查询构建器
+local builder = QueryBuilder:new('system_menu', config.table_prefix)
+builder:select({'system_menu.id', 'system_menu.title', 'system_role.name'})
+builder:left_join('system_role_menu'):on('id', 'menu_id')
+builder:left_join('system_role'):on('system_role_menu.role_id', 'id')
+builder:where('system_role.id', '=', 1)
+builder:where('system_menu.status', '=', 1)
+
+local sql = builder:to_sql()
+-- 假设 config.table_prefix = 'cms_'
+-- SQL: SELECT system_menu.id, system_menu.title, system_role.name FROM cms_system_menu
+--      LEFT JOIN cms_system_role_menu ON cms_system_menu.id = cms_system_role_menu.menu_id
+--      LEFT JOIN cms_system_role ON cms_system_role_menu.role_id = cms_system_role.id
+--      WHERE cms_system_role.id = 1
+--      AND cms_system_menu.status = 1
+
+-- 执行查询
+local rows = self:query(sql)
+```
+
+### 5.4 前缀自动处理规则
+
+| 场景 | 示例 | 生成 SQL |
+|------|------|----------|
+| 主表名 | `new('system_menu', 'cms_')` | `FROM cms_system_menu` |
+| JOIN 表名 | `left_join('system_role')` | `LEFT JOIN cms_system_role` |
+| ON 左字段 | `on('id', 'menu_id')` | `ON cms_system_menu.id = ...` |
+| ON 右字段 | `on('menu_id', 'id')` | `ON ... = cms_system_role_menu.id` |
+| 已带前缀的字段 | `on('system_menu.id', 'role.menu_id')` | `ON cms_system_menu.id = cms_role.menu_id` |
+
+---
+
+## 6. system_menu 表 CRUD 完整示例
+
+### 6.1 表结构假设
 
 ```sql
 CREATE TABLE `system_menu` (
@@ -625,7 +738,7 @@ CREATE TABLE `system_menu` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统菜单表';
 ```
 
-### 5.2 Model 层实现
+### 6.2 Model 层实现
 
 ```lua
 -- app/models/MenuModel.lua
@@ -813,7 +926,7 @@ end
 return _M
 ```
 
-### 5.3 Controller 层实现
+### 6.3 Controller 层实现
 
 ```lua
 -- app/controllers/menu.lua
@@ -1014,7 +1127,7 @@ end
 return _M
 ```
 
-### 5.4 路由注册
+### 6.4 路由注册
 
 ```lua
 -- app/routes.lua
@@ -1038,7 +1151,7 @@ function M(route)
 end
 ```
 
-### 5.5 API 调用示例
+### 6.5 API 调用示例
 
 ```bash
 # 创建菜单
@@ -1098,9 +1211,9 @@ GET /menu/tree
 
 ---
 
-## 6. 总结
+## 7. 总结
 
-### 6.1 快速选择
+### 7.1 快速选择
 
 | 操作类型 | 推荐方式 | 示例 |
 |---------|---------|------|
@@ -1116,7 +1229,7 @@ GET /menu/tree
 | IN 列表 | QueryBuilder | `where_in('id', {1,2,3})` |
 | 分页查询 | QueryBuilder | `limit():offset()` |
 
-### 6.2 代码规范
+### 7.2 代码规范
 
 ```lua
 -- ✅ 推荐：简单操作用 Model
@@ -1132,9 +1245,10 @@ end
 -- ✅ 推荐：复杂查询用 QueryBuilder
 function _M:search(options)
     local builder = QueryBuilder:new('system_menu')
-    builder:select('id, name, title')
+    builder:select('id, path, name, title, icon, sort, status, parent_id')
     builder:where('status', '=', 1)
     builder:like('title', options.keyword or '')
+    builder:or_where('name', options.keyword or '')
     builder:order_by('sort', 'ASC')
     builder:limit(10)
     builder:offset(0)

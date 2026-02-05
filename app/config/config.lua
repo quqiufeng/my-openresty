@@ -11,6 +11,7 @@ local config = {
     cache_path = '/var/www/web/my-openresty/logs/cache',
     log_path = '/var/www/web/my-openresty/logs',
     log_threshold = 4,
+    table_prefix = '',
     autoload = {
         'helper',
         'url',

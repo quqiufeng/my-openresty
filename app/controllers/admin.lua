@@ -18,12 +18,13 @@ function _M:list()
     local page = tonumber(self.request.get and self.request.get['page']) or 1
     local pageSize = tonumber(self.request.get and self.request.get['pageSize']) or 10
 
-    local sorter = self.request.get and self.request.get['sorter'] or 'id'
+    local sorter = self.request.get and self.request.get['sorter'] or 'admin.id'
     local order = self.request.get and self.request.get['order'] or ''
 
     local username = self.request.get and self.request.get['username']
     local phone = self.request.get and self.request.get['phone']
     local role_id = self.request.get and self.request.get['role_id']
+    local status = self.request.get and self.request.get['status']
 
     local data, err = admin_model:list({
         page = page,
@@ -32,7 +33,8 @@ function _M:list()
         order = order,
         username = username,
         phone = phone,
-        role_id = role_id
+        role_id = role_id,
+        status = status
     })
 
     if err then
@@ -43,7 +45,8 @@ function _M:list()
     local total, count_err = admin_model:count({
         username = username,
         phone = phone,
-        role_id = role_id
+        role_id = role_id,
+        status = status
     })
     if count_err then
         total = 0
