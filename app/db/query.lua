@@ -32,6 +32,29 @@ local function validate_identifier(identifier)
     return identifier
 end
 
+-- 处理字段名，支持 table.field 和 table.field as alias 格式
+local function parse_field(field)
+    if not field or type(field) ~= 'string' then
+        return field
+    end
+
+    -- 检查是否包含 AS 别名 (不区分大小写)
+    local alias_start = field:upper():find('%s+AS%s+', 1, true)
+    if alias_start then
+        local field_part = field:sub(1, alias_start - 1):trim()
+        local alias = field:sub(alias_start + 4):trim()
+        return field_part, alias
+    end
+
+    return field, nil
+end
+
+-- 清理字符串首尾空白
+local function trim(str)
+    if not str then return nil end
+    return str:gsub('^%s+', ''):gsub('%s+$', '')
+end
+
 function QueryBuilder:new(table_name)
     local self = setmetatable({}, QueryBuilder)
     self.table = table_name or ''
@@ -45,7 +68,21 @@ function QueryBuilder:new(table_name)
 end
 
 function QueryBuilder:select(fields)
-    self.fields = fields or '*'
+    if type(fields) == 'table' then
+        -- 支持 table 格式: {'id', 'name', 'users.email as user_email'}
+        local parts = {}
+        for _, field in ipairs(fields) do
+            local field_part, alias = parse_field(field)
+            if alias then
+                table.insert(parts, field_part .. ' AS ' .. alias)
+            else
+                table.insert(parts, field_part)
+            end
+        end
+        self.fields = table.concat(parts, ', ')
+    else
+        self.fields = fields or '*'
+    end
     return self
 end
 
@@ -76,67 +113,8 @@ function QueryBuilder:right_join(table_name, first_key, operator, second_key)
     return self
 end
 
-function QueryBuilder:select(fields)
-    self.fields = fields or '*'
-    return self
-end
-
-function QueryBuilder:where(key, operator, value)
-    table.insert(self.wheres, {
-        key = key,
-        operator = operator,
-        value = value
-    })
-    return self
-end
-
-function QueryBuilder:or_where(key, operator, value)
-    table.insert(self.wheres, {
-        key = key,
-        operator = operator,
-        value = value,
-        is_or = true
-    })
-    return self
-end
-
-function QueryBuilder:where_in(key, values)
-    if not validate_identifier(key) then
-        ngx.log(ngx.WARN, 'Invalid identifier in where_in: ' .. tostring(key))
-        return self
-    end
-    local condition = key .. ' IN ('
-    local escaped_values = {}
-    for i, v in ipairs(values) do
-        table.insert(escaped_values, escape_sql(v))
-    end
-    condition = condition .. table.concat(escaped_values, ', ') .. ')'
-    table.insert(self.wheres, { raw = condition })
-    return self
-end
-
-function QueryBuilder:like(key, value)
-    if type(value) ~= 'string' then
-        value = tostring(value or '')
-    end
-    table.insert(self.wheres, {
-        key = key,
-        operator = 'LIKE',
-        value = value
-    })
-    return self
-end
-
-function QueryBuilder:join(table_name, cond)
-    -- Simple join (for demo purposes)
-    return self
-end
-
-function QueryBuilder:left_join(table_name, cond)
-    return self
-end
-
 function QueryBuilder:order_by(field, direction)
+    -- 支持 table.field 格式
     table.insert(self.orders, {
         field = field,
         direction = direction or 'ASC'
@@ -205,10 +183,7 @@ function QueryBuilder:to_sql()
     if #self.orders > 0 then
         local orders = {}
         for _, o in ipairs(self.orders) do
-            local field_name = validate_identifier(o.field)
-            if field_name then
-                table.insert(orders, field_name .. ' ' .. o.direction)
-            end
+            table.insert(orders, o.field .. ' ' .. o.direction)
         end
         if #orders > 0 then
             sql = sql .. ' ORDER BY ' .. table.concat(orders, ', ')
