@@ -364,37 +364,73 @@ b:left_join("role")
 
 ## 6. 测试规范
 
-### 必须遵守的测试流程
+### 测试文件命名
+
+| 类型 | 规范 | 示例 |
+|------|------|------|
+| 单元测试 | `tests/unit/models/*_spec.lua` | `admin_spec.lua` |
+| 控制器测试 | `tests/unit/controllers/*Spec.lua` | `AdminSpec.lua` |
+| 集成测试 | `tests/integration/crud/*.sh` | `Admin.sh` |
+
+### 自动生成测试
+
+代码生成器会自动生成以下测试文件：
+
+```bash
+# 生成 CRUD 后自动生成
+luajit myresty curd /path/to/admin.json
+
+# 生成文件列表
+app/models/{Name}Model.lua       # 数据模型
+app/controllers/{Name}.lua       # 统一接口控制器
+tests/unit/models/{name}_spec.lua    # Model 单元测试
+tests/unit/controllers/{Name}Spec.lua # Controller 单元测试
+tests/integration/crud/{Name}.sh      # 集成测试
+```
+
+### 运行测试
 
 ```bash
 # 1. 语法检查
 luajit -c app/models/UserModel.lua
 
 # 2. 运行单元测试
+luajit tests/unit/models/admin_spec.lua        # Model 测试
+luajit tests/unit/controllers/AdminSpec.lua    # Controller 测试
+
+# 3. 运行 QueryBuilder 测试
 luajit tests/unit/query_builder_test.lua
 luajit tests/unit/model_join_test.lua
 luajit tests/unit/model_prefix_test.lua
 
-# 3. 运行集成测试
-./tests/integration/crud/User.sh
+# 4. 运行集成测试
+./tests/integration/crud/Admin.sh
 
-# 4. API 接口测试
-curl http://localhost:8080/users
+# 5. API 接口测试
+curl http://localhost:8080/admin/list
 ```
-
-### 测试文件命名
-
-| 类型 | 规范 | 示例 |
-|------|------|------|
-| 单元测试 | `*_test.lua` | `query_builder_test.lua` |
-| 集成测试 | `*.sh` | `crud/User.sh` |
-| 控制器测试 | `controllers/*Spec.lua` | `controllers/UserSpec.lua` |
 
 ### 测试覆盖率要求
 
-- QueryBuilder：所有 public 方法必须有测试
-- Model：基本 CRUD 必须有测试
-- Controller：关键 API 必须有集成测试
+- **QueryBuilder**: 所有 public 方法必须有测试 (60+ tests)
+- **Model**: CRUD 方法必须有测试 (7+ tests per model)
+- **Controller**: 5 个接口必须有测试 (8+ tests per controller)
+
+### 测试通过标准
+
+```bash
+# 单元测试
+✓ PASS: test_name
+✗ FAIL: test_name
+
+# 集成测试
+✓ PASS: API name
+✗ FAIL: API name
+
+# 退出码
+0 = 全部通过
+1 = 有失败
+```
 
 ---
 
@@ -456,12 +492,24 @@ luajit myresty curd < /path/to/admin.json  # 支持输入重定向
 |------|------|
 | `app/models/{Name}Model.lua` | 数据模型 |
 | `app/controllers/{Name}.lua` | 统一接口控制器 |
+| `tests/unit/models/{name}_spec.lua` | Model 单元测试 |
+| `tests/unit/controllers/{Name}Spec.lua` | Controller 单元测试 |
+| `tests/integration/crud/{Name}.sh` | 集成测试 |
+
+### 生成后必须执行
+
+```bash
+# 生成后运行测试验证
+luajit tests/unit/models/{name}_spec.lua
+luajit tests/unit/controllers/{Name}Spec.lua
+./tests/integration/crud/{Name}.sh
+```
 
 ### 生成器编码规则
 
 1. **变量命名统一**: QueryBuilder 用 `b`，Model 用 `m`
-2. **生成后自检**: 检查禁用的模式
-3. **必须运行测试**: 生成后执行 `luajit tests/unit/*.lua`
+2. **自动生成测试**: 生成器自动生成单元测试和集成测试
+3. **目录自动创建**: 自动创建 tests/unit/models 目录
 
 ---
 
