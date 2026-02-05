@@ -1,4 +1,4 @@
-# MyResty CI/CD Pipeline - Auto-run tests on push/PR
+name: Tests
 
 on:
   push:
@@ -35,6 +35,39 @@ jobs:
           luajit tests/unit/controllers/RoleSpec.lua
           luajit tests/unit/controllers/UserSpec.lua
           luajit tests/unit/controllers/MenuSpec.lua
+
+      - name: Check new code has tests
+        run: |
+          # Get list of new/modified controllers
+          NEW_CONTROLLERS=$(git diff --name-only HEAD~1 HEAD | grep 'app/controllers/[a-z]\+\.lua$' | grep -v 'Spec\.lua$' || true)
+          
+          # Get list of new/modified models
+          NEW_MODELS=$(git diff --name-only HEAD~1 HEAD | grep 'app/models/[A-Z][a-z]\+Model\.lua$' || true)
+          
+          echo "Checking new/modified files..."
+          
+          MISSING_TESTS=""
+          
+          for f in $NEW_CONTROLLERS; do
+            NAME=$(basename "$f" .lua)
+            if [ ! -f "tests/unit/controllers/${NAME}Spec.lua" ]; then
+              MISSING_TESTS="$MISSING_TESTS\n❌ Missing test: tests/unit/controllers/${NAME}Spec.lua for $f"
+            fi
+          done
+          
+          for f in $NEW_MODELS; do
+            NAME=$(basename "$f" .lua | sed 's/Model$//' | tr '[:upper:]' '[:lower:]')
+            if [ ! -f "tests/unit/models/${NAME}_spec.lua" ]; then
+              MISSING_TESTS="$MISSING_TESTS\n❌ Missing test: tests/unit/models/${NAME}_spec.lua for $f"
+            fi
+          done
+          
+          if [ -n "$MISSING_TESTS" ]; then
+            echo "New code must have tests:$MISSING_TESTS"
+            exit 1
+          fi
+          
+          echo "✅ All new code has tests"
 
       - name: Run Integration Tests
         run: |
