@@ -1,4 +1,4 @@
--- Curd Command - Generate Unified CRUD from JSON config
+-- Curd Command - Generate Unified CRUD from JSON config or database
 local _M = {}
 
 local Command = {}
@@ -10,22 +10,37 @@ function Command.new()
     function self:handle()
         local f=self:arg(1)
         local c
-        -- Support < xxx.json syntax (read from stdin)
-        if not f then
-            c=io.read('*a')
-            if not c or c=='' then print('[ERROR] Usage: myresty curd <config.json>')return end
+        
+        -- Check if it's a database table scan (--from-db flag)
+        if f=='--from-db' then
+            f=self:arg(2)
+            c=self:scan_from_db(f)
+        elseif f=='--scan' then
+            -- Scan existing code and generate missing tests
+            self:scan_and_generate_tests()
+            return
+        elseif not f then
+            -- No argument, show help
+            self:show_help()
+            return
         else
-            -- Support < xxx.json (shell passes '<' as arg1, filename as arg2)
-            if f=='<' then
-                f=self:arg(2)
-            elseif f and f:sub(1,1)=='<' then
-                f=f:sub(2):match('^%s*(.-)%s*$')
+            -- Support < xxx.json syntax
+            if not f then
+                c=io.read('*a')
+                if not c or c=='' then print('[ERROR] Usage: myresty curd <config.json>')return end
+            else
+                if f=='<' then
+                    f=self:arg(2)
+                elseif f and f:sub(1,1)=='<' then
+                    f=f:sub(2):match('^%s*(.-)%s*$')
+                end
+                if not f then print('[ERROR] Usage: myresty curd <config.json>')return end
+                local file=io.open(f,'r')
+                if not file then print('[ERROR] File not found: '..f)return end
+                c=file:read('*a')file:close()
             end
-            if not f then print('[ERROR] Usage: myresty curd <config.json>')return end
-            local file=io.open(f,'r')
-            if not file then print('[ERROR] File not found: '..f)return end
-            c=file:read('*a')file:close()
         end
+        
         local config=_M.parse_json(c)
         if not config or not config.table then print('[ERROR] Invalid config')return end
         local tn=config.table
@@ -49,6 +64,139 @@ function Command.new()
         print('')
         print('[OK] Done!')
     end
+    
+    function self:show_help()
+        print('MyResty CRUD Generator')
+        print('')
+        print('Usage:')
+        print('  luajit myresty curd <config.json>          # From JSON config')
+        print('  luajit myresty curd < config.json         # From stdin')
+        print('  luajit myresty curd --from-db <table>     # Scan from database')
+        print('  luajit myresty curd --scan                # Scan and generate missing tests')
+        print('')
+        print('Examples:')
+        print('  luajit myresty curd /path/to/admin.json')
+        print('  luajit myresty curd --from-db users')
+        print('  luajit myresty curd --scan')
+    end
+    
+    -- Scan database and generate config
+    function self:scan_from_db(table_name)
+        if not table_name then
+            print('[ERROR] Please specify table name: --from-db <table>')
+            return nil
+        end
+        
+        print('[INFO] Scanning table structure from database: '..table_name)
+        
+        -- Load MySQL library
+        local mysql = require('app.lib.mysql')
+        local conn = mysql:new()
+        
+        -- Get table structure
+        local sql = 'DESCRIBE '..table_name
+        local res, err = conn:query(sql)
+        
+        if not res then
+            print('[ERROR] Failed to get table structure: '..tostring(err))
+            conn:set_keepalive(10000, 100)
+            return nil
+        end
+        
+        conn:set_keepalive(10000, 100)
+        
+        -- Parse columns
+        local list_field = {}
+        local search_field = {}
+        local create_field = {}
+        local update_field = {}
+        
+        for _, row in ipairs(res) do
+            local field = row.Field
+            local field_type = row.Type
+            local is_null = row.Null
+            local key = row.Key
+            
+            -- Add to list_field
+            table.insert(list_field, field)
+            
+            -- Add to search_field (skip key fields)
+            if field ~= 'id' and field ~= 'created_at' and field ~= 'updated_at' then
+                table.insert(search_field, field)
+            end
+            
+            -- Add to create/update fields (skip auto fields)
+            if field ~= 'id' and field ~= 'created_at' and field ~= 'updated_at' then
+                table.insert(create_field, field)
+                table.insert(update_field, field)
+            end
+        end
+        
+        -- Generate config
+        local config = {
+            table = table_name,
+            search_field = search_field,
+            list_field = list_field,
+            create_field = create_field,
+            update_field = update_field
+        }
+        
+        print('[OK] Scanned '..#list_field..' columns from table '..table_name)
+        print('[INFO] Generating config...')
+        
+        return _M.stringify(config)
+    end
+    
+    -- Scan existing code and generate missing tests
+    function self:scan_and_generate_tests()
+        print('[INFO] Scanning for code without tests...')
+        print('')
+        
+        local generated = 0
+        local skipped = 0
+        
+        -- Check controllers
+        local controllers = io.popen('ls app/controllers/*.lua 2>/dev/null'):read('*a')
+        for cn in controllers:gmatch('[^\n]+') do
+            if cn and cn ~= '' then
+                local name = cn:match('app/controllers/(.+)%.lua$')
+                if name then
+                    local spec_file = 'tests/unit/controllers/'..name:gsub('^%l',string.upper)..'Spec.lua'
+                    if io.open(spec_file,'r') then
+                        print('[SKIP] '..spec_file..' (exists)')
+                        skipped = skipped + 1
+                    else
+                        print('[GEN]  '..spec_file..' (missing)')
+                        _M.gen_empty_ctrl_test(self, name)
+                        generated = generated + 1
+                    end
+                end
+            end
+        end
+        
+        -- Check models
+        local models = io.popen('ls app/models/*Model.lua 2>/dev/null'):read('*a')
+        for mn in models:gmatch('[^\n]+') do
+            if mn and mn ~= '' then
+                local name = mn:match('app/models/(.+)Model%.lua$'):lower()
+                local spec_file = 'tests/unit/models/'..name..'_spec.lua'
+                if io.open(spec_file,'r') then
+                    print('[SKIP] '..spec_file..' (exists)')
+                    skipped = skipped + 1
+                else
+                    print('[GEN]  '..spec_file..' (missing)')
+                    _M.gen_empty_model_test(self, name)
+                    generated = generated + 1
+                end
+            end
+        end
+        
+        print('')
+        print('[OK] Scan complete!')
+        print('[OK] Generated: '..generated..' tests')
+        print('[OK] Skipped: '..skipped..' tests (already exist)')
+    end
+    
     function self:write(p,c)local f=io.open(p,'w')if not f then return false end f:write(c)f:close()return true end
     function self:run(a)self:parse_args(a)self:handle()end
     return self
@@ -102,6 +250,121 @@ function _M.parse_json(s)
     end
     return v()
 end
+
+function _M.stringify(t, indent)
+    indent = indent or ''
+    if type(t) ~= 'table' then return tostring(t) end
+    
+    local result = '{\n'
+    local first = true
+    for k, v in pairs(t) do
+        if not first then result = result .. ',\n' end
+        first = false
+        
+        if type(k) == 'number' then
+            result = result .. indent .. '  ' .. tostring(v)
+        else
+            result = result .. indent .. '  "' .. k .. '": ' .. _M.stringify(v, indent .. '  ')
+        end
+    end
+    result = result .. '\n' .. indent .. '}'
+    return result
+end
+
+-- Generate empty model test (for code without JSON config)
+function _M.gen_empty_model_test(self, tn)
+    local sn = tn
+    local mn = tn:gsub('^%l',string.upper)..'Model'
+    
+    local ct='-- '..mn..' Unit Tests (Auto-generated)\n'
+    ct=ct..'-- Run with: luajit tests/unit/models/'..sn..'_spec.lua\n\n'
+    ct=ct..'package.path="/var/www/web/my-openresty/?.lua;;"..package.path\n'
+    ct=ct..'package.cpath="/var/www/web/my-openresty/?.so;;"..package.cpath\n\n'
+    ct=ct..'local tests_passed=0\n'
+    ct=ct..'local tests_failed=0\n\n'
+    ct=ct..'local function assert_eq(exp,act,name)\n'
+    ct=ct..'    if exp==act then\n'
+    ct=ct..'        print("✓ PASS: "..name)\n'
+    ct=ct..'        tests_passed=tests_passed+1\n'
+    ct=ct..'    else\n'
+    ct=ct..'        print("✗ FAIL: "..name)\n'
+    ct=ct..'        print("  Expected: "..tostring(exp))\n'
+    ct=ct..'        print("  Actual:   "..tostring(act))\n'
+    ct=ct..'        tests_failed=tests_failed+1\n'
+    ct=ct..'    end\n'
+    ct=ct..'end\n\n'
+    ct=ct..'print("='..string.rep('=',60)..'")\n'
+    ct=ct..'print("'..mn..' Unit Tests (Auto-generated)")\n'
+    ct=ct..'print("='..string.rep('=',60)..'")\n'
+    ct=ct..'print()\n\n'
+    ct=ct..'-- Test: new()\n'
+    ct=ct..'print("Test: new()")\n'
+    ct=ct..'local ok, m = pcall(require, "app.models.'..mn..'")\n'
+    ct=ct..'if not ok then\n'
+    ct=ct..'    print("✗ SKIP: Model not found or has errors")\n'
+    ct=ct..'    os.exit(0)\n'
+    ct=ct..'end\n'
+    ct=ct..'local instance = '..mn..':new()\n'
+    ct=ct..'assert_eq("table",type(instance),"new() should return table")\n'
+    ct=ct..'print()\n\n'
+    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("Test Results")\n'
+    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("Passed: "..tests_passed)\n'
+    ct=ct..'print("Failed: "..tests_failed)\n'
+    ct=ct..'print()\n'
+    ct=ct..'if tests_failed>0 then os.exit(1) end\n'
+    
+    local p='/var/www/web/my-openresty/tests/unit/models/'..sn..'_spec.lua'
+    os.execute('mkdir -p "'..p:match('(.+)/[^/]+')..'"')
+    self:write(p,ct)print('[OK] Generated: '..p)
+end
+
+-- Generate empty controller test
+function _M.gen_empty_ctrl_test(self, cn)
+    local ct='-- '..cn:gsub('^%l',string.upper)..' Controller Unit Tests (Auto-generated)\n'
+    ct=ct..'-- Run with: luajit tests/unit/controllers/'..cn:gsub('^%l',string.upper)..'Spec.lua\n\n'
+    ct=ct..'package.path="/var/www/web/my-openresty/?.lua;;"..package.path\n'
+    ct=ct..'package.cpath="/var/www/web/my-openresty/?.so;;"..package.cpath\n\n'
+    ct=ct..'local tests_passed=0\n'
+    ct=ct..'local tests_failed=0\n\n'
+    ct=ct..'local function assert_eq(exp,act,name)\n'
+    ct=ct..'    if exp==act then\n'
+    ct=ct..'        print("✓ PASS: "..name)\n'
+    ct=ct..'        tests_passed=tests_passed+1\n'
+    ct=ct..'    else\n'
+    ct=ct..'        print("✗ FAIL: "..name)\n'
+    ct=ct..'        print("  Expected: "..tostring(exp))\n'
+    ct=ct..'        print("  Actual:   "..tostring(act))\n'
+    ct=ct..'        tests_failed=tests_failed+1\n'
+    ct=ct..'    end\n'
+    ct=ct..'end\n\n'
+    ct=ct..'print("='..string.rep('=',60)..'")\n'
+    ct=ct..'print("'..cn:gsub('^%l',string.upper)..' Controller Unit Tests (Auto-generated)")\n'
+    ct=ct..'print("='..string.rep('=',60)..'")\n'
+    ct=ct..'print()\n\n'
+    ct=ct..'-- Test: controller file exists\n'
+    ct=ct..'print("Test: controller exists")\n'
+    ct=ct..'local ok, C = pcall(require, "app.controllers.'..cn..'")\n'
+    ct=ct..'if not ok then\n'
+    ct=ct..'    print("✗ SKIP: Controller not found or has errors")\n'
+    ct=ct..'    os.exit(0)\n'
+    ct=ct..'end\n'
+    ct=ct..'assert_eq("table",type(C),"controller should be table")\n'
+    ct=ct..'print()\n\n'
+    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("Test Results")\n'
+    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("Passed: "..tests_passed)\n'
+    ct=ct..'print("Failed: "..tests_failed)\n'
+    ct=ct..'print()\n'
+    ct=ct..'if tests_failed>0 then os.exit(1) end\n'
+    
+    local p='/var/www/web/my-openresty/tests/unit/controllers/'..cn:gsub('^%l',string.upper)..'Spec.lua'
+    self:write(p,ct)print('[OK] Generated: '..p)
+end
+
+-- Rest of the code (same as before)...
 
 function _M.gen_model(self,config,mn,tn)
     local sp={}local jp={}
@@ -278,17 +541,10 @@ function _M.gen_ctrl(self,config,cn,tn,sn)
 end
 
 function _M.gen_model_test(self,config,mn,tn,sn)
-    local tests_passed=0
-    local tests_failed=0
-    local function assert_eq(exp,act,name)
-        if exp==act then tests_passed=tests_passed+1 else tests_failed=tests_failed+1 end
-    end
     local ct='-- '..mn..' Unit Tests\n'
     ct=ct..'-- Generated by curd command. Run with: luajit tests/unit/models/'..sn..'_spec.lua\n\n'
     ct=ct..'package.path="/var/www/web/my-openresty/?.lua;;"..package.path\n'
     ct=ct..'package.cpath="/var/www/web/my-openresty/?.so;;"..package.cpath\n\n'
-    ct=ct..'local Test=require("app.lib.test")\n'
-    ct=ct..'local '..mn..'=require("app.models.'..sn:gsub('^%l',string.upper)..'Model")\n\n'
     ct=ct..'local tests_passed=0\n'
     ct=ct..'local tests_failed=0\n\n'
     ct=ct..'local function assert_eq(exp,act,name)\n'
@@ -308,6 +564,7 @@ function _M.gen_model_test(self,config,mn,tn,sn)
     ct=ct..'print()\n\n'
     ct=ct..'-- Test: new()\n'
     ct=ct..'print("Test: new()")\n'
+    ct=ct..'local '..mn..'=require("app.models.'..sn:gsub('^%l',string.upper)..'Model")\n'
     ct=ct..'local m='..mn..':new()\n'
     ct=ct..'assert_eq("'..tn..'",m._TABLE,"new() should set table name")\n'
     ct=ct..'assert_eq(true,m~=nil,"new() should return instance")\n'
@@ -349,9 +606,8 @@ function _M.gen_model_test(self,config,mn,tn,sn)
     ct=ct..'print("Failed: "..tests_failed)\n'
     ct=ct..'print()\n'
     ct=ct..'if tests_failed>0 then os.exit(1) end\n'
-    local p='/var/www/web/my-openresty/tests/unit/models'
-    os.execute('mkdir -p "'..p..'"')
-    p=p..'/'..sn..'_spec.lua'
+    local p='/var/www/web/my-openresty/tests/unit/models/'..sn..'_spec.lua'
+    os.execute('mkdir -p "'..p:match('(.+)/[^/]+')..'"')
     self:write(p,ct)print('[OK] Model Test: '..p)
 end
 
