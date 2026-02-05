@@ -37,9 +37,42 @@ function QueryBuilder:new(table_name)
     self.table = table_name or ''
     self.fields = '*'
     self.wheres = {}
+    self.joins = {}
     self.orders = {}
     self.limit_val = nil
     self.offset_val = nil
+    return self
+end
+
+function QueryBuilder:select(fields)
+    self.fields = fields or '*'
+    return self
+end
+
+function QueryBuilder:join(table_name, first_key, operator, second_key)
+    if not table_name or not first_key or not second_key then
+        return self
+    end
+    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
+    table.insert(self.joins, { type = 'JOIN', table = table_name, on = cond })
+    return self
+end
+
+function QueryBuilder:left_join(table_name, first_key, operator, second_key)
+    if not table_name or not first_key or not second_key then
+        return self
+    end
+    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
+    table.insert(self.joins, { type = 'LEFT JOIN', table = table_name, on = cond })
+    return self
+end
+
+function QueryBuilder:right_join(table_name, first_key, operator, second_key)
+    if not table_name or not first_key or not second_key then
+        return self
+    end
+    local cond = validate_identifier(first_key) .. ' ' .. (operator or '=') .. ' ' .. validate_identifier(second_key)
+    table.insert(self.joins, { type = 'RIGHT JOIN', table = table_name, on = cond })
     return self
 end
 
@@ -131,6 +164,14 @@ function QueryBuilder:to_sql()
 
     local sql = 'SELECT ' .. self.fields .. ' FROM ' .. table_name
 
+    -- JOIN 子句
+    if #self.joins > 0 then
+        for _, join in ipairs(self.joins) do
+            sql = sql .. ' ' .. join.type .. ' ' .. join.table .. ' ON ' .. join.on
+        end
+    end
+
+    -- WHERE 子句
     if #self.wheres > 0 then
         sql = sql .. ' WHERE '
         local conditions = {}
@@ -160,6 +201,7 @@ function QueryBuilder:to_sql()
         sql = sql .. table.concat(conditions, ' ')
     end
 
+    -- ORDER BY 子句
     if #self.orders > 0 then
         local orders = {}
         for _, o in ipairs(self.orders) do
@@ -173,6 +215,7 @@ function QueryBuilder:to_sql()
         end
     end
 
+    -- LIMIT 子句
     if self.limit_val then
         local limit = tonumber(self.limit_val)
         if limit and limit > 0 then
@@ -180,6 +223,7 @@ function QueryBuilder:to_sql()
         end
     end
 
+    -- OFFSET 子句
     if self.offset_val then
         local offset = tonumber(self.offset_val)
         if offset and offset >= 0 then
@@ -193,6 +237,7 @@ end
 function QueryBuilder:reset()
     self.fields = '*'
     self.wheres = {}
+    self.joins = {}
     self.orders = {}
     self.limit_val = nil
     self.offset_val = nil
@@ -203,8 +248,12 @@ function QueryBuilder:clone()
     local clone = QueryBuilder:new(self.table)
     clone.fields = self.fields
     clone.wheres = {}
+    clone.joins = {}
     for _, w in ipairs(self.wheres) do
         table.insert(clone.wheres, w)
+    end
+    for _, j in ipairs(self.joins) do
+        table.insert(clone.joins, j)
     end
     for _, o in ipairs(self.orders) do
         table.insert(clone.orders, o)
