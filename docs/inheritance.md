@@ -200,8 +200,8 @@ route:get('/users/{id}', 'user:show')
 │                                         │
 │ -- 基础方法                              │
 │ function _M.new(self)                   │
-│ function _M.connect(opts)               │
-│ function _M.query(sql)                  │
+│ function _M.connect()                   │ ← 自动连接
+│ function _M.query(sql)                  │ ← 使用 app.lib.mysql
 │ function _M.get_all(where, limit, off)  │
 │ function _M.get_by_id(id)               │
 │ function _M.insert(data)                │
@@ -209,15 +209,27 @@ route:get('/users/{id}', 'user:show')
 │ function _M.delete(where)               │
 │ function _M.count(where)                │
 │                                         │
-│ -- 底层实现 (手动 MySQL 协议)             │
-│ local tcp = ngx.socket.tcp              │  ← 底层 socket
-│ _send_query()                           │  ← 发送查询
-│ _read_packet()                          │  ← 读取响应
-│ _parse_ok_packet()                      │  ← 解析 OK 包
-│ _parse_row_packet()                     │  ← 解析行数据
 └──────────────────┬─────────────────────┘
                    │
-                   │ ngx.socket.tcp()
+                   │ require('app.lib.mysql')
+                   ↓
+┌────────────────────────────────────────┐
+│      app/lib/mysql.lua (封装层)          │
+│                                         │
+│ -- 便捷函数 (封装 resty.mysql)           │
+│ _M.new()           → resty.mysql:new() │
+│ _M.connect()       → db:connect()      │
+│ _M.query()         → db:query()        │
+│ _M.set_keepalive() → db:set_keepalive()│
+│ _M.close()         → db:close()        │
+└──────────────────┬─────────────────────┘
+                   │ require()
+                   ↓
+┌────────────────────────────────────────┐
+│          resty.mysql (系统内置)          │
+│    OpenResty 自带 MySQL 客户端库         │
+└────────────────────────────────────────┘
+```
                    ↓
 ┌────────────────────────────────────────┐
 │       ngx.socket.tcp()                  │
@@ -238,60 +250,53 @@ route:get('/users/{id}', 'user:show')
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
--- 引入原生 TCP socket
-local tcp = ngx.socket.tcp
-
--- 状态常量
-local STATE_CONNECTED = 1
+-- 引入 MySQL 封装库
+local Mysql = require('app.lib.mysql')
 
 -- 创建 Model 实例
 function _M.new(self)
-    local sock, err = tcp()  -- 创建 TCP socket
-    if not sock then return nil, err end
+    -- 使用 app.lib.mysql 创建实例
+    local db, config = Mysql.new()
     
     return setmetatable({
-        sock = sock,         -- 底层 socket
-        state = nil,         -- 连接状态
-        packet_no = nil,     -- 包序号
-        compact = false      -- 紧凑模式
+        _db = db,           -- resty.mysql 实例
+        _config = config,   -- 配置
+        table_name = nil    -- 表名
     }, mt)
+end
+
+-- 连接数据库 (自动处理)
+function _M.connect(self)
+    local Mysql = require('app.lib.mysql')
+    return Mysql.connect(self._db)
+end
+
+-- 执行查询 (自动连接/释放)
+function _M.query(self, query, est_nrows)
+    local Mysql = require('app.lib.mysql')
+    
+    -- 自动连接
+    local ok, err = Mysql.connect(self._db)
+    if not ok then
+        return nil, "connect failed: " .. err
+    end
+    
+    -- 执行查询
+    local res, err, errno = Mysql.query(self._db, query)
+    
+    -- 自动放回连接池
+    Mysql.set_keepalive(self._db)
+    
+    if err then
+        return nil, err, errno
+    end
+    return res
 end
 
 -- 设置表名
 function _M.set_table(self, name)
     self.table_name = name
     return self
-end
-
--- 连接数据库
-function _M.connect(self, opts)
-    local sock = self.sock
-    local host = opts.host or "127.0.0.1"
-    local port = opts.port or 3306
-    
-    local ok, err = sock:connect(host, port, {
-        pool_size = opts.pool_size or 100
-    })
-    
-    if not ok then return nil, err end
-    self.state = STATE_CONNECTED
-    return 1
-end
-
--- 执行查询 (底层 MySQL 协议)
-function _M.query(self, query, est_nrows)
-    local sock = self.sock
-    self.packet_no = -1
-    
-    -- 发送查询包 (MySQL 协议: 0x03 + SQL)
-    local packet = string.char(0x03) .. query
-    sock:send(packet)
-    
-    -- 读取响应包并解析
-    local data = sock:receive(4)  -- 包头
-    -- ... 解析 MySQL 协议包 ...
-    
-    return rows  -- 返回结果
 end
 
 -- ========== 便捷方法 ==========
@@ -314,28 +319,14 @@ end
 
 -- 插入
 function _M.insert(self, data)
-    local fields = {}
-    local values = {}
-    for k, v in pairs(data) do
-        table.insert(fields, k)
-        table.insert(values, "'" .. _escape_str(v) .. "'")
-    end
-    local sql = "INSERT INTO " .. self.table_name .. 
-                " (" .. table.concat(fields, ",") .. ")" ..
-                " VALUES (" .. table.concat(values, ",") .. ")"
+    local sql = "INSERT INTO " .. self.table_name .. " (...) VALUES (...)"
     local res = self:query(sql)
     return res and res.insert_id
 end
 
 -- 更新
 function _M.update(self, data, where)
-    local sets = {}
-    for k, v in pairs(data) do
-        table.insert(sets, k .. " = '" .. _escape_str(v) .. "'")
-    end
-    local sql = "UPDATE " .. self.table_name .. 
-                " SET " .. table.concat(sets, ",") ..
-                _build_where_clause(where)
+    local sql = "UPDATE " .. self.table_name .. " SET ..." .. _build_where_clause(where)
     self:query(sql)
     return true
 end
@@ -548,46 +539,51 @@ end
 │                                                              │
 │   Model 基类 (app/core/Model.lua)                            │
 │       ↓                                                      │
-│   使用 ngx.socket.tcp() 创建原生 socket                       │
+│   使用 app.lib.mysql (封装 resty.mysql)                       │
 │       ↓                                                      │
-│   手动实现 MySQL 协议 (二进制协议解析)                         │
-│   - _send_query()    发送 MySQL 协议包                        │
-│   - _read_packet()   读取 MySQL 协议包                        │
-│   - _parse_ok_packet() 解析 OK 响应                          │
-│   - _parse_row_packet() 解析数据行                           │
+│   app/lib/mysql.lua                                          │
+│   - new()         创建 resty.mysql 实例                       │
+│   - connect()     连接数据库                                  │
+│   - query()       执行查询                                    │
+│   - set_keepalive() 连接池复用                                │
 │       ↓                                                      │
-│   直接连接 MySQL Server                                       │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│   lib/mysql (app/lib/mysql.lua)                              │
-│       ↓                                                      │
-│   封装 resty.mysql (OpenResty 系统库)                         │
-│       ↓                                                      │
-│   使用 resty.mysql 提供的 API                                 │
-│   - db:connect()                                             │
-│   - db:query()                                               │
-│   - db:set_keepalive()                                       │
-│       ↓                                                      │
-│   resty.mysql 内部实现 MySQL 协议                              │
+│   resty.mysql  (OpenResty 系统内置)                           │
 │       ↓                                                      │
 │   连接 MySQL Server                                           │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 对比
+### 5.2 代码示例
+
+```lua
+-- Model 层调用链
+function _M:query(sql)
+    -- 1. 获取 mysql 封装实例
+    local Mysql = require('app.lib.mysql')
+    local db = Mysql.new()
+    
+    -- 2. 连接数据库
+    Mysql.connect(db)
+    
+    -- 3. 执行查询
+    local res = Mysql.query(db, sql)
+    
+    -- 4. 放回连接池
+    Mysql.set_keepalive(db)
+    
+    return res
+end
+```
+
+### 5.3 对比
 
 | 特性 | Model (app/core/Model) | lib/mysql (app/lib/mysql) |
 |------|------------------------|---------------------------|
-| **底层** | `ngx.socket.tcp()` 原生 socket | `resty.mysql` 系统库 |
-| **MySQL 协议** | 手动实现 (约 300 行) | resty.mysql 内部实现 |
-| **连接池** | 自动管理 | 自动管理 |
-| **使用场景** | Model 层数据访问 | 通用 MySQL 操作 |
-| **灵活性** | 高 (完全控制) | 中 (依赖 resty.mysql) |
-| **代码量** | 多 (470 行) | 少 (70 行) |
+| **定位** | Model 基类 (180 行) | MySQL 封装模块 (70 行) |
+| **底层** | `app.lib.mysql` → `resty.mysql` | `resty.mysql` 系统库 |
+| **连接管理** | query() 自动处理 | 需手动调用 connect/set_keepalive |
+| **使用场景** | Model 层数据访问 | 通用数据库操作 |
 
 ### 5.3 选择建议
 
@@ -636,13 +632,16 @@ end
 ### 6.2 Model
 
 ```
-用户 Model (app/models/*Model.lua)
+自定义 Model (app/models/*Model.lua)
     ↑
     └── setmetatable(_, { __index = Model })
         ↑
         └── app.core.Model (基类)
-            ├── ngx.socket.tcp()  ← 底层
-            ├── 手动实现 MySQL 协议
+            │
+            ├── app.lib.mysql (便捷封装)
+            │   │
+            │   └── resty.mysql (OpenResty 系统内置)
+            │
             └── 便捷方法:
                 ├── get_all()
                 ├── get_by_id()
@@ -655,20 +654,20 @@ end
 ### 6.3 lib/mysql
 
 ```
-app.lib.mysql (便捷封装)
+app.lib.mysql (便捷封装模块)
     ↑
-    └── 封装 resty.mysql
+    └── 封装 resty.mysql (OpenResty 系统内置)
         ↑
-        └── require('resty.mysql')  ← OpenResty 系统内置
+        └── require('resty.mysql')
 ```
 
 ## 7. 快速参考表
 
 | 文件路径 | 类型 | 继承/依赖 | 说明 |
 |---------|------|----------|------|
-| `app/controllers/user.lua` | Controller | 继承 `app.core.Controller` | 用户控制器 |
+| `app/controllers/*.lua` | Controller | 继承 `app.core.Controller` | 用户控制器 |
 | `app/core/Controller.lua` | 基类 | 依赖 Request, Response, Config | Controller 基类 |
-| `app/models/UserModel.lua` | Model | 继承 `app.core.Model` | 用户模型 |
-| `app/core/Model.lua` | 基类 | 使用 `ngx.socket.tcp()` | Model 基类 (手写 MySQL 协议) |
-| `app/lib/mysql.lua` | 库模块 | 封装 `resty.mysql` | MySQL 便捷封装 |
+| `app/models/*Model.lua` | Model | 继承 `app.core.Model` | 用户模型 |
+| `app/core/Model.lua` | 基类 | 使用 `app.lib.mysql` | Model 基类 (180 行) |
+| `app/lib/mysql.lua` | 库模块 | 封装 `resty.mysql` | MySQL 便捷封装 (70 行) |
 | `resty.mysql` | 系统库 | OpenResty 内置 | MySQL 客户端 |
