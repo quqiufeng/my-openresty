@@ -3,7 +3,6 @@
 
 local Model = require('app.core.Model')
 local QueryBuilder = require('app.db.query')
-local Mysql = require('app.lib.mysql')
 
 local _M = setmetatable({}, { __index = Model })
 _M._TABLE = 'admin'
@@ -23,21 +22,14 @@ function _M:list(options)
     local builder = QueryBuilder:new('admin')
     builder.fields = 'id, username, phone, role_id, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time'
 
-    local conditions = {}
     if options.username and options.username ~= '' then
-        table.insert(conditions, { field = 'username', operator = 'LIKE', value = '%' .. options.username .. '%' })
+        builder:where('username', 'LIKE', '%' .. options.username .. '%')
     end
     if options.phone and options.phone ~= '' then
-        table.insert(conditions, { field = 'phone', operator = 'LIKE', value = '%' .. options.phone .. '%' })
+        builder:where('phone', 'LIKE', '%' .. options.phone .. '%')
     end
     if options.role_id and options.role_id ~= '' then
-        table.insert(conditions, { field = 'role_id', operator = '=', value = tonumber(options.role_id) })
-    end
-
-    if #conditions > 0 then
-        for _, cond in ipairs(conditions) do
-            builder:where(cond.field, cond.operator, cond.value)
-        end
+        builder:where('role_id', '=', tonumber(options.role_id))
     end
 
     local sorter = options.sorter or 'id'
@@ -47,82 +39,29 @@ function _M:list(options)
     builder:offset(offset)
 
     local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return rows
+    return self:query(sql)
 end
 
 function _M:count(options)
     options = options or {}
 
-    local builder = QueryBuilder:new('admin')
-    builder.fields = 'COUNT(*) as total'
-
-    local conditions = {}
+    local where = {}
     if options.username and options.username ~= '' then
-        table.insert(conditions, { field = 'username', operator = 'LIKE', value = '%' .. options.username .. '%' })
+        where.username = '%' .. options.username .. '%'
     end
     if options.phone and options.phone ~= '' then
-        table.insert(conditions, { field = 'phone', operator = 'LIKE', value = '%' .. options.phone .. '%' })
+        where.phone = '%' .. options.phone .. '%'
     end
     if options.role_id and options.role_id ~= '' then
-        table.insert(conditions, { field = 'role_id', operator = '=', value = tonumber(options.role_id) })
+        where.role_id = tonumber(options.role_id)
     end
 
-    if #conditions > 0 then
-        for _, cond in ipairs(conditions) do
-            builder:where(cond.field, cond.operator, cond.value)
-        end
-    end
-
-    local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return 0, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return 0, query_err, errno
-    end
-
-    return rows and rows[1] and tonumber(rows[1].total) or 0
+    return self:count(where)
 end
 
 function _M:get_by_id(id)
     if not id then return nil end
-
-    local builder = QueryBuilder:new('admin')
-    builder.fields = 'id, username, phone, role_id, FROM_UNIXTIME(create_time) as create_time, FROM_UNIXTIME(update_time) as update_time'
-    builder:where('id', '=', tonumber(id))
-    builder:limit(1)
-
-    local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return rows and rows[1] or nil
+    return Model.get_by_id(self, id)
 end
 
 function _M:get_by_username(username)
@@ -134,23 +73,11 @@ function _M:get_by_username(username)
     builder:limit(1)
 
     local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
+    local rows = self:query(sql)
     return rows and rows[1] or nil
 end
 
 function _M:create(data)
-    local builder = QueryBuilder:new('admin')
     local insert_data = {
         username = data.username,
         password = data.password,
@@ -159,27 +86,12 @@ function _M:create(data)
         create_time = ngx.time(),
         update_time = ngx.time()
     }
-
-    local sql = builder:insert(insert_data)
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local res, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return res and res.insert_id
+    return self:insert(insert_data)
 end
 
 function _M:update(id, data)
     if not id then return false end
 
-    local builder = QueryBuilder:new('admin')
     local update_data = {}
     if data.username then update_data.username = data.username end
     if data.password and data.password ~= '' then update_data.password = data.password end
@@ -187,44 +99,12 @@ function _M:update(id, data)
     if data.role_id then update_data.role_id = tonumber(data.role_id) end
     update_data.update_time = ngx.time()
 
-    builder:where('id', '=', tonumber(id))
-    local sql = builder:update(update_data)
-
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return false, err
-    end
-    local _, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return false, query_err, errno
-    end
-
-    return true
+    return self:update(update_data, { id = tonumber(id) })
 end
 
 function _M:delete(id)
     if not id then return false end
-
-    local builder = QueryBuilder:new('admin')
-    builder:where('id', '=', tonumber(id))
-    local sql = builder:delete()
-
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return false, err
-    end
-    local _, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return false, query_err, errno
-    end
-
-    return true
+    return self:delete({ id = tonumber(id) })
 end
 
 return _M

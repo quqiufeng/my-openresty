@@ -3,7 +3,6 @@
 
 local Model = require('app.core.Model')
 local QueryBuilder = require('app.db.query')
-local Mysql = require('app.lib.mysql')
 
 local _M = setmetatable({}, { __index = Model })
 _M._TABLE = 'role'
@@ -30,39 +29,11 @@ function _M:list(options)
     builder:offset(offset)
 
     local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return rows
+    return self:query(sql)
 end
 
 function _M:count()
-    local builder = QueryBuilder:new('role')
-    builder.fields = 'COUNT(*) as total'
-    local sql = builder:to_sql()
-
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return 0, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return 0, query_err, errno
-    end
-
-    return rows and rows[1] and tonumber(rows[1].total) or 0
+    return self:count(nil)
 end
 
 function _M:get_by_id(id)
@@ -74,23 +45,11 @@ function _M:get_by_id(id)
     builder:limit(1)
 
     local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
+    local rows = self:query(sql)
     return rows and rows[1] or nil
 end
 
 function _M:create(data)
-    local builder = QueryBuilder:new('role')
     local insert_data = {
         name = data.name,
         description = data.description,
@@ -98,71 +57,24 @@ function _M:create(data)
         create_time = ngx.time(),
         update_time = ngx.time()
     }
-
-    local sql = builder:insert(insert_data)
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local res, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return res and res.insert_id
+    return self:insert(insert_data)
 end
 
 function _M:update(id, data)
     if not id then return false end
 
-    local builder = QueryBuilder:new('role')
     local update_data = {}
     if data.name then update_data.name = data.name end
     if data.description ~= nil then update_data.description = data.description end
     if data.status ~= nil then update_data.status = tonumber(data.status) end
     update_data.update_time = ngx.time()
 
-    builder:where('id', '=', tonumber(id))
-    local sql = builder:update(update_data)
-
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return false, err
-    end
-    local _, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return false, query_err, errno
-    end
-
-    return true
+    return self:update(update_data, { id = tonumber(id) })
 end
 
 function _M:delete(id)
     if not id then return false end
-
-    local builder = QueryBuilder:new('role')
-    builder:where('id', '=', tonumber(id))
-    local sql = builder:delete()
-
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return false, err
-    end
-    local _, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return false, query_err, errno
-    end
-
-    return true
+    return self:delete({ id = tonumber(id) })
 end
 
 return _M

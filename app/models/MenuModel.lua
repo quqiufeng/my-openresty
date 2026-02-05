@@ -3,7 +3,6 @@
 
 local Model = require('app.core.Model')
 local QueryBuilder = require('app.db.query')
-local Mysql = require('app.lib.mysql')
 
 local _M = setmetatable({}, { __index = Model })
 _M._TABLE = 'system_menu'
@@ -15,26 +14,7 @@ function _M.new()
 end
 
 function _M:get_all_menus()
-    local builder = QueryBuilder:new('system_menu')
-    builder.fields = 'id, path, name, title, icon, component, keep_alive, sort'
-    builder:where('status', '=', 1)
-    builder:order_by('sort', 'ASC')
-    builder:order_by('path', 'ASC')
-
-    local sql = builder:to_sql()
-    local db = Mysql:new()
-    local ok, err = db:connect()
-    if not ok then
-        return nil, err
-    end
-    local rows, query_err, errno = db:query(sql)
-    db:set_keepalive()
-
-    if query_err then
-        return nil, query_err, errno
-    end
-
-    return rows
+    return self:get_all({ status = 1 }, nil, nil)
 end
 
 function _M:get_menu_tree()
@@ -116,11 +96,9 @@ function _M:format_menus_for_antd(menu_tree)
         }
 
         if menu.routes and #menu.routes > 0 then
-            item.routes = format_item(menu.routes[1]) and {format_item(menu.routes[1])} or {}
-            for i, child in ipairs(menu.routes) do
-                if i > 1 then
-                    table.insert(item.routes, format_item(child))
-                end
+            item.routes = {}
+            for _, child in ipairs(menu.routes) do
+                table.insert(item.routes, format_item(child))
             end
         end
 
