@@ -35,7 +35,7 @@ end
 -- 处理字段名，支持 table.field 和 table.field as alias 格式
 local function parse_field(field)
     if not field or type(field) ~= 'string' then
-        return field
+        return field, nil
     end
 
     -- 检查是否包含 AS 别名 (不区分大小写)
@@ -53,6 +53,14 @@ end
 local function trim(str)
     if not str then return nil end
     return str:gsub('^%s+', ''):gsub('%s+$', '')
+end
+
+-- 检查字段是否已有表名前缀
+local function has_table_prefix(field)
+    if not field or type(field) ~= 'string' then
+        return false
+    end
+    return field:find('%.'), nil
 end
 
 function QueryBuilder:new(table_name)
@@ -84,6 +92,48 @@ function QueryBuilder:select(fields)
         self.fields = fields or '*'
     end
     return self
+end
+
+-- 自动为 JOIN 查询添加表名前缀
+function QueryBuilder:auto_prefix_fields()
+    if #self.joins == 0 then
+        return
+    end
+
+    if type(self.fields) == 'string' and self.fields ~= '*' then
+        -- 处理字符串格式: 'id, name, email'
+        local parts = {}
+        for field in string.gmatch(self.fields, '[^,]+') do
+            field = field:gsub('^%s+', ''):gsub('%s+$', '')
+            local field_part, alias = parse_field(field)
+            -- 如果没有表前缀且不是 *，添加主表前缀
+            if not has_table_prefix(field) and field_part ~= '*' then
+                field_part = self.table .. '.' .. field_part
+            end
+            if alias then
+                table.insert(parts, field_part .. ' AS ' .. alias)
+            else
+                table.insert(parts, field_part)
+            end
+        end
+        self.fields = table.concat(parts, ', ')
+    elseif type(self.fields) == 'table' then
+        -- 处理 table 格式
+        local parts = {}
+        for _, field in ipairs(self.fields) do
+            local field_part, alias = parse_field(field)
+            -- 如果没有表前缀且不是 *，添加主表前缀
+            if not has_table_prefix(field) and field_part ~= '*' then
+                field_part = self.table .. '.' .. field_part
+            end
+            if alias then
+                table.insert(parts, field_part .. ' AS ' .. alias)
+            else
+                table.insert(parts, field_part)
+            end
+        end
+        self.fields = table.concat(parts, ', ')
+    end
 end
 
 function QueryBuilder:join(table_name, first_key, operator, second_key)
@@ -138,6 +188,11 @@ function QueryBuilder:to_sql()
     if not table_name then
         ngx.log(ngx.ERR, 'Invalid table name: ' .. tostring(self.table))
         return 'SELECT * FROM invalid_table'
+    end
+
+    -- 如果有 JOIN，自动为字段添加表名前缀
+    if #self.joins > 0 then
+        self:auto_prefix_fields()
     end
 
     local sql = 'SELECT ' .. self.fields .. ' FROM ' .. table_name
