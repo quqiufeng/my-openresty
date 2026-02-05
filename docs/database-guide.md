@@ -269,6 +269,9 @@ local sql = builder:to_sql()
 |------|------|------|----------|
 | `new(table)` | 创建实例 | `QueryBuilder.new('system_menu')` | - |
 | `select(fields)` | 指定字段 | `select('id, name, title')` | `SELECT id, name, title` |
+| `join(t, k1, op, k2)` | 内连接 | `join('orders', 'users.id', '=', 'orders.user_id')` | `JOIN orders ON users.id = orders.user_id` |
+| `left_join(t, k1, op, k2)` | 左连接 | `left_join('orders', 'users.id', '=', 'orders.user_id')` | `LEFT JOIN orders ON users.id = orders.user_id` |
+| `right_join(t, k1, op, k2)` | 右连接 | `right_join('orders', 'users.id', '=', 'orders.user_id')` | `RIGHT JOIN orders ON users.id = orders.user_id` |
 | `where(k, op, v)` | AND 条件 | `where('status', '=', 1)` | `WHERE status = 1` |
 | `or_where()` | OR 条件 | `or_where('a', '=', 1)` | `OR a = 1` |
 | `where_in(k, arr)` | IN 列表 | `where_in('id', {1,2,3})` | `WHERE id IN (1,2,3)` |
@@ -504,7 +507,67 @@ local sql = builder:to_sql()
 -- 假设 page=3: SQL: SELECT * FROM system_menu WHERE status = 1 ORDER BY sort ASC LIMIT 10 OFFSET 20
 ```
 
-### 4.11 完整查询示例
+### 4.12 join - 表连接
+
+QueryBuilder 支持三种 JOIN 类型：`join`、`left_join`、`right_join`。
+
+```lua
+-- 1. INNER JOIN (只返回匹配的行)
+local builder = QueryBuilder:new('users')
+builder:select('users.id, users.name, orders.order_no, orders.total')
+builder:join('orders', 'users.id', '=', 'orders.user_id')
+local sql = builder:to_sql()
+-- SQL: SELECT users.id, users.name, orders.order_no, orders.total FROM users JOIN orders ON users.id = orders.user_id
+
+-- 2. LEFT JOIN (返回左表所有行，右表无匹配为 NULL)
+local builder = QueryBuilder:new('users')
+builder:select('users.id, users.name, orders.order_no')
+builder:left_join('orders', 'users.id', '=', 'orders.user_id')
+builder:where('users.status', '=', 1)
+local sql = builder:to_sql()
+-- SQL: SELECT users.id, users.name, orders.order_no FROM users LEFT JOIN orders ON users.id = orders.user_id WHERE users.status = 1
+
+-- 3. RIGHT JOIN (返回右表所有行，左表无匹配为 NULL)
+local builder = QueryBuilder:new('users')
+builder:select('users.id, users.name, orders.order_no')
+builder:right_join('orders', 'users.id', '=', 'orders.user_id')
+local sql = builder:to_sql()
+-- SQL: SELECT users.id, users.name, orders.order_no FROM users RIGHT JOIN orders ON users.id = orders.user_id
+
+-- 4. 多表连接
+local builder = QueryBuilder:new('orders')
+builder:select('orders.id, orders.total, users.name as user_name, products.name as product_name')
+builder:left_join('users', 'orders.user_id', '=', 'users.id')
+builder:left_join('order_items', 'orders.id', '=', 'order_items.order_id')
+builder:left_join('products', 'order_items.product_id', '=', 'products.id')
+builder:where('orders.status', '=', 'completed')
+builder:order_by('orders.created_at', 'DESC')
+builder:limit(20)
+local sql = builder:to_sql()
+-- 生成的 SQL:
+-- SELECT orders.id, orders.total, users.name as user_name, products.name as product_name 
+-- FROM orders 
+-- LEFT JOIN users ON orders.user_id = users.id 
+-- LEFT JOIN order_items ON orders.id = order_items.order_id 
+-- LEFT JOIN products ON order_items.product_id = products.id 
+-- WHERE orders.status = 'completed' 
+-- ORDER BY orders.created_at DESC 
+-- LIMIT 20
+
+-- 5. 自定义连接条件运算符
+local builder = QueryBuilder:new('products')
+builder:select('p.id, p.name, p.price, c.name as category_name')
+builder:join('categories c', 'p.category_id', '=', 'c.id')
+-- 注意：复杂表名/别名需要在 to_sql 层面处理，此处仅支持简单标识符
+
+local builder = QueryBuilder:new('products')
+builder:select('p.id, p.name')
+builder:left_join('categories', 'p.category_id', '>', 0)  -- 使用 >
+local sql = builder:to_sql()
+-- SQL: SELECT p.id, p.name FROM products LEFT JOIN categories ON p.category_id > 0
+```
+
+### 4.13 完整查询示例
 
 ```lua
 -- 构建复杂查询
