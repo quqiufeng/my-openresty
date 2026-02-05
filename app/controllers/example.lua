@@ -51,57 +51,34 @@ function _M:where_conditions()
 end
 
 function _M:aggregates()
-    local count_sql = QueryBuilder.new('users'):count()
-    local sum_sql = QueryBuilder.new('orders'):sum('total')
-    local avg_sql = QueryBuilder.new('products'):avg('price')
-    local max_sql = QueryBuilder.new('products'):max('price')
-
     self:json({
-        count = count_sql,
-        sum = sum_sql,
-        avg = avg_sql,
-        max = max_sql
+        message = 'Use Model:count() for aggregates',
+        example = 'model:count({ status = "active" })',
+        note = 'QueryBuilder no longer provides count/sum/avg/max methods. Use Model layer directly.'
     })
 end
 
 function _M:insert_example()
-    local insert_sql = QueryBuilder.new('users'):insert({
-        name = 'John Doe',
-        email = 'john@example.com',
-        status = 'active'
-    })
-
-    local batch_sql = QueryBuilder.new('users'):insert_batch({
-        {name = 'User 1', email = 'user1@example.com'},
-        {name = 'User 2', email = 'user2@example.com'},
-    })
-
     self:json({
-        insert = insert_sql,
-        batch_insert = batch_sql
+        message = 'Use Model:insert() for inserts',
+        example = 'model:set_table("users"):insert({ name = "John" })',
+        note = 'QueryBuilder no longer provides insert method. Use Model layer directly.'
     })
 end
 
 function _M:update_example()
-    local sql = QueryBuilder.new('users')
-        :where('id', 1)
-        :update({
-            name = 'Updated Name',
-            status = 'inactive'
-        })
-
     self:json({
-        update = sql
+        message = 'Use Model:update() for updates',
+        example = 'model:update({ name = "New" }, { id = 1 })',
+        note = 'QueryBuilder no longer provides update method. Use Model layer directly.'
     })
 end
 
 function _M:delete_example()
-    local sql = QueryBuilder.new('users')
-        :where('status', 'deleted')
-        :delete()
-
     self:json({
-        delete = sql
+        message = 'Use Model:delete() for deletes',
+        example = 'model:delete({ status = "deleted" })',
+        note = 'QueryBuilder no longer provides delete method. Use Model layer directly.'
     })
 end
 

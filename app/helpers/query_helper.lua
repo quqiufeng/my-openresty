@@ -1,7 +1,7 @@
 local _M = {}
 
 function _M.table(table_name)
-    local QueryBuilder = require('app.core.QueryBuilder')
+    local QueryBuilder = require('app.db.query')
     return QueryBuilder.new(table_name)
 end
 
@@ -25,27 +25,31 @@ function _M.select(sql)
 end
 
 function _M.insert(table, data)
-    local QueryBuilder = require('app.core.QueryBuilder')
-    return QueryBuilder.new(table):insert(data)
+    local Model = require('app.core.Model')
+    local model = Model:new()
+    model:set_table(table)
+    return model:insert(data)
 end
 
 function _M.update(table, data, where)
-    local QueryBuilder = require('app.core.QueryBuilder')
-    return QueryBuilder.new(table):where(where):update(data)
+    local Model = require('app.core.Model')
+    local model = Model:new()
+    model:set_table(table)
+    return model:update(data, where)
 end
 
 function _M.delete(table, where)
-    local QueryBuilder = require('app.core.QueryBuilder')
-    return QueryBuilder.new(table):where(where):delete()
+    local Model = require('app.core.Model')
+    local model = Model:new()
+    model:set_table(table)
+    return model:delete(where)
 end
 
 function _M.count(table, where)
-    local QueryBuilder = require('app.core.QueryBuilder')
-    local qb = QueryBuilder.new(table)
-    if where then
-        qb:where(where)
-    end
-    return qb:count()
+    local Model = require('app.core.Model')
+    local model = Model:new()
+    model:set_table(table)
+    return model:count(where)
 end
 
 function _M.transaction(callback)
