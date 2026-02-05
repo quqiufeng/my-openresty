@@ -1,21 +1,10 @@
 local _M = {}
 
 local resty_mysql = require('resty.mysql')
-local mysql_config = require('app.config.mysql')
+local Config = require('app.config.config')
 
-local pools = {}
-
-local function get_pool_name(config)
-    return string.format('%s:%s:%d:%s',
-        config.user or '',
-        config.database or '',
-        config.port or 3306,
-        config.host or '127.0.0.1'
-    )
-end
-
-function _M.new(db_name)
-    local config = mysql_config.get(db_name)
+function _M.new()
+    local config = Config.mysql or {}
 
     local db = resty_mysql:new()
     db:set_timeout(config.timeout or 5000)
@@ -24,16 +13,28 @@ function _M.new(db_name)
 end
 
 function _M.connect(db, db_name)
-    local config = mysql_config.get(db_name)
+    local config = Config.mysql or {}
+    local conn_config = Config.connections and Config.connections[db_name] or {}
+
+    local final_config = {}
+    for k, v in pairs(config) do final_config[k] = v end
+    for k, v in pairs(conn_config) do final_config[k] = v end
+
+    local pool_name = string.format('%s:%s:%d:%s',
+        final_config.user or '',
+        final_config.database or '',
+        final_config.port or 3306,
+        final_config.host or '127.0.0.1'
+    )
 
     local ok, err = db:connect({
-        host = config.host,
-        port = config.port,
-        user = config.user,
-        password = config.password,
-        database = config.database,
-        charset = config.charset,
-        pool = get_pool_name(config)
+        host = final_config.host,
+        port = final_config.port,
+        user = final_config.user,
+        password = final_config.password,
+        database = final_config.database,
+        charset = final_config.charset,
+        pool = pool_name
     })
 
     if not ok then
@@ -43,8 +44,7 @@ function _M.connect(db, db_name)
     return true
 end
 
-function _M.query(db, sql, db_name)
-    local config = mysql_config.get(db_name)
+function _M.query(db, sql)
     return db:query(sql)
 end
 
@@ -54,28 +54,16 @@ function _M.close(db)
     end
 end
 
-function _M.set_keepalive(db, db_name)
+function _M.set_keepalive(db)
     if not db then
         return nil, 'not initialized'
     end
 
-    local config = mysql_config.get(db_name)
-    local pool_size = config.pool_size or 20
-    local idle_timeout = config.pool_idle_timeout or 60000
+    local config = Config.mysql or {}
+    local pool_size = config.pool_size or 100
+    local idle_timeout = config.idle_timeout or 10000
 
     return db:set_keepalive(idle_timeout, pool_size)
-end
-
-function _M.get_config(db_name)
-    return mysql_config.get(db_name)
-end
-
-function _M.set_default_config(config)
-    mysql_config.setup(config)
-end
-
-function _M.add_named_connection(name, config)
-    mysql_config.add_connection(name, config)
 end
 
 return _M
