@@ -180,7 +180,7 @@ function _M.parse_uri(self, uri)
     local segments = new_tab(8, 0)
     local segment_count = 0
 
-    for segment in string_gmatch(uri, '([^/]+') do
+    for segment in string_gmatch(uri, '([^/]+)') do
         segment_count = segment_count + 1
         segments[segment_count] = segment
     end
@@ -216,7 +216,7 @@ function _M.dispatch(self, Request)
     if handler then
         if type(handler) == 'string' then
             local parts = {}
-            for segment in string_gmatch(handler, '([^%.]+') do
+            for segment in string_gmatch(handler, '([^%.]+)') do
                 table.insert(parts, segment)
             end
             if #parts == 2 then

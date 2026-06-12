@@ -48,16 +48,17 @@ local rec_size = ffi_sizeof("struct lua_resty_limit_req_rec")
 
 local rec_cdata = ffi.new("struct lua_resty_limit_req_rec")
 
-local Limit = {}
+local _M = { _VERSION = '1.0.0' }
+local mt = { __index = _M }
 
-Limit.STRATEGIES = {
+_M.STRATEGIES = {
     SLIDING_WINDOW = "sliding_window",
     FIXED_WINDOW = "fixed_window",
     TOKEN_BUCKET = "token_bucket",
     LEAKY_BUCKET = "leaky_bucket"
 }
 
-Limit.ACTIONS = {
+_M.ACTIONS = {
     DENY = "deny",
     DROP = "drop",
     REDIRECT = "redirect"
@@ -101,16 +102,16 @@ local function _put_tab_into_pool(tab)
     tab_pool[tab_pool_len] = tab
 end
 
-function Limit:new(config)
+function _M:new(config)
     config = config or {}
     local instance = {
         dict_name = config.dict_name or "limit_dict",
         dict = nil,
-        strategy = config.strategy or Limit.STRATEGIES.SLIDING_WINDOW,
+        strategy = config.strategy or _M.STRATEGIES.SLIDING_WINDOW,
         default_limit = config.default_limit or 100,
         default_window = config.default_window or 60,
         default_burst = config.default_burst or 0,
-        action = config.action or Limit.ACTIONS.DENY,
+        action = config.action or _M.ACTIONS.DENY,
         redirect_url = config.redirect_url or "/rate-limited",
         response_status = config.response_status or 429,
         response_message = config.response_message or "Too Many Requests",
@@ -118,13 +119,13 @@ function Limit:new(config)
         counters = {}
     }
 
-    setmetatable(instance, { __index = Limit })
+    setmetatable(instance, mt)
     instance:init()
 
     return instance
 end
 
-function Limit:init()
+function _M:init()
     local shared_dict = ngx_shared[self.dict_name]
     if not shared_dict then
         ngx.log(ngx.WARN, "Rate limit: shared dict '" .. self.dict_name .. "' not found, using in-memory fallback")
@@ -136,7 +137,7 @@ function Limit:init()
     self.counters = {}
 end
 
-function Limit:ffi_incoming(self, key, rate, burst, commit)
+function _M:ffi_incoming(self, key, rate, burst, commit)
     local dict = self.dict
     local now = ngx_now() * 1000
 
@@ -169,7 +170,7 @@ function Limit:ffi_incoming(self, key, rate, burst, commit)
     return true, excess / 1000, rate
 end
 
-function Limit:get_key(key_type, identifier, route)
+function _M:get_key(key_type, identifier, route)
     if key_type == "ip" then
         return "limit:" .. ngx.var.remote_addr or "unknown"
     elseif key_type == "user" then
@@ -182,11 +183,11 @@ function Limit:get_key(key_type, identifier, route)
     return "limit:" .. identifier
 end
 
-function Limit:get_time()
+function _M:get_time()
     return ngx.now() * 1000
 end
 
-function Limit:get_sliding_window_count(key, window)
+function _M:get_sliding_window_count(key, window)
     local now = self:get_time()
     local window_ms = window * 1000
     local start_time = now - window_ms
@@ -210,7 +211,7 @@ function Limit:get_sliding_window_count(key, window)
     return count
 end
 
-function Limit:add_request(key, count)
+function _M:add_request(key, count)
     local now = self.get_time and self:get_time() or ngx.now() * 1000
 
     local data = self.dict[key]
@@ -231,7 +232,7 @@ function Limit:add_request(key, count)
     return true
 end
 
-function Limit:sliding_window_check(key, limit, window)
+function _M:sliding_window_check(key, limit, window)
     local count = self:get_sliding_window_count(key, window)
     local now = self:get_time()
 
@@ -244,7 +245,7 @@ function Limit:sliding_window_check(key, limit, window)
     return true, count + 1, limit
 end
 
-function Limit:fixed_window_check(key, limit, window)
+function _M:fixed_window_check(key, limit, window)
     local window_key = key .. ":" .. math.floor(self:get_time() / (window * 1000))
     local current = self.dict[window_key] or 0
 
@@ -260,7 +261,7 @@ function Limit:fixed_window_check(key, limit, window)
     return true, current + 1, limit
 end
 
-function Limit:token_bucket_check(key, rate, capacity)
+function _M:token_bucket_check(key, rate, capacity)
     local bucket_key = key .. ":bucket"
     local tokens_key = key .. ":tokens"
 
@@ -281,7 +282,7 @@ function Limit:token_bucket_check(key, rate, capacity)
     return true, new_tokens - 1, capacity
 end
 
-function Limit:check(identifier, route, limit, window, burst)
+function _M:check(identifier, route, limit, window, burst)
     limit = limit or self.default_limit
     window = window or self.default_window
     burst = burst or self.default_burst
@@ -291,11 +292,11 @@ function Limit:check(identifier, route, limit, window, burst)
     local success, current, max_limit
     local effective_limit = limit + burst
 
-    if self.strategy == Limit.STRATEGIES.SLIDING_WINDOW then
+    if self.strategy == _M.STRATEGIES.SLIDING_WINDOW then
         success, current, max_limit = self:sliding_window_check(key, effective_limit, window)
-    elseif self.strategy == Limit.STRATEGIES.FIXED_WINDOW then
+    elseif self.strategy == _M.STRATEGIES.FIXED_WINDOW then
         success, current, max_limit = self:fixed_window_check(key, effective_limit, window)
-    elseif self.strategy == Limit.STRATEGIES.TOKEN_BUCKET then
+    elseif self.strategy == _M.STRATEGIES.TOKEN_BUCKET then
         success, current, max_limit = self:token_bucket_check(key, limit, effective_limit)
     else
         success, current, max_limit = self:sliding_window_check(key, effective_limit, window)
@@ -319,28 +320,28 @@ function Limit:check(identifier, route, limit, window, burst)
     }
 end
 
-function Limit:check_user(user_id, route, limit, window)
+function _M:check_user(user_id, route, limit, window)
     local key = self:get_key("user", user_id, route)
     local success, info = self:sliding_window_check(key, limit, window)
     return success, info
 end
 
-function Limit:check_combined(route, limit, window)
+function _M:check_combined(route, limit, window)
     local key = self:get_key("combined", nil, route)
     local success, info = self:sliding_window_check(key, limit, window)
     return success, info
 end
 
-function Limit:limit_exceeded(identifier, route, limit, window, burst)
+function _M:limit_exceeded(identifier, route, limit, window, burst)
     local success, info = self:check(identifier, route, limit, window, burst)
     return not success, info
 end
 
-function Limit:is_allowed(...)
+function _M:is_allowed(...)
     return self:check(...)
 end
 
-function Limit:apply_limits(rules)
+function _M:apply_limits(rules)
     local headers = {}
     local blocked = false
     local block_info = nil
@@ -368,7 +369,7 @@ function Limit:apply_limits(rules)
     return blocked, headers
 end
 
-function Limit:set_headers(info)
+function _M:set_headers(info)
     if not info then return end
 
     ngx.header["X-RateLimit-Limit"] = info.limit
@@ -377,10 +378,10 @@ function Limit:set_headers(info)
     ngx.header["X-RateLimit-Window"] = info.window
 end
 
-function Limit:reject()
-    if self.action == Limit.ACTIONS.REDIRECT then
+function _M:reject()
+    if self.action == _M.ACTIONS.REDIRECT then
         return ngx.redirect(self.redirect_url, 302)
-    elseif self.action == Limit.ACTIONS.DROP then
+    elseif self.action == _M.ACTIONS.DROP then
         ngx.exit(ngx.OK)
     else
         ngx.header["Content-Type"] = "application/json"
@@ -390,7 +391,7 @@ function Limit:reject()
     end
 end
 
-function Limit:check_and_reject(identifier, route, limit, window, burst)
+function _M:check_and_reject(identifier, route, limit, window, burst)
     local success, info = self:check(identifier, route, limit, window, burst)
     self:set_headers(info)
 
@@ -402,7 +403,7 @@ function Limit:check_and_reject(identifier, route, limit, window, burst)
     return true
 end
 
-function Limit:reset(key)
+function _M:reset(key)
     local full_key = "limit:" .. key
     self.dict[full_key] = nil
     self.dict[full_key .. "_ts"] = nil
@@ -411,7 +412,7 @@ function Limit:reset(key)
     return true
 end
 
-function Limit:reset_all()
+function _M:reset_all()
     if self.dict and self.dict.flush_all then
         self.dict:flush_all()
     end
@@ -419,7 +420,7 @@ function Limit:reset_all()
     return true
 end
 
-function Limit:get_stats(key)
+function _M:get_stats(key)
     local full_key = "limit:" .. key
     local data = self.dict[full_key]
 
@@ -445,7 +446,7 @@ function Limit:get_stats(key)
     return stats
 end
 
-function Limit:get_all_keys()
+function _M:get_all_keys()
     local keys = {}
     local prefix = "limit:"
 
@@ -470,7 +471,7 @@ function Limit:get_all_keys()
     return result
 end
 
-function Limit:create_zone(name, limit, window, burst)
+function _M:create_zone(name, limit, window, burst)
     self.zones = self.zones or {}
     self.zones[name] = {
         limit = limit,
@@ -480,7 +481,7 @@ function Limit:create_zone(name, limit, window, burst)
     return self.zones[name]
 end
 
-function Limit:check_zone(zone_name, identifier)
+function _M:check_zone(zone_name, identifier)
     local zone = self.zones and self.zones[zone_name]
     if not zone then
         return true, { error = "Zone not found" }
@@ -492,4 +493,4 @@ function Limit:check_zone(zone_name, identifier)
     return success, info
 end
 
-return Limit
+return _M

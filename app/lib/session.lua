@@ -1,15 +1,15 @@
 -- Session Library for MyResty
 -- Manages user sessions with encrypted cookie-based storage
 
-local Session = {}
-Session.__index = Session
+local _M = { _VERSION = '1.0.0' }
+local mt = { __index = _M }
 
 local COOKIE_NAME = 'session'
 local COOKIE_PATH = '/'
 local COOKIE_MAX_AGE = 86400
 
-function Session:new(options)
-    local self = setmetatable({}, Session)
+function _M:new(options)
+    local self = setmetatable({}, mt)
 
     self.data = {}
     self.session_id = nil
@@ -26,7 +26,7 @@ function Session:new(options)
     return self
 end
 
-function Session:load_from_cookie()
+function _M:load_from_cookie()
     local cookie_name = self.cookie_name
     local cookie_str = ngx.var['cookie_' .. cookie_name]
 
@@ -51,7 +51,7 @@ function Session:load_from_cookie()
     end
 end
 
-function Session:start()
+function _M:start()
     if not self.session_id then
         self.session_id = self:generate_id(32)
     end
@@ -59,7 +59,7 @@ function Session:start()
     return self
 end
 
-function Session:generate_id(length)
+function _M:generate_id(length)
     length = tonumber(length) or 32
     local chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     local result = {}
@@ -71,43 +71,43 @@ function Session:generate_id(length)
     return table.concat(result)
 end
 
-function Session:get(key)
+function _M:get(key)
     return self.data[key]
 end
 
-function Session:set(key, value)
+function _M:set(key, value)
     self.data[key] = value
     return self
 end
 
-function Session:has(key)
+function _M:has(key)
     return self.data[key] ~= nil
 end
 
-function Session:remove(key)
+function _M:remove(key)
     self.data[key] = nil
     return self
 end
 
-function Session:clear()
+function _M:clear()
     self.data = {}
     return self
 end
 
-function Session:get_id()
+function _M:get_id()
     return self.session_id
 end
 
-function Session:is_new_session()
+function _M:is_new_session()
     return self.is_new_session_flag
 end
 
 -- 兼容旧 API
-function Session:is_new()
+function _M:is_new()
     return self:is_new_session()
 end
 
-function Session:count()
+function _M:count()
     if not self.data or type(self.data) ~= 'table' then
         return 0
     end
@@ -118,18 +118,18 @@ function Session:count()
     return count
 end
 
-function Session:get_all_data()
+function _M:get_all_data()
     return self.data
 end
 
-function Session:save()
+function _M:save()
     if self.session_id then
         self.data.session_id = self.session_id
     end
     return self
 end
 
-function Session:to_cookie()
+function _M:to_cookie()
     self:save()
 
     local cjson = require('cjson')
@@ -139,12 +139,12 @@ function Session:to_cookie()
     return self.cookie_name .. '=' .. encrypted .. '; Path=' .. self.cookie_path .. '; HttpOnly; Max-Age=' .. self.cookie_max_age
 end
 
-function Session:set_cookie(value)
+function _M:set_cookie(value)
     local cookie_str = self.cookie_name .. '=' .. value .. '; Path=' .. self.cookie_path .. '; HttpOnly; Max-Age=' .. self.cookie_max_age
     ngx.header['Set-Cookie'] = cookie_str
 end
 
-function Session:destroy()
+function _M:destroy()
     self.data = {}
     self.session_id = nil
     self.is_new_session_flag = true
@@ -152,7 +152,7 @@ function Session:destroy()
     return self
 end
 
-function Session:aes_encrypt(plaintext)
+function _M:aes_encrypt(plaintext)
     if not plaintext or plaintext == '' then
         return nil
     end
@@ -161,7 +161,7 @@ function Session:aes_encrypt(plaintext)
     return Crypto.encrypt_session(plaintext)
 end
 
-function Session:aes_decrypt(encrypted_data)
+function _M:aes_decrypt(encrypted_data)
     if not encrypted_data or encrypted_data == '' then
         return nil
     end
@@ -170,4 +170,4 @@ function Session:aes_decrypt(encrypted_data)
     return Crypto.decrypt_session(encrypted_data)
 end
 
-return Session
+return _M

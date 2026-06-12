@@ -1,6 +1,6 @@
-local Middleware = {}
+local _M = { _VERSION = '1.0.0' }
 
-Middleware.PHASES = {
+_M.PHASES = {
     INIT = 'init',
     INIT_WORKER = 'init_worker',
     SET = 'set',
@@ -30,7 +30,7 @@ local function load_middleware(name)
     return mod
 end
 
-function Middleware:setup(config)
+function _M:setup(config)
     middleware_config = config or {}
 
     for _, cfg in ipairs(middleware_config) do
@@ -43,7 +43,7 @@ function Middleware:setup(config)
     end
 end
 
-function Middleware:run(name, options)
+function _M:run(name, options)
     local mod = load_middleware(name)
     if not mod then
         return true
@@ -68,7 +68,7 @@ function Middleware:run(name, options)
     return true
 end
 
-function Middleware:run_phase(phase, options)
+function _M:run_phase(phase, options)
     options = options or {}
 
     for _, cfg in ipairs(middleware_config) do
@@ -99,7 +99,7 @@ function Middleware:run_phase(phase, options)
     return true
 end
 
-function Middleware:match_routes(routes)
+function _M:match_routes(routes)
     local uri = ngx.var.uri
 
     for _, route in ipairs(routes) do
@@ -112,7 +112,7 @@ function Middleware:match_routes(routes)
     return false
 end
 
-function Middleware:register(name, phase, handler, options)
+function _M:register(name, phase, handler, options)
     options = options or {}
 
     table.insert(middleware_config, {
@@ -126,7 +126,7 @@ function Middleware:register(name, phase, handler, options)
     return self
 end
 
-function Middleware:disable(name)
+function _M:disable(name)
     for _, cfg in ipairs(middleware_config) do
         if cfg.name == name then
             cfg.enabled = false
@@ -135,7 +135,7 @@ function Middleware:disable(name)
     return self
 end
 
-function Middleware:enable(name)
+function _M:enable(name)
     for _, cfg in ipairs(middleware_config) do
         if cfg.name == name then
             cfg.enabled = true
@@ -144,11 +144,11 @@ function Middleware:enable(name)
     return self
 end
 
-function Middleware:get_config()
+function _M:get_config()
     return middleware_config
 end
 
-function Middleware:list()
+function _M:list()
     local list = {}
     for _, cfg in ipairs(middleware_config) do
         table.insert(list, {
@@ -162,19 +162,19 @@ function Middleware:list()
     return list
 end
 
-function Middleware:clear()
+function _M:clear()
     middleware_config = {}
     return self
 end
 
-function Middleware:require_middleware(name)
+function _M:require_middleware(name)
     return load_middleware(name)
 end
 
-function Middleware:create_handler(name, phase)
+function _M:create_handler(name, phase)
     return function()
         return self:run_phase(phase)
     end
 end
 
-return Middleware
+return _M

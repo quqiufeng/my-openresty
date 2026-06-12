@@ -1,8 +1,8 @@
 -- QueryBuilder for MyResty
 -- Simple SQL query builder with SQL injection protection
 
-local QueryBuilder = {}
-QueryBuilder.__index = QueryBuilder
+local _M = { _VERSION = '1.0.0' }
+local mt = { __index = _M }
 
 -- SQL 转义函数
 local function escape_sql(value)
@@ -76,8 +76,8 @@ local function has_table_prefix(field)
     return field:find('%.'), nil
 end
 
-function QueryBuilder:new(table_name, prefix)
-    local self = setmetatable({}, QueryBuilder)
+function _M:new(table_name, prefix)
+    local self = setmetatable({}, mt)
     self.table = table_name or ''
     self._prefix = prefix or ''
     self.fields = '*'
@@ -90,31 +90,31 @@ function QueryBuilder:new(table_name, prefix)
     return self
 end
 
-function QueryBuilder:prefix(p)
+function _M:prefix(p)
     self._prefix = p or ''
     return self
 end
 
-function QueryBuilder:table_prefix(tp)
+function _M:table_prefix(tp)
     self._prefix = tp or ''
     return self
 end
 
-function QueryBuilder:from_config(config)
+function _M:from_config(config)
     local prefix = config.table_prefix or ''
     return self:new(self.table, prefix)
 end
 
-function QueryBuilder:prefix(p)
+function _M:prefix(p)
     self._prefix = p or ''
     return self
 end
 
-function QueryBuilder:get_prefix()
+function _M:get_prefix()
     return self._prefix or ''
 end
 
-function QueryBuilder:select(fields)
+function _M:select(fields)
     if type(fields) == 'table' then
         -- 支持 table 格式: {'id', 'name', 'orders.total as order_amount'}
         -- 字段直接存储，JOIN 时在 to_sql() 中自动添加表前缀
@@ -135,7 +135,7 @@ function QueryBuilder:select(fields)
 end
 
 -- 自动为 JOIN 查询添加表名前缀
-function QueryBuilder:auto_prefix_fields()
+function _M:auto_prefix_fields()
     if #self.joins == 0 then
         return
     end
@@ -176,7 +176,7 @@ function QueryBuilder:auto_prefix_fields()
     end
 end
 
-function QueryBuilder:join(table_name)
+function _M:join(table_name)
     if not table_name then
         return self
     end
@@ -185,7 +185,7 @@ function QueryBuilder:join(table_name)
     return self
 end
 
-function QueryBuilder:left_join(table_name)
+function _M:left_join(table_name)
     if not table_name then
         return self
     end
@@ -194,7 +194,7 @@ function QueryBuilder:left_join(table_name)
     return self
 end
 
-function QueryBuilder:right_join(table_name)
+function _M:right_join(table_name)
     if not table_name then
         return self
     end
@@ -203,7 +203,7 @@ function QueryBuilder:right_join(table_name)
     return self
 end
 
-function QueryBuilder:on(left_field, right_field)
+function _M:on(left_field, right_field)
     if not left_field or not right_field then
         return self
     end
@@ -221,7 +221,7 @@ function QueryBuilder:on(left_field, right_field)
     return self
 end
 
-function QueryBuilder:order_by(field, direction)
+function _M:order_by(field, direction)
     -- 支持 table.field 格式
     table.insert(self.orders, {
         field = field,
@@ -230,17 +230,17 @@ function QueryBuilder:order_by(field, direction)
     return self
 end
 
-function QueryBuilder:limit(n)
+function _M:limit(n)
     self.limit_val = tonumber(n)
     return self
 end
 
-function QueryBuilder:offset(n)
+function _M:offset(n)
     self.offset_val = tonumber(n)
     return self
 end
 
-function QueryBuilder:where(key, operator, value)
+function _M:where(key, operator, value)
     table.insert(self.wheres, {
         key = key,
         operator = operator or '=',
@@ -249,7 +249,7 @@ function QueryBuilder:where(key, operator, value)
     return self
 end
 
-function QueryBuilder:to_sql()
+function _M:to_sql()
     local prefix = self._prefix or ''
 
     -- 验证主表名
@@ -357,7 +357,7 @@ function QueryBuilder:to_sql()
     return sql
 end
 
-function QueryBuilder:reset()
+function _M:reset()
     self.fields = '*'
     self.wheres = {}
     self.joins = {}
@@ -368,13 +368,13 @@ function QueryBuilder:reset()
     return self
 end
 
-function QueryBuilder:table_prefix(tp)
+function _M:table_prefix(tp)
     self._prefix = tp or ''
     return self
 end
 
-function QueryBuilder:clone()
-    local clone = QueryBuilder:new(self.table, self._prefix)
+function _M:clone()
+    local clone = _M.new(self.table, self._prefix)
     clone.fields = self.fields
     clone.wheres = {}
     clone.joins = {}
@@ -392,4 +392,4 @@ function QueryBuilder:clone()
     return clone
 end
 
-return QueryBuilder
+return _M

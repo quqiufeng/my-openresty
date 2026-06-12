@@ -99,20 +99,6 @@ function _M.jsonp(self, data, callback, status)
     return self
 end
 
-function _M.jsonp(self, data, callback, status)
-    self.content_type = 'application/javascript'
-    local json_str = _json_encode(data)
-    if callback and callback ~= '' then
-        self.body = callback .. '(' .. json_str .. ')'
-    else
-        self.body = json_str
-    end
-    if status then
-        self.status = tonumber(status) or 200
-    end
-    return self
-end
-
 function _M.xml(self, data, status)
     self.content_type = 'application/xml'
     if type(data) == 'table' then
@@ -275,7 +261,7 @@ function _M.error(self, message, status)
 end
 
 function _M.success(self, data, message)
-    return self.json({
+    return self:json({
         success = true,
         data = data,
         message = message
@@ -283,7 +269,7 @@ function _M.success(self, data, message)
 end
 
 function _M.fail(self, message, data, status)
-    return self.json({
+    return self:json({
         success = false,
         message = message,
         data = data or nil
@@ -292,7 +278,7 @@ end
 
 function _M.paginate(self, data, total, page, per_page)
     local total_pages = math.ceil(total / per_page)
-    return self.json({
+    return self:json({
         success = true,
         data = data,
         pagination = {
