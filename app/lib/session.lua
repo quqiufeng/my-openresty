@@ -13,6 +13,9 @@ if not ok then
     end
 end
 
+local Crypto = require("app.lib.crypto")
+local cjson = require("cjson")
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
@@ -30,7 +33,6 @@ function _M:new(options)
     self.cookie_path = (options and options.cookie_path) or COOKIE_PATH
     self.cookie_max_age = (options and options.cookie_max_age) or COOKIE_MAX_AGE
 
-    local Crypto = require('app.lib.crypto')
     self.secret_key = Crypto.get_secret_key()
 
     self:load_from_cookie()
@@ -51,7 +53,6 @@ function _M:load_from_cookie()
         return
     end
 
-    local cjson = require('cjson')
     local success, data = pcall(function()
         return cjson.decode(decrypted)
     end)
@@ -158,7 +159,6 @@ end
 function _M:to_cookie()
     self:save()
 
-    local cjson = require('cjson')
     local json_str = cjson.encode(self.data)
     local encrypted = self:aes_encrypt(json_str)
 
@@ -183,7 +183,6 @@ function _M:aes_encrypt(plaintext)
         return nil
     end
 
-    local Crypto = require('app.lib.crypto')
     return Crypto.encrypt_session(plaintext)
 end
 
@@ -192,7 +191,6 @@ function _M:aes_decrypt(encrypted_data)
         return nil
     end
 
-    local Crypto = require('app.lib.crypto')
     return Crypto.decrypt_session(encrypted_data)
 end
 

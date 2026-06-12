@@ -9,6 +9,7 @@ local ngx_status = ngx.status
 local ngx_say = ngx.say
 local ngx_print = ngx.print
 local ngx_redirect = ngx.redirect
+local cjson = require("cjson")
 local table_insert = table.insert
 local table_concat = table.concat
 
@@ -46,7 +47,7 @@ local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
 local function _json_encode(data)
-    local json = require('cjson')
+    local json = cjson
     if json.encode_empty_table_as_object then
         return json.encode(data)
     end
