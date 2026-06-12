@@ -15,7 +15,7 @@ end
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
-function _M.new(self)
+function _M.new()
     local instance = {
         request = nil,
         response = nil,
@@ -25,7 +25,12 @@ function _M.new(self)
     }
 
     instance.load = function(name, alias)
-        return self:load_model(name, alias)
+        local Loader = require('app.core.Loader')
+        local model = Loader:model(name)
+        if model then
+            instance[alias or name] = model
+        end
+        return model
     end
 
     return setmetatable(instance, mt)
@@ -303,22 +308,28 @@ function _M.display(self, template, data)
     self:html(content)
 end
 
-function _M.cache(self, key, ttl)
-    local shdict = ngx.shared.my_resty_cache
-    if shdict then
-        if ttl then
-            shdict:set(key, 1, ttl)
-        else
-            return shdict:get(key)
-        end
+function _M.cache(self, key, ttl, value)
+    local Cache = require('app.lib.cache')
+    local cache = Cache:new()
+    if value ~= nil then
+        return cache:set(key, value, ttl)
+    elseif ttl ~= nil then
+        return cache:set(key, true, ttl)
+    else
+        return cache:get(key)
     end
 end
 
 function _M.uncache(self, key)
-    local shdict = ngx.shared.my_resty_cache
-    if shdict then
-        shdict:delete(key)
-    end
+    local Cache = require('app.lib.cache')
+    local cache = Cache:new()
+    return cache:delete(key)
+end
+
+function _M.remember(self, key, ttl, callback)
+    local Cache = require('app.lib.cache')
+    local cache = Cache:new()
+    return cache:remember(key, ttl, callback)
 end
 
 return _M

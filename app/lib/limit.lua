@@ -137,7 +137,7 @@ function _M:init()
     self.counters = {}
 end
 
-function _M:ffi_incoming(self, key, rate, burst, commit)
+function _M:ffi_incoming(key, rate, burst, commit)
     local dict = self.dict
     local now = ngx_now() * 1000
 

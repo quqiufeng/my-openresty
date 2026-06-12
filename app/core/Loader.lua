@@ -213,12 +213,18 @@ function _M.clear_cache(self, type)
     end
 end
 
+local function _hash_count(t)
+    local n = 0
+    for _ in pairs(t) do n = n + 1 end
+    return n
+end
+
 function _M.get_stats(self)
     return {
-        models = #loaded_models,
-        libraries = #loaded_libs,
-        helpers = #loaded_helpers,
-        controllers = #loaded_controllers
+        models = _hash_count(loaded_models),
+        libraries = _hash_count(loaded_libs),
+        helpers = _hash_count(loaded_helpers),
+        controllers = _hash_count(loaded_controllers)
     }
 end
 

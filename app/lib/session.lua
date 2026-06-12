@@ -61,6 +61,20 @@ end
 
 function _M:generate_id(length)
     length = tonumber(length) or 32
+    local Crypto = require('app.lib.crypto')
+    local random_bytes = Crypto.random_bytes(length)
+    if random_bytes then
+        -- Use crypto-grade random bytes as session ID (hex encoded)
+        local hex = {}
+        for i = 1, #random_bytes do
+            hex[i] = string.format('%02x', string.byte(random_bytes, i))
+        end
+        return table.concat(hex, ''):sub(1, length)
+    end
+    -- Fallback: use time-based ID
+    local ngx_now = ngx.now
+    local pid = ngx.worker and ngx.worker.pid() or 0
+    math.randomseed(ngx_now() * 10000 + pid)
     local chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     local result = {}
     local n = #chars
