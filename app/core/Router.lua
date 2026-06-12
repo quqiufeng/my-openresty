@@ -15,6 +15,31 @@ local ok, new_tab = pcall(require, "table.new")
 if not ok then
     new_tab = function(narr, nrec) return {} end
 end
+local ok, tb_clear = pcall(require, "table.clear")
+if not ok then
+	tb_clear = function(tab)
+		for k, _ in pairs(tab) do tab[k] = nil end
+	end
+end
+
+-- Table pool for hot-path temp tables
+local tab_pool_len = 0
+local tab_pool = new_tab(16, 0)
+
+local function _get_tab()
+	if tab_pool_len > 0 then
+		tab_pool_len = tab_pool_len - 1
+		return tab_pool[tab_pool_len + 1]
+	end
+	return new_tab(8, 0)
+end
+
+local function _put_tab(tab)
+	if tab_pool_len >= 32 then return end
+	tb_clear(tab)
+	tab_pool_len = tab_pool_len + 1
+	tab_pool[tab_pool_len] = tab
+end
 
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }

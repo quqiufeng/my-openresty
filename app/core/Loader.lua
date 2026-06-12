@@ -7,10 +7,18 @@ local ipairs = ipairs
 local setmetatable = setmetatable
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
+local ngx_WARN = ngx.WARN
 
 local ok, new_tab = pcall(require, "table.new")
 if not ok then
     new_tab = function(narr, nrec) return {} end
+end
+
+local ok, tb_clear = pcall(require, "table.clear")
+if not ok then
+    tb_clear = function(tab)
+        for k, _ in pairs(tab) do tab[k] = nil end
+    end
 end
 
 local _M = new_tab(0, 20)

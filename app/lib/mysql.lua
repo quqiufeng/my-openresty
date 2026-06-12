@@ -1,5 +1,11 @@
 local ngx_log = ngx.log
 local ngx_WARN = ngx.WARN
+
+local ok, new_tab = pcall(require, "table.new")
+if not ok then
+    new_tab = function(narr, nrec) return {} end
+end
+
 local _M = { _VERSION = '1.0.0' }
 
 local resty_mysql = require('resty.mysql')
@@ -18,7 +24,7 @@ function _M.connect(db, db_name)
     local config = Config.mysql or {}
     local conn_config = Config.connections and Config.connections[db_name] or {}
 
-    local final_config = {}
+    local final_config = new_tab(0, 8)
     for k, v in pairs(config) do final_config[k] = v end
     for k, v in pairs(conn_config) do final_config[k] = v end
 

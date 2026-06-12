@@ -12,6 +12,13 @@ if not ok then
     new_tab = function(narr, nrec) return {} end
 end
 
+local ok, tb_clear = pcall(require, "table.clear")
+if not ok then
+    tb_clear = function(tab)
+        for k, _ in pairs(tab) do tab[k] = nil end
+    end
+end
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
