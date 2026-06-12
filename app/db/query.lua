@@ -1,6 +1,18 @@
 -- QueryBuilder for MyResty
 -- Simple SQL query builder with SQL injection protection
 
+local ok, new_tab = pcall(require, "table.new")
+if not ok then
+    new_tab = function(narr, nrec) return {} end
+end
+
+local ok, tb_clear = pcall(require, "table.clear")
+if not ok then
+    tb_clear = function(tab)
+        for k, _ in pairs(tab) do tab[k] = nil end
+    end
+end
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
@@ -147,7 +159,7 @@ function _M:auto_prefix_fields()
             field = field:gsub('^%s+', ''):gsub('%s+$', '')
             local field_part, alias = parse_field(field)
             -- 如果不包含 . 且不是 *，添加主表名前缀
-            if not has_table_prefix(field_part) and field_part ~= '*' then
+            if not has_table_prefix(field_part) and field_part ~= '*' and not field_part:find('(', 1, true) then
                 field_part = self.table .. '.' .. field_part
             end
             if alias then
@@ -163,7 +175,7 @@ function _M:auto_prefix_fields()
         for _, field in ipairs(self.fields) do
             local field_part, alias = parse_field(field)
             -- 如果不包含 . 且不是 *，添加主表名前缀
-            if not has_table_prefix(field_part) and field_part ~= '*' then
+            if not has_table_prefix(field_part) and field_part ~= '*' and not field_part:find('(', 1, true) then
                 field_part = self.table .. '.' .. field_part
             end
             if alias then
@@ -417,7 +429,7 @@ function _M:insert_batch(data)
     for i, row in ipairs(data) do
         local vals = new_tab(#fields, 0)
         for j, k in ipairs(fields) do
-            vals[j] = _quote(row[k])
+            vals[j] = escape_sql(row[k])
         end
         value_parts[i] = "(" .. table.concat(vals, ",") .. ")"
     end
