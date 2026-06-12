@@ -392,4 +392,33 @@ function _M:clone()
     return clone
 end
 
+
+function _M:insert_batch(data)
+    if type(data) ~= "table" or #data == 0 then return nil end
+
+    local fields = {}
+    for k, _ in pairs(data[1]) do
+        fields[#fields + 1] = k
+    end
+
+    local value_parts = new_tab(#data, 0)
+    for i, row in ipairs(data) do
+        local vals = new_tab(#fields, 0)
+        for j, k in ipairs(fields) do
+            vals[j] = _quote(row[k])
+        end
+        value_parts[i] = "(" .. table.concat(vals, ",") .. ")"
+    end
+
+    local parts = new_tab(6, 0)
+    parts[1] = "INSERT INTO "
+    parts[2] = self.table
+    parts[3] = " ("
+    parts[4] = table.concat(fields, ",")
+    parts[5] = ") VALUES "
+    parts[6] = table.concat(value_parts, ",")
+
+    return table.concat(parts, "")
+end
+
 return _M

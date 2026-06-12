@@ -39,6 +39,17 @@ local function _put_tab(tab)
     tab_pool[tab_pool_len] = tab
 end
 
+-- Cache module references (avoid package.loaded lookup per query)
+local Mysql = require('app.lib.mysql')
+local QB = require('app.db.query')
+
+-- Cache config module for table prefix
+local config_ok, config_module = pcall(require, 'app.config.config')
+local default_prefix = ''
+if config_ok and config_module and config_module.table_prefix then
+    default_prefix = config_module.table_prefix
+end
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
@@ -73,21 +84,13 @@ local function _build_where_clause(where)
 end
 
 function _M.new(self)
-    local Mysql = require('app.lib.mysql')
     local db, config = Mysql.new()
-    
-    -- 读取配置中的表前缀
-    local ok, config_module = pcall(require, 'app.config.config')
-    local table_prefix = ''
-    if ok and config_module and config_module.table_prefix then
-        table_prefix = config_module.table_prefix
-    end
     
     return setmetatable({
         _db = db,
         _config = config,
         table_name = nil,
-        _prefix = table_prefix
+        _prefix = default_prefix
     }, mt)
 end
 
@@ -110,7 +113,6 @@ function _M.get_full_table_name(self)
 end
 
 function _M.connect(self)
-    local Mysql = require('app.lib.mysql')
     local ok, err = Mysql.connect(self._db)
     if not ok then
         return nil, err
@@ -119,12 +121,10 @@ function _M.connect(self)
 end
 
 function _M.set_keepalive(self)
-    local Mysql = require('app.lib.mysql')
     return Mysql.set_keepalive(self._db)
 end
 
 function _M.query(self, query, est_nrows)
-    local Mysql = require('app.lib.mysql')
     local ok, err = Mysql.connect(self._db)
     if not ok then
         return nil, "connect failed: " .. err
@@ -255,7 +255,7 @@ end
 
 function _M.join(self, table_name)
     if not self._query_builder then
-        self._query_builder = require('app.db.query'):new(self.table_name)
+        self._query_builder = QB:new(self.table_name)
     end
     self._query_builder:join(table_name)
     return self
@@ -263,7 +263,7 @@ end
 
 function _M.left_join(self, table_name)
     if not self._query_builder then
-        self._query_builder = require('app.db.query'):new(self.table_name, self._prefix)
+        self._query_builder = QB:new(self.table_name, self._prefix)
     end
     self._query_builder:left_join(table_name)
     return self
@@ -271,7 +271,7 @@ end
 
 function _M.right_join(self, table_name)
     if not self._query_builder then
-        self._query_builder = require('app.db.query'):new(self.table_name, self._prefix)
+        self._query_builder = QB:new(self.table_name, self._prefix)
     end
     self._query_builder:right_join(table_name)
     return self
@@ -287,7 +287,7 @@ end
 function _M.get_all_join(self, options)
     options = options or {}
     local prefix = self._prefix or ''
-    local builder = self._query_builder or require('app.db.query'):new(self.table_name, prefix)
+    local builder = self._query_builder or QB:new(self.table_name, prefix)
 
     -- 设置字段
     if options.fields and options.fields ~= '' then
@@ -319,6 +319,50 @@ function _M.get_all_join(self, options)
 
     local sql = builder:to_sql()
     return self:query(sql)
+end
+
+-- ========== 批量操作 ==========
+
+function _M.insert_batch(self, data_list)
+    if not data_list or type(data_list) ~= 'table' or #data_list == 0 then
+        return false
+    end
+
+    local first = data_list[1]
+    local fields = {}
+    local field_count = 0
+    for k, _ in pairs(first) do
+        field_count = field_count + 1
+        fields[field_count] = k
+    end
+
+    local full_table = self:get_full_table_name()
+    local all_values = new_tab(#data_list * 2, 0)
+    local idx = 0
+
+    for _, data in ipairs(data_list) do
+        local vals = new_tab(field_count, 0)
+        for j, f in ipairs(fields) do
+            local v = data[f]
+            if type(v) == 'string' then
+                vals[j] = "'" .. _escape_str(v) .. "'"
+            else
+                vals[j] = tostring(v)
+            end
+        end
+        idx = idx + 1
+        all_values[idx] = '(' .. table.concat(vals, ',') .. ')'
+    end
+
+    local parts = new_tab(6, 0)
+    parts[1] = 'INSERT INTO '
+    parts[2] = full_table
+    parts[3] = ' ('
+    parts[4] = table.concat(fields, ',')
+    parts[5] = ') VALUES '
+    parts[6] = table.concat(all_values, ',', 1, idx)
+
+    return self:query(table.concat(parts, ''))
 end
 
 return _M
