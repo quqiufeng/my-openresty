@@ -249,6 +249,18 @@ function _M:where(key, operator, value)
     return self
 end
 
+function _M:wheres_raw(raw_sql, ...)
+    table.insert(self.wheres, {
+        raw = raw_sql,
+        binds = {...}
+    })
+    return self
+end
+
+function _M:where_raw(raw_sql, ...)
+    return self:wheres_raw(raw_sql, ...)
+end
+
 function _M:to_sql()
     local prefix = self._prefix or ''
 

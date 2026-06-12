@@ -5,18 +5,18 @@ local _M=setmetatable({},{__index=M})
 _M._TABLE="role"
 
 function _M.new()
-  local o=M:new()o:set_table(_M._TABLE)return o
+  local o=M:new()o:set_table(_M._TABLE)setmetatable(o,{__index=_M})return o
 end
 
 -- /role/list - 列表查询
-function _M.list(o)
+function _M:list(o)
   o=o or{}local page=tonumber(o.page)or 1
   local pageSize=tonumber(o.pageSize)or 10
   local b=QB:new("role")
   b:select("role.id, role.name")
   local sf={"name"}
   if o.keyword and o.keyword~="" then
-    local c={}for _,f in ipairs(sf)do c[#c+1]="role."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    local c={}for _,f in ipairs(sf)do local kw=(o.keyword or ""):gsub("'", "\\'") c[#c+1]="role."..f.." LIKE \"%%"..kw.."%%\"" end
     if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
   end
     -- 无 JOIN
@@ -27,7 +27,7 @@ function _M.list(o)
 end
 
 -- /role/detail - 详情查询
-function _M.detail(o)
+function _M:detail(o)
   local id=o and o.id
   if not id then return nil end
   local b=QB:new("role")
@@ -39,7 +39,7 @@ function _M.detail(o)
 end
 
 -- /role/create - 新建
-function _M.create(o)
+function _M:create(o)
   local d=o or{}
   local t=ngx and ngx.time()or os.time()
   d.created_at=d.created_at or t
@@ -48,7 +48,7 @@ function _M.create(o)
 end
 
 -- /role/update - 更新
-function _M.update(o)
+function _M:update(o)
   local id=o and o.id
   if not id then return false end
   local d=o or{}
@@ -57,19 +57,19 @@ function _M.update(o)
 end
 
 -- /role/delete - 删除
-function _M.delete(o)
+function _M:delete(o)
   local id=o and o.id
   if not id then return false end
   return self:delete({id=tonumber(id)})
 end
 
 -- /role/count - 统计
-function _M.count(o)
+function _M:count(o)
   local b=QB:new("role")
   b:select("COUNT(*)as cnt")
   local sf={"name"}
   if o and o.keyword and o.keyword~="" then
-    local c={}for _,f in ipairs(sf)do c[#c+1]="role."..f.." LIKE \"%%"..o.keyword.."%%\"" end
+    local c={}for _,f in ipairs(sf)do local kw=(o.keyword or ""):gsub("'", "\\'") c[#c+1]="role."..f.." LIKE \"%%"..kw.."%%\"" end
     if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end
   end
   local r=self:query(b:to_sql())

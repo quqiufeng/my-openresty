@@ -1,4 +1,4 @@
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/var/www/web/?.lua;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/var/www/web/?.lua;/usr/local/lualib/?.lua;;'
 package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 local Config = require('app.core.Config')
