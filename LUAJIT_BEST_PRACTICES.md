@@ -12,8 +12,8 @@ This guide summarizes LuaJIT best practices based on OpenResty source code analy
 
 ```lua
 -- 在文件开头设置正确的路径
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;;'
-package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 -- 优先加载本地模块
 local mylib = require('app.lib.mylib')

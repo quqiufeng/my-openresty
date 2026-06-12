@@ -98,11 +98,11 @@ apt-get install -y fonts-wqy-microhei fonts-wqy-zenhei
 ### LuaJIT 安装
 
 ```bash
-# 默认安装路径
-/usr/local/web/luajit/bin/luajit
+# LuaJIT 解释器路径（已就绪）
+/usr/local/bin/luajit
 
-# 创建软链接（必须）
-sudo ln -s /usr/local/web/luajit/bin/luajit /usr/local/bin/luajit
+# LuaJIT 库路径
+/usr/local/lualib/
 
 # 验证版本
 luajit -v
@@ -113,16 +113,16 @@ luajit -v
 
 ```bash
 # 安装路径
-/usr/local/web/nginx/
+/usr/local/nginx/
 
 # 启动命令
-/usr/local/web/nginx/sbin/nginx
+/usr/local/nginx/sbin/nginx
 
 # 重启命令
-/usr/local/web/nginx/sbin/nginx -s reload
+/usr/local/nginx/sbin/nginx -s reload
 
 # 主配置文件
-/usr/local/web/nginx/conf/nginx.conf
+/usr/local/nginx/conf/nginx.conf
 
 # 项目配置文件（会被主配置 include）
 /var/www/web/my-openresty/nginx/conf/myresty.conf
@@ -153,7 +153,7 @@ redis-server /etc/redis/redis.conf
 systemctl start mysql
 
 # 3. 启动 Nginx
-/usr/local/web/nginx/sbin/nginx
+/usr/local/nginx/sbin/nginx
 
 # 验证服务
 curl http://localhost:8080/
@@ -440,7 +440,7 @@ curl http://localhost:8080/admin/list
 
 ```bash
 # 创建软链接
-sudo ln -s /usr/local/web/luajit/bin/luajit /usr/local/bin/luajit
+# LuaJIT 已安装在 /usr/local/bin/luajit
 
 # CRUD 生成（从 JSON 配置）
 luajit myresty curd /path/to/admin.json
@@ -623,12 +623,12 @@ local config = {
 
 ```bash
 # 启动服务
-/usr/local/web/nginx/sbin/nginx           # Nginx
+/usr/local/nginx/sbin/nginx           # Nginx
 redis-server /etc/redis/redis.conf       # Redis
 systemctl start mysql                    # MySQL
 
 # 重启服务
-/usr/local/web/nginx/sbin/nginx -s reload
+/usr/local/nginx/sbin/nginx -s reload
 redis-cli shutdown && redis-server /etc/redis/redis.conf
 systemctl restart mysql
 

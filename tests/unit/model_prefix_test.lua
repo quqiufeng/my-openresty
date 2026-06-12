@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 -- Model Prefix Test Runner
 
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;/usr/local/web/lualib/?.lua;;'
-package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 -- Mock Model for testing prefix
 local mock_model = {

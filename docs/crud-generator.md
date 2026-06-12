@@ -98,7 +98,7 @@ FROM admin LEFT JOIN role ON admin.role_id = role.id
 
 确保 LuaJIT 已安装：
 ```bash
-sudo ln -s /usr/local/web/luajit/bin/luajit /usr/local/bin/luajit
+# LuaJIT 已安装在 /usr/local/bin/luajit
 luajit -v
 ```
 

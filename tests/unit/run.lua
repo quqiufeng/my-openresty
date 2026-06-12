@@ -9,8 +9,8 @@ Usage:
     lua tests/unit/run.lua --help             -- Show help
 ]]
 
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/web/?.lua;;'
-package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/web/lualib/?.so;;'
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 local Test = require('app.utils.test')
 local args = {...}
