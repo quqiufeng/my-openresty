@@ -20,6 +20,25 @@ if not ok then
     end
 end
 
+-- Table pool
+local tab_pool_len = 0
+local tab_pool = new_tab(16, 0)
+
+local function _get_tab()
+    if tab_pool_len > 0 then
+        tab_pool_len = tab_pool_len - 1
+        return tab_pool[tab_pool_len + 1]
+    end
+    return new_tab(8, 0)
+end
+
+local function _put_tab(tab)
+    if tab_pool_len >= 32 then return end
+    tb_clear(tab)
+    tab_pool_len = tab_pool_len + 1
+    tab_pool[tab_pool_len] = tab
+end
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
@@ -31,10 +50,13 @@ end
 local function _build_where_clause(where)
     if not where then return '' end
     if type(where) == 'table' then
-        local parts = new_tab(#where, 0)
+        local parts = _get_tab()
         local count = 0
         for k, v in pairs(where) do
             count = count + 1
+            if count > #parts then
+                parts[count] = nil
+            end
             local val_str
             if type(v) == 'string' then
                 val_str = "'" .. _escape_str(v) .. "'"
@@ -43,10 +65,9 @@ local function _build_where_clause(where)
             end
             parts[count] = k .. " = " .. val_str
         end
-        local where_parts = new_tab(2, 0)
-        where_parts[1] = ' WHERE '
-        where_parts[2] = table.concat(parts, ' AND ')
-        return table.concat(where_parts, '')
+        local result = ' WHERE ' .. table.concat(parts, ' AND ', 1, count)
+        _put_tab(parts)
+        return result
     end
     return ' WHERE ' .. where
 end

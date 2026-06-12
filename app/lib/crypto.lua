@@ -78,7 +78,7 @@ function _M.encrypt(data, key)
     end
 
     if libcrypto.RAND_bytes(iv_c, iv_len) ~= 1 then
-        if ngx then ngx.log(ngx.ERR, "RAND_bytes failed") end
+        if ngx then ngx_log(ngx_ERR, "RAND_bytes failed") end
         return nil, "Failed to generate IV"
     end
 
@@ -93,26 +93,26 @@ function _M.encrypt(data, key)
 
     local ctx = libcrypto.EVP_CIPHER_CTX_new()
     if not ctx then
-        if ngx then ngx.log(ngx.ERR, "EVP_CIPHER_CTX_new failed") end
+        if ngx then ngx_log(ngx_ERR, "EVP_CIPHER_CTX_new failed") end
         return nil, "Failed to create context"
     end
 
     local cipher = libcrypto.EVP_aes_256_cbc()
     if cipher == nil then
         libcrypto.EVP_CIPHER_CTX_free(ctx)
-        if ngx then ngx.log(ngx.ERR, "EVP_aes_256_cbc returned nil") end
+        if ngx then ngx_log(ngx_ERR, "EVP_aes_256_cbc returned nil") end
         return nil, "Failed to get cipher"
     end
 
     if libcrypto.EVP_EncryptInit_ex(ctx, cipher, nil, key_c, iv_c) ~= 1 then
         libcrypto.EVP_CIPHER_CTX_free(ctx)
-        if ngx then ngx.log(ngx.ERR, "EVP_EncryptInit_ex failed") end
+        if ngx then ngx_log(ngx_ERR, "EVP_EncryptInit_ex failed") end
         return nil, "Encrypt init failed"
     end
 
     if libcrypto.EVP_EncryptUpdate(ctx, out_buf, out_len, data_c, data_len) ~= 1 then
         libcrypto.EVP_CIPHER_CTX_free(ctx)
-        if ngx then ngx.log(ngx.ERR, "EVP_EncryptUpdate failed") end
+        if ngx then ngx_log(ngx_ERR, "EVP_EncryptUpdate failed") end
         return nil, "Encrypt update failed"
     end
 
@@ -121,7 +121,7 @@ function _M.encrypt(data, key)
 
     if libcrypto.EVP_EncryptFinal_ex(ctx, out_buf + mid_len, final_len) ~= 1 then
         libcrypto.EVP_CIPHER_CTX_free(ctx)
-        if ngx then ngx.log(ngx.ERR, "EVP_EncryptFinal_ex failed") end
+        if ngx then ngx_log(ngx_ERR, "EVP_EncryptFinal_ex failed") end
         return nil, "Encrypt final failed"
     end
 
