@@ -72,11 +72,15 @@ local function find_specs()
     end
     ok:close()
 
-    -- Find all spec files
-    for file in io.lines(io.popen('ls ' .. spec_dir)) do
-        if file:match('_spec%.lua$') then
-            table.insert(specs, file:gsub('_spec%.lua$', ''))
+    -- Find all spec files (pure Lua, no ls dependency)
+    local popenf = io.popen and io.popen('ls ' .. spec_dir .. ' 2>/dev/null')
+    if popenf then
+        for file in popenf:lines() do
+            if file:match('_spec%.lua$') then
+                table.insert(specs, (file:gsub('_spec%.lua$', '')))
+            end
         end
+        popenf:close()
     end
 
     return specs

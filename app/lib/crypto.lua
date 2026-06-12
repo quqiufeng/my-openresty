@@ -53,11 +53,13 @@ local function get_secret_key()
     end
 
     local config = load_config()
-    if config and config.session and config.session.secret_key then
+    if config and config.session and config.session.secret_key and config.session.secret_key ~= '' then
+        ngx_log(ngx_WARN, 'crypto: SESSION_SECRET from config.lua, set SESSION_SECRET env var for production')
         return config.session.secret_key
     end
 
-    return 'd07495d9623312cae328d13ca573e788'
+    ngx_log(ngx_WARN, 'crypto: SESSION_SECRET not set! Using insecure fallback. Set SESSION_SECRET env var.')
+    return 'INSECURE_DEFAULT_KEY_DO_NOT_USE_IN_PRODUCTION'
 end
 
 function _M.get_secret_key()

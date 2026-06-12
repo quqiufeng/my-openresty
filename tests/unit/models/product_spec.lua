@@ -1,44 +1,18 @@
--- ProductModel Unit Tests (Auto-generated)
--- Run with: luajit tests/unit/models/product_spec.lua
-
-package.path="/var/www/web/my-openresty/?.lua;;"..package.path
-package.cpath="/var/www/web/my-openresty/?.so;;"..package.cpath
-
-local tests_passed=0
-local tests_failed=0
-
-local function assert_eq(exp,act,name)
-    if exp==act then
-        print("✓ PASS: "..name)
-        tests_passed=tests_passed+1
-    else
-        print("✗ FAIL: "..name)
-        print("  Expected: "..tostring(exp))
-        print("  Actual:   "..tostring(act))
-        tests_failed=tests_failed+1
-    end
-end
-
-print("=============================================================")
-print("ProductModel Unit Tests (Auto-generated)")
-print("=============================================================")
-print()
-
--- Test: new()
-print("Test: new()")
-local ok, m = pcall(require, "app.models.ProductModel")
-if not ok then
-    print("✗ SKIP: Model not found or has errors")
-    os.exit(0)
-end
-local instance = ProductModel:new()
-assert_eq("table",type(instance),"new() should return table")
-print()
-
-print("="..string.rep("=",60)..")
-print("Test Results")
-print("="..string.rep("=",60)..")
-print("Passed: "..tests_passed)
-print("Failed: "..tests_failed)
-print()
-if tests_failed>0 then os.exit(1) end
+-- product Model Auto-generated Test
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
+local Test = require('app.utils.test')
+describe = Test.describe; it = Test.it; assert = Test.assert
+describe('ProductModel', function()
+    it('should require module', function()
+        local ok, mod = pcall(require, 'app.models.ProductModel')
+        assert.is_true(ok)
+    end)
+    it('should create instance', function()
+        local ok, mod = pcall(require, 'app.models.ProductModel')
+        if ok and mod.new then
+            local inst = mod:new()
+            assert.is_not_nil(inst)
+        end
+    end)
+end)

@@ -1,0 +1,91 @@
+-- Loader Unit Tests
+package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
+local Test = require('app.utils.test')
+describe = Test.describe; it = Test.it; assert = Test.assert
+
+if not ngx then ngx = { log = function() end, ERR = 4, WARN = 3 } end
+
+describe('Loader Module', function()
+    describe('new()', function()
+        it('should create loader instance', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            assert.is_not_nil(l)
+        end)
+    end)
+
+    describe('library()', function()
+        it('should return nil for unknown library', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local lib = l:library('nonexistent_lib')
+            assert.is_nil(lib)
+        end)
+
+        it('should load known library', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            -- cache and crypto should be loadable
+            local cache = l:library('cache')
+            -- may be nil outside nginx but function should exist
+            assert.is_not_nil(cache)
+        end)
+
+        it('should cache loaded libraries', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local lib1 = l:library('cache')
+            local lib2 = l:library('cache')
+            assert.equals(lib1, lib2)
+        end)
+    end)
+
+    describe('model()', function()
+        it('should return nil for unknown model', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local m = l:model('nonexistent')
+            assert.is_nil(m)
+        end)
+    end)
+
+    describe('helper()', function()
+        it('should return nil for unknown helper', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local h = l:helper('nonexistent')
+            assert.is_nil(h)
+        end)
+    end)
+
+    describe('config()', function()
+        it('should return config value', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local cfg = l:config('table_prefix')
+            assert.is_not_nil(cfg)
+        end)
+    end)
+
+    describe('get_stats()', function()
+        it('should return stats table', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local stats = l:get_stats()
+            assert.is_table(stats)
+            assert.is_number(stats.models or 0)
+            assert.is_number(stats.libraries or 0)
+            assert.is_number(stats.helpers or 0)
+        end)
+    end)
+
+    describe('is_loaded()', function()
+        it('should check if module is loaded', function()
+            local Loader = require('app.core.Loader')
+            local l = Loader:new()
+            local loaded = l:is_loaded('model', 'test')
+            assert.is_false(loaded)
+        end)
+    end)
+end)

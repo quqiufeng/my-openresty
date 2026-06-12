@@ -100,7 +100,10 @@ local config = {
         cookie_name = 'myresty_session',
         -- AES-128 安全密钥（32字符十六进制）
         -- 足够安全且配置简洁
-        secret_key = 'd07495d9623312cae328d13ca573e788',
+        -- WARNING: Set SESSION_SECRET env var! This fallback is insecure.
+        -- WARNING: Set SESSION_SECRET env var for production
+        -- crypto.lua reads from env, config value is fallback only
+        secret_key = nil, -- Set SESSION_SECRET env var in production
         -- 会话过期时间（秒）
         expires = 86400,
         cookie_path = '/',
