@@ -1,44 +1,96 @@
+-- MyResty Configuration
+-- Reads from .env file with fallback defaults
+
+local io_open = io.open
+local tonumber = tonumber
+
+local function trim(s)
+    return s:match('^%s*(.-)%s*$')
+end
+
+-- Read .env file
+local env = {}
+local env_path = '/var/www/web/my-openresty/.env'
+local f, err = io_open(env_path, 'r')
+if f then
+    for line in f:lines() do
+        line = trim(line)
+        if line ~= '' and line:sub(1, 1) ~= '#' then
+            local eq = line:find('=')
+            if eq then
+                local key = trim(line:sub(1, eq - 1))
+                local val = trim(line:sub(eq + 1))
+                if key ~= '' then
+                    env[key] = val
+                end
+            end
+        end
+    end
+    f:close()
+end
+
+-- Environment variable override (highest priority)
+local function e(key, default)
+    return os.getenv(key) or env[key] or default
+end
+
+local function e_num(key, default)
+    local v = os.getenv(key) or env[key]
+    if v and v ~= '' then return tonumber(v) or default end
+    return default
+end
+
+local function split_csv(val, default)
+    if val and val ~= '' then
+        local parts = {}
+        for part in val:gmatch('[^,]+') do
+            parts[#parts + 1] = trim(part)
+        end
+        return #parts > 0 and parts or default
+    end
+    return default
+end
+
 local config = {
-    base_url = '',
+    base_url = e('APP_BASE_URL', ''),
     index_page = 'index.php',
     uri_protocol = 'PATH_INFO',
     url_suffix = '',
     url_protocol = 'http',
-    host = 'localhost',
-    port = 8080,
-    charset = 'UTF-8',
+    host = e('APP_HOST', 'localhost'),
+    port = e_num('APP_PORT', 8080),
+    charset = e('APP_CHARSET', 'UTF-8'),
     app_path = '/var/www/web/my-openresty',
     cache_path = '/var/www/web/my-openresty/logs/cache',
-    log_path = '/var/www/web/my-openresty/logs',
-    log_threshold = 4,
+    log_path = e('LOG_DIR', '/var/www/web/my-openresty/logs'),
+    log_threshold = e_num('LOG_LEVEL', 4),
     table_prefix = '',
-    autoload = {
-        'helper',
-        'url',
-        'request'
-    },
+    autoload = {'helper', 'url', 'request'},
+
     mysql = {
-        host = '127.0.0.1',
-        port = 3306,
-        user = 'root',
-        password = '123456',
-        database = 'project',
-        charset = 'utf8mb4',
-        pool_size = 100,
-        idle_timeout = 10000
+        host = e('MYSQL_HOST', '127.0.0.1'),
+        port = e_num('MYSQL_PORT', 3306),
+        user = e('MYSQL_USER', 'root'),
+        password = e('MYSQL_PASSWORD', ''),
+        database = e('MYSQL_DATABASE', 'myresty'),
+        charset = e('MYSQL_CHARSET', 'utf8mb4'),
+        pool_size = e_num('MYSQL_POOL_SIZE', 100),
+        idle_timeout = e_num('MYSQL_IDLE_TIMEOUT', 10000),
     },
+
     redis = {
-        host = '127.0.0.1',
-        port = 6379,
-        password = '',
-        db = 0,
-        pool_size = 100,
-        idle_timeout = 10000
+        host = e('REDIS_HOST', '127.0.0.1'),
+        port = e_num('REDIS_PORT', 6379),
+        password = e('REDIS_PASSWORD', ''),
+        db = e_num('REDIS_DB', 0),
+        pool_size = e_num('REDIS_POOL_SIZE', 100),
+        idle_timeout = e_num('REDIS_IDLE_TIMEOUT', 10000),
     },
+
     upload = {
-        path = '/var/www/web/my-openresty/uploads',
-        max_size = 10,
-        allowed_types = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'},
+        path = e('UPLOAD_PATH', '/var/www/web/my-openresty/uploads'),
+        max_size = e_num('UPLOAD_MAX_SIZE', 10),
+        allowed_types = split_csv(e('UPLOAD_ALLOWED_TYPES', ''), {'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'}),
         allowed_mimes = {
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
             'application/pdf',
@@ -46,117 +98,73 @@ local config = {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/zip', 'application/x-zip-compressed'
+            'application/zip', 'application/x-zip-compressed',
         },
         images_only = false,
         preserve_extension = true,
         sanitize_filename = true,
-        create_subdirs = true
+        create_subdirs = true,
     },
+
     image = {
-        quality = 85,
-        thumbnail_size = 150,
+        quality = e_num('IMAGE_QUALITY', 85),
+        thumbnail_size = e_num('IMAGE_THUMBNAIL_SIZE', 150),
         avatar_size = 200,
         medium_size = 800,
         large_size = 1920,
-        webp_quality = 80,
-        preserve_format = true
+        webp_quality = e_num('IMAGE_WEBP_QUALITY', 80),
+        preserve_format = true,
     },
-    -- ============================================================
-    -- 验证码配置
-    -- ============================================================
-    -- 安全说明:
-    --   验证码使用与 Session 相同的密钥配置（session.secret_key）
-    --   无需单独配置 captcha.key
-    --   密钥通过环境变量 SESSION_SECRET 或 config.session.secret_key 获取
-    --
-    -- 配置优先级:
-    --   1. 环境变量 SESSION_SECRET (最高)
-    --   2. 环境变量 MYRESTY_SESSION_SECRET
-    --   3. config.session.secret_key
-    -- ============================================================
+
     captcha = {
-        -- 验证码长度
-        length = 5,
-        -- 验证码有效期（秒）
-        expires = 300,
-        -- 图片宽度
-        width = 120,
-        -- 图片高度
-        height = 80
+        length = e_num('CAPTCHA_LENGTH', 5),
+        expires = e_num('CAPTCHA_EXPIRES', 300),
+        width = e_num('CAPTCHA_WIDTH', 120),
+        height = e_num('CAPTCHA_HEIGHT', 80),
     },
-    -- ============================================================
-    -- Session 配置
-    -- ============================================================
-    -- 安全说明:
-    --   1. secret_key 必须保持机密，泄露后攻击者可伪造任意 session
-    --   2. Session 与 Captcha 使用相同的密钥配置
-    --   3. 修改密钥会导致所有现有 session 失效
-    --
-    -- 生成新密钥命令:
-    --   openssl rand -hex 16
-    -- ============================================================
+
     session = {
-        cookie_name = 'myresty_session',
-        -- AES-128 安全密钥（32字符十六进制）
-        -- 足够安全且配置简洁
-        -- WARNING: Set SESSION_SECRET env var! This fallback is insecure.
-        -- WARNING: Set SESSION_SECRET env var for production
-        -- crypto.lua reads from env, config value is fallback only
-        secret_key = nil, -- Set SESSION_SECRET env var in production
-        -- 会话过期时间（秒）
-        expires = 86400,
+        cookie_name = e('SESSION_COOKIE_NAME', 'myresty_session'),
+        secret_key = nil,  -- crypto.lua reads SESSION_SECRET env var directly
+        expires = e_num('SESSION_EXPIRES', 86400),
         cookie_path = '/',
         cookie_domain = '',
-        cookie_secure = true,
-        cookie_httponly = true,
-        cookie_samesite = 'Strict'
+        cookie_secure = e('SESSION_COOKIE_SECURE', 'true') == 'true',
+        cookie_httponly = e('SESSION_COOKIE_HTTPONLY', 'true') == 'true',
+        cookie_samesite = e('SESSION_COOKIE_SAMESITE', 'Strict'),
     },
+
     logger = {
-        level = 2,
+        level = e_num('LOG_LEVEL', 2),
         handlers = {
             console = true,
-            file = true
+            file = true,
         },
-        log_dir = '/var/www/web/my-openresty/logs',
-        max_size = 10485760,
-        max_files = 5,
-        async = true
+        log_dir = e('LOG_DIR', '/var/www/web/my-openresty/logs'),
+        max_size = e_num('LOG_MAX_SIZE', 10485760),
+        max_files = e_num('LOG_MAX_FILES', 5),
+        async = true,
     },
+
     limit = {
-        dict_name = "limit_dict",
-        strategy = "sliding_window",
-        default_limit = 100,
-        default_window = 60,
-        default_burst = 0,
-        action = "deny",
-        redirect_url = "/rate-limited",
+        dict_name = 'limit_dict',
+        strategy = 'sliding_window',
+        default_limit = e_num('LIMIT_DEFAULT_RATE', 100),
+        default_window = e_num('LIMIT_DEFAULT_WINDOW', 60),
+        default_burst = e_num('LIMIT_DEFAULT_BURST', 20),
+        action = 'deny',
+        redirect_url = '/rate-limited',
         response_status = 429,
-        response_message = "Too Many Requests",
+        response_message = 'Too Many Requests',
         log_blocked = true,
         zones = {
-            api = {
-                limit = 60,
-                window = 60,
-                burst = 10
-            },
-            login = {
-                limit = 5,
-                window = 300,
-                burst = 0
-            },
-            upload = {
-                limit = 10,
-                window = 60,
-                burst = 2
-            },
-            default = {
-                limit = 100,
-                window = 60,
-                burst = 20
-            }
-        }
+            api = { limit = 60, window = 60, burst = 10 },
+            login = { limit = 5, window = 300, burst = 0 },
+            upload = { limit = 10, window = 60, burst = 2 },
+            default = { limit = 100, window = 60, burst = 20 },
+        },
     },
+
     validation = {
         bail = true,
         throw_exception = false,
@@ -177,7 +185,7 @@ local config = {
             date = 'The :field must be a valid date.',
             url = 'The :field must be a valid URL.',
             regex = 'The :field format is invalid.',
-            unique = 'The :field has already been taken.'
+            unique = 'The :field has already been taken.',
         },
         default_labels = {
             username = 'Username',
@@ -190,24 +198,10 @@ local config = {
             phone = 'Phone Number',
             age = 'Age',
             price = 'Price',
-            quantity = 'Quantity'
-        }
+            quantity = 'Quantity',
+        },
     },
-    -- ============================================================
-    -- Unified Error Codes
-    -- ============================================================
-    -- 200: Success
-    -- 201: Created
-    -- 400: Bad Request / Missing Parameters
-    -- 401: Unauthorized
-    -- 403: Forbidden
-    -- 404: Not Found
-    -- 408: Request Timeout
-    -- 429: Too Many Requests (Rate Limit)
-    -- 500: Internal Server Error
-    -- 502: Bad Gateway (Upstream Failure)
-    -- 503: Service Unavailable (Degradation Mode)
-    -- ============================================================
+
     error_codes = {
         success = 200,
         created = 201,
@@ -221,22 +215,23 @@ local config = {
         bad_gateway = 502,
         unavailable = 503,
     },
+
     middleware = {
         {
             name = 'request_id',
             phase = 'access',
             options = {
                 header_name = 'X-Request-Id',
-                set_response_header = true
-            }
+                set_response_header = true,
+            },
         },
         {
             name = 'timeout',
             phase = 'access',
             options = {
                 max_execution_time = 30,
-                degradation_mode = true
-            }
+                degradation_mode = true,
+            },
         },
         {
             name = 'logger',
@@ -246,8 +241,8 @@ local config = {
                 format = 'combined',
                 request_id = true,
                 timing = true,
-                exclude_paths = {'/health', '/favicon.ico'}
-            }
+                exclude_paths = {'/health', '/favicon.ico'},
+            },
         },
         {
             name = 'cors',
@@ -256,8 +251,8 @@ local config = {
                 origin = '*',
                 methods = {'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'},
                 credentials = true,
-                max_age = 86400
-            }
+                max_age = 86400,
+            },
         },
         {
             name = 'rate_limit',
@@ -265,20 +260,20 @@ local config = {
             options = {
                 zone = 'default',
                 headers = true,
-                log_blocked = true
+                log_blocked = true,
             },
-            routes = {'/api/*', '/upload/*'}
+            routes = {'/api/*', '/upload/*'},
         },
         {
             name = 'auth',
             phase = 'access',
             options = {
                 mode = 'session',
-                allow_guest = true
+                allow_guest = true,
             },
-            exclude = {'/health', '/captcha', '/static/*', '/middleware/*'}
-        }
-    }
+            exclude = {'/health', '/captcha', '/static/*', '/middleware/*'},
+        },
+    },
 }
 
 return config
