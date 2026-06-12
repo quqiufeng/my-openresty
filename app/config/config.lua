@@ -10,10 +10,21 @@ end
 
 -- Read .env file
 local env = {}
-local env_path = '/var/www/web/my-openresty/.env'
-local f, err = io_open(env_path, 'r')
+local env_paths = {
+    '/tmp/.nginx/.env',
+    '/var/www/web/my-openresty/.env',
+}
+local env_path = nil
+local f, err
+for _, p in ipairs(env_paths) do
+    f, err = io_open(p, 'r')
+    if f then
+        env_path = p
+        break
+    end
+end
 if f then
-    for line in f:lines() do
+for line in f:lines() do
         line = trim(line)
         if line ~= '' and line:sub(1, 1) ~= '#' then
             local eq = line:find('=')
