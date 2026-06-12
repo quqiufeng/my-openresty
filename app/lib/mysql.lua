@@ -1,4 +1,6 @@
-local _M = {}
+local ngx_log = ngx.log
+local ngx_WARN = ngx.WARN
+local _M = { _VERSION = '1.0.0' }
 
 local resty_mysql = require('resty.mysql')
 local Config = require('app.config.config')
@@ -48,8 +50,12 @@ function _M.query(db, sql)
     return db:query(sql)
 end
 
+-- DEPRECATED: Use set_keepalive() instead.
+-- Calling close() may cause "Got packets out of order" errors.
+-- See CLAUDE.md Bug#1 for details.
 function _M.close(db)
     if db then
+        ngx.log(ngx.WARN, 'mysql:close() is deprecated, use set_keepalive() instead')
         return db:close()
     end
 end

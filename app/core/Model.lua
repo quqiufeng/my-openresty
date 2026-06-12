@@ -102,11 +102,6 @@ function _M.set_keepalive(self)
     return Mysql.set_keepalive(self._db)
 end
 
-function _M.close(self)
-    local Mysql = require('app.lib.mysql')
-    return Mysql.close(self._db)
-end
-
 function _M.query(self, query, est_nrows)
     local Mysql = require('app.lib.mysql')
     local ok, err = Mysql.connect(self._db)

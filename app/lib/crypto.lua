@@ -2,7 +2,7 @@
 -- Unified Crypto Library using OpenSSL FFI
 -- Used by Session and Captcha modules
 
-local _M = {}
+local _M = { _VERSION = '1.0.0' }
 
 local ffi = require("ffi")
 
