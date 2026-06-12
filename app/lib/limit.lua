@@ -1,14 +1,14 @@
 local ffi = require("ffi")
 local C = ffi.C
 
-ffi.cdef[[
-    int access(const char *pathname, int mode);
-    int mkdir(const char *pathname, mode_t mode);
-    int stat(const char *pathname, void *buf);
+local cdef_ok = pcall(ffi.cdef, [[
     typedef unsigned long ino_t;
     typedef unsigned long dev_t;
     typedef long off_t;
     typedef unsigned int mode_t;
+    int access(const char *pathname, int mode);
+    int mkdir(const char *pathname, mode_t mode);
+    int stat(const char *pathname, void *buf);
     typedef unsigned int nlink_t;
     typedef unsigned int uid_t;
     typedef unsigned int gid_t;
@@ -35,7 +35,15 @@ ffi.cdef[[
         unsigned long        excess;
         uint64_t             last;
     };
-]]
+]])
+if not cdef_ok then
+    pcall(ffi.cdef, [[
+        struct lua_resty_limit_req_rec {
+            unsigned long        excess;
+            uint64_t             last;
+        };
+    ]])
+end
 
 local F_OK = 0
 

@@ -1,10 +1,8 @@
 -- Rewrite Phase Handler
--- 用途: URI 重写、路径标准化
-
-local Middleware = require('app.middleware')
-
-local function run_rewrite_middleware()
+local ok, result = pcall(function()
+    local Middleware = require('app.middleware')
     return Middleware:run_phase('rewrite')
+end)
+if not ok then
+    ngx.log(ngx.ERR, 'Rewrite middleware error: ', result)
 end
-
-run_rewrite_middleware()

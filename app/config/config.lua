@@ -193,7 +193,51 @@ local config = {
             quantity = 'Quantity'
         }
     },
+    -- ============================================================
+    -- Unified Error Codes
+    -- ============================================================
+    -- 200: Success
+    -- 201: Created
+    -- 400: Bad Request / Missing Parameters
+    -- 401: Unauthorized
+    -- 403: Forbidden
+    -- 404: Not Found
+    -- 408: Request Timeout
+    -- 429: Too Many Requests (Rate Limit)
+    -- 500: Internal Server Error
+    -- 502: Bad Gateway (Upstream Failure)
+    -- 503: Service Unavailable (Degradation Mode)
+    -- ============================================================
+    error_codes = {
+        success = 200,
+        created = 201,
+        bad_request = 400,
+        unauthorized = 401,
+        forbidden = 403,
+        not_found = 404,
+        timeout = 408,
+        rate_limited = 429,
+        server_error = 500,
+        bad_gateway = 502,
+        unavailable = 503,
+    },
     middleware = {
+        {
+            name = 'request_id',
+            phase = 'access',
+            options = {
+                header_name = 'X-Request-Id',
+                set_response_header = true
+            }
+        },
+        {
+            name = 'timeout',
+            phase = 'access',
+            options = {
+                max_execution_time = 30,
+                degradation_mode = true
+            }
+        },
         {
             name = 'logger',
             phase = 'log',

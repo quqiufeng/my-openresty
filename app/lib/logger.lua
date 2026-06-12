@@ -1,11 +1,7 @@
 local ffi = require("ffi")
 local C = ffi.C
 
-ffi.cdef[[
-    int access(const char *pathname, int mode);
-    int mkdir(const char *pathname, mode_t mode);
-    int rename(const char *oldpath, const char *newpath);
-    int stat(const char *pathname, void *buf);
+local cdef_ok = pcall(ffi.cdef, [[
     typedef unsigned long ino_t;
     typedef unsigned long dev_t;
     typedef long off_t;
@@ -15,6 +11,10 @@ ffi.cdef[[
     typedef unsigned int gid_t;
     typedef long blksize_t;
     typedef long blkcnt_t;
+    int access(const char *pathname, int mode);
+    int mkdir(const char *pathname, mode_t mode);
+    int rename(const char *oldpath, const char *newpath);
+    int stat(const char *pathname, void *buf);
     typedef struct timespec { long tv_sec; long tv_nsec; } timespec;
     typedef struct stat {
         dev_t st_dev;
@@ -31,7 +31,26 @@ ffi.cdef[[
         timespec st_mtim;
         timespec st_ctim;
     } struct_stat;
-]]
+]])
+if not cdef_ok then
+    pcall(ffi.cdef, [[
+        typedef struct stat {
+            dev_t st_dev;
+            ino_t st_ino;
+            mode_t st_mode;
+            nlink_t st_nlink;
+            uid_t st_uid;
+            gid_t st_gid;
+            dev_t st_rdev;
+            off_t st_size;
+            blksize_t st_blksize;
+            blkcnt_t st_blocks;
+            timespec st_atim;
+            timespec st_mtim;
+            timespec st_ctim;
+        } struct_stat;
+    ]])
+end
 
 local F_OK = 0
 local R_OK = 4

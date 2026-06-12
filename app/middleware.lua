@@ -51,9 +51,11 @@ function _M:run(name, options)
 
     local handler = mod.handle or mod.run or mod.execute
     if not handler then
+        ngx.log(ngx.INFO, 'Middleware [' .. name .. ']: no handler found')
         return true
     end
 
+    ngx.log(ngx.INFO, 'Middleware [' .. name .. ']: executing handler')
     local ok, result = pcall(handler, mod, options or {})
 
     if not ok then

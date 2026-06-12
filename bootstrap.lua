@@ -10,6 +10,16 @@ local Routes = require('app.routes')
 
 Config.load()
 
+-- Initialize middleware system (for header_filter / log phases)
+local Middleware = require('app.middleware')
+local mw_config = Config.get('middleware') or {
+    { name = 'request_id', phase = 'access', options = { header_name = 'X-Request-Id' } },
+    { name = 'timeout', phase = 'access', options = { max_execution_time = 30 } },
+    { name = 'logger', phase = 'log', options = { level = 'info' } },
+    { name = 'cors', phase = 'header_filter' }
+}
+Middleware:setup(mw_config)
+
 local router = Router:new()
 Routes(router)
 
@@ -18,6 +28,14 @@ router:get('/test', function(req, res)
 end)
 
 local function run()
+    -- Generate request ID for tracing
+    if not ngx.ctx then ngx.ctx = {} end
+    local pid = ngx.worker and ngx.worker.pid() or 0
+    ngx.ctx.request_id = string.format('%x-%x-%d', pid, ngx.now() * 1000, math.random(10000, 99999))
+    ngx.header['X-Request-Id'] = ngx.ctx.request_id
+
+    -- Record start time for timeout tracking
+    ngx.ctx._request_start = ngx.now()
     local Request = require('app.core.Request')
     Request:reset_cache()
 
