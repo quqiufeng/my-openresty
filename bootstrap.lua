@@ -1,5 +1,5 @@
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/var/www/web/?.lua;/usr/local/lualib/?.lua;;'
-package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
+package.path = '/tmp/.nginx/?.lua;/tmp/.nginx/app/?.lua;/tmp/.nginx/app/?/init.lua;/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = '/tmp/.nginx/?.so;/tmp/.nginx/lualib/?.so;/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 local Config = require('app.core.Config')
 local Router = require('app.core.Router')
