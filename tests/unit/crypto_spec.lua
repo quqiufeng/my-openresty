@@ -1,4 +1,4 @@
--- Crypto Library Unit Tests
+-- Crypto Library Unit Tests (tests the real app.lib.crypto implementation)
 -- tests/unit/crypto_spec.lua
 
 package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
@@ -14,129 +14,56 @@ after_each = Test.after_each
 assert = Test.assert
 
 describe('Crypto Module', function()
-    describe('key derivation', function()
-        it('should derive encryption and HMAC keys', function()
-            local function derive_keys(secret_key, suffix)
-                suffix = suffix or ""
-                local enc_key = ngx.sha1_bin(secret_key .. ":encryption" .. suffix)
-                local hmac_key = ngx.sha1_bin(secret_key .. ":hmac" .. suffix)
-                return enc_key, hmac_key
-            end
-            
-            local enc_key, hmac_key = derive_keys('test-secret', ':captcha')
-            assert.equals(20, #enc_key)  -- SHA1 produces 20 bytes
-            assert.equals(20, #hmac_key)
-            assert.is_true(enc_key ~= hmac_key)  -- Keys should be different
+    describe('base64', function()
+        it('encodes a known value', function()
+            local Crypto = require('app.lib.crypto')
+            assert.equals('SGVsbG8=', Crypto.base64_encode('Hello'))
         end)
 
-        it('should produce same keys for same input', function()
-            local function derive_keys(secret_key)
-                return ngx.sha1_bin(secret_key .. ":encryption"),
-                       ngx.sha1_bin(secret_key .. ":hmac")
-            end
-            
-            local enc1, hmac1 = derive_keys('secret')
-            local enc2, hmac2 = derive_keys('secret')
-            assert.equals(enc1, enc2)
-            assert.equals(hmac1, hmac2)
+        it('round-trips arbitrary binary data', function()
+            local Crypto = require('app.lib.crypto')
+            local data = 'Hello, World! \0\1\2\255'
+            assert.equals(data, Crypto.base64_decode(Crypto.base64_encode(data)))
+        end)
+
+        it('handles empty input safely', function()
+            local Crypto = require('app.lib.crypto')
+            assert.equals('', Crypto.base64_decode(''))
         end)
     end)
 
-    describe('base64 encoding', function()
-        it('should encode and decode correctly', function()
-            local function base64_encode(data)
-                local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-                local result = {}
-                local i = 1
-                while i <= #data do
-                    local b1 = string.byte(data, i)
-                    local b2 = i + 1 <= #data and string.byte(data, i + 1) or 0
-                    local b3 = i + 2 <= #data and string.byte(data, i + 2) or 0
-                    local triplet = (b1 << 16) + (b2 << 8) + b3
-                    table.insert(result, b64chars:sub((triplet >> 18) % 64 + 1, (triplet >> 18) % 64 + 1))
-                    table.insert(result, b64chars:sub((triplet >> 12) % 64 + 1, (triplet >> 12) % 64 + 1))
-                    if i + 1 <= #data then table.insert(result, b64chars:sub((triplet >> 6) % 64 + 1, (triplet >> 6) % 64 + 1)) else table.insert(result, '=') end
-                    if i + 2 <= #data then table.insert(result, b64chars:sub(triplet % 64 + 1, triplet % 64 + 1)) else table.insert(result, '=') end
-                    i = i + 3
-                end
-                return table.concat(result)
-            end
-            
-            local encoded = base64_encode('Hello')
-            assert.equals('SGVsbG8=', encoded)
+    describe('random_bytes', function()
+        it('returns the requested number of bytes', function()
+            local Crypto = require('app.lib.crypto')
+            local a = Crypto.random_bytes(16)
+            assert.is_string(a)
+            assert.equals(16, #a)
+        end)
+
+        it('produces distinct values', function()
+            local Crypto = require('app.lib.crypto')
+            assert.is_true(Crypto.random_bytes(16) ~= Crypto.random_bytes(16))
         end)
     end)
 
-    describe('HMAC SHA256', function()
-        it('should generate consistent HMAC', function()
-            local function hmac_sha256(data, key)
-                local sha256 = require('resty.sha256')
-                local sha = sha256:new()
-                sha:update(key .. data)
-                return sha:final()
-            end
-            
-            local sig = hmac_sha256('message', 'secret-key')
-            assert.equals(32, #sig)  -- SHA256 produces 32 bytes
-            
-            -- Same input should produce same output
-            local sig2 = hmac_sha256('message', 'secret-key')
-            assert.equals(sig, sig2)
+    describe('AES-256-CBC', function()
+        it('encrypt/decrypt round-trips', function()
+            local Crypto = require('app.lib.crypto')
+            local ciphertext = Crypto.encrypt('session payload')
+            assert.is_string(ciphertext)
+            assert.equals('session payload', Crypto.decrypt(ciphertext))
         end)
 
-        it('should produce different HMAC for different keys', function()
-            local function hmac_sha256(data, key)
-                local sha256 = require('resty.sha256')
-                local sha = sha256:new()
-                sha:update(key .. data)
-                return sha:final()
-            end
-            
-            local sig1 = hmac_sha256('message', 'key1')
-            local sig2 = hmac_sha256('message', 'key2')
-            assert.is_true(sig1 ~= sig2)
+        it('uses a random IV (distinct ciphertext per call)', function()
+            local Crypto = require('app.lib.crypto')
+            assert.is_true(Crypto.encrypt('same input') ~= Crypto.encrypt('same input'))
         end)
-    end)
 
-    describe('secure random', function()
-        it('should generate random bytes', function()
-            local function secure_random(length)
-                local buf = {}
-                for i = 1, length do
-                    buf[i] = math.random(0, 255)
-                end
-                return table.concat(buf)
-            end
-            
-            local rand1 = secure_random(16)
-            local rand2 = secure_random(16)
-            assert.equals(16, #rand1)
-            assert.equals(16, #rand2)
-            -- Probability of same random is extremely low
-            assert.is_true(rand1 ~= rand2)
-        end)
-    end)
-
-    describe('AES encryption simulation', function()
-        it('should encrypt and decrypt consistently', function()
-            local function xor_encrypt(data, key)
-                local result = {}
-                for i = 1, #data do
-                    local d = string.byte(data, i)
-                    local k = string.byte(key, (i - 1) % #key + 1)
-                    table.insert(result, string.char(d ~ k))
-                end
-                return table.concat(result)
-            end
-            
-            local key = 'my-secret-key-16chars!!'
-            local plaintext = 'Hello, World!'
-            
-            local encrypted = xor_encrypt(plaintext, key)
-            local decrypted = xor_encrypt(encrypted, key)
-            
-            assert.equals(plaintext, decrypted)
-            assert.is_true(encrypted ~= plaintext)
+        it('rejects data that is too short', function()
+            local Crypto = require('app.lib.crypto')
+            local plain, err = Crypto.decrypt('short')
+            assert.is_nil(plain)
+            assert.is_string(err)
         end)
     end)
 end)

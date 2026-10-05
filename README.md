@@ -16,13 +16,56 @@
 
 ## AI 开发指南
 
-**请阅读 [CLAUDE.md](./CLAUDE.md)** - 本项目的完整 AI 开发指南，包含：
+**请阅读 [AGENTS.md](./AGENTS.md)** - 本项目的完整 AI 开发指南，包含：
 
 - 项目架构和技术栈信息
 - 开发规范和命名约定
 - 历史 bug 修复记录
 - 代码生成器使用说明
 - 测试要求和检查清单
+
+---
+
+## 更新日志 / Changelog
+
+### 2026-10-05 — 代码审计修复 / Code Audit Fixes
+
+本次审计修复了导致框架无法运行、测试失效以及若干安全/正确性问题。
+
+This audit fixed issues that prevented the framework from running, broke the test suite, and introduced security/correctness problems.
+
+**阻断性问题 / Blocking**
+
+- 修复 `app/lib/validation.lua`、`app/helpers/request_helper.lua`、`app/utils/file.lua`、`app/utils/captcha.lua` 的语法 / FFI 错误（此前这些模块无法加载）。
+- 修复单元测试运行器：递归发现 spec、改正 `crypto_spec.lua`、`tests/run.lua` 及已生成控制器测试的语法错误。
+- 新增 `tests/unit/ngx_mock.lua`，使框架模块可在纯 LuaJIT 下测试。
+
+**核心框架 / Core**
+
+- **Router**：路由注册去重（消除每请求路由表无限增长的内存泄漏）；无捕获参数的路由不再把 URI 当 action 参数传入；`dispatch()` 按 `:` 解析 `controller:action`；新增 `Router:reset_routes()`。
+- **Config**：`Config.get(k)` 与 `Config:get(k)` 行为一致（此前 `Config.get('middleware')` 会返回整份配置）。
+- **中间件**：移除 Neovim 专属的 `vim.tbl_deep_extend`，改用 `app/utils/table.lua`（auth/cors/logger/rate_limit 此前运行时必然报错）。
+- **Loader**：只缓存模块类，Model 与 Library 实例改为**按请求实例化**，不再跨请求共享连接 / 会话状态。
+- **路由初始化**：`init.lua`（`init_by_lua_file`）一次性注册路由，`bootstrap.lua` 仅在未初始化时回退注册，消除每请求注册开销。
+- **路由匹配**：静态路由改为 O(1) 哈希查找，动态路由（含参数）单独扫描，不再对全部路由线性遍历。
+- **配置统一**：`app/lib/mysql.lua`、`app/core/Model.lua` 统一通过 `app.core.Config` 读取配置，不再直接 `require('app.config.config')`。
+- **日志降噪**：中间件执行过程中的 INFO 日志降为 DEBUG，减少每请求日志开销。
+- **Response**：新增 `sent` 标记，`send()` 幂等，修复便捷方法（`success`/`fail`/`paginate` 等）与 `bootstrap.lua` 重复输出响应体的问题。
+- **Request**：请求缓存从模块级变量迁移到 `ngx.ctx`，协程安全，避免跨请求串数据。
+- **crypto**：补上未定义的 `ngx_log / ngx_WARN / ngx_ERR`。
+- **request_id / timeout**：改为运行时读取 `ngx.ctx`，不再在模块加载时捕获 nil。
+
+**数据层 / Data Layer**
+
+- **Model**：字符串值改用 `ngx.quote_sql_str` 转义（回退手动转义）；拒绝无 `WHERE` 的全表 `UPDATE`/`DELETE`；查询失败时关闭连接而非放回连接池。
+- **命名统一**：`user_model.lua` → `UserModel.lua`；`menu_model.lua` 合并进 `MenuModel.lua` 并补齐 `format_menus_for_antd`；生成模型的搜索条件由字符串拼接改为 `where/or_where`（消除 LIKE 注入点）。
+- **QueryBuilder**（`app/db/query.lua`）：新增 `or_where()`、`where_in()`、`like()`、`not_like()`；`join/left_join/right_join` 支持 `(table, left, op, right)`；原始 WHERE 条件补上 `AND`/`OR` 连接。
+- **CRUD 生成器**：修正 `update`/`delete` 自递归、控制器文件名大小写、`get_params` 引用不存在方法等问题；为 `admin`/`role` 补充 `detail` 接口。
+
+**测试 / Tests**
+
+- `luajit tests/unit/run.lua` 运行 291 个用例（全部通过），其中 `framework_behavior_spec.lua` 针对真实模块做行为验证；`query_builder_test.lua` / `model_join_test.lua` / `model_prefix_test.lua` 共 88 个用例通过。
+- CI 不再使用 `|| echo "Skipped"` 掩盖测试失败。
 
 ---
 
@@ -99,7 +142,7 @@ app.core.Controller  app.core.Model
 
 **数据访问原则 / Data Access Principles:**
 - **简单操作** → 使用 Model 自带方法 (`get_all`, `insert`, `update`, `delete`)
-- **复杂查询** → 使用 QueryBuilder (`where`, `order_by`, `limit`, `offset`)
+- **复杂查询** → 使用 QueryBuilder (`where`, `or_where`, `where_in`, `like`, `join`, `order_by`, `limit`, `offset`)
 - **禁止** 在 Controller 中直接写 SQL
 
 **Key Points:**
@@ -126,7 +169,7 @@ This project requires LuaJIT 2.1 to run unit tests. Default path is `/usr/local/
 luajit -v
 
 # 输出 / Expected output:
-# LuaJIT 2.1.ROLLING -- Copyright (C) 2005-2025 Mike Pall.
+# LuaJIT 2.1.1780076327 -- Copyright (C) 2005-2026 Mike Pall.
 # https://luajit.org/
 ```
 
@@ -377,7 +420,7 @@ Examples:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          Nginx Server                               │
-│                         (OpenResty 1.27.1)                         │
+│                         (OpenResty 1.31.1.1)                       │
 ├─────────────────────────────────────────────────────────────────────┤
 │  Request Flow / 请求流程:                                            │
 │                                                                     │
@@ -421,7 +464,7 @@ Examples:
 │  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
 │  │      Models      │ │      Library     │ │     Helpers     │ │
 │  │      数据模型     │ │      库函数      │ │     辅助函数    │ │
-│  │  user_model.lua  │ │  mysql, redis,   │ │  url, file,    │ │
+│  │  UserModel.lua   │ │  mysql, redis,   │ │  url, file,    │ │
 │  │                  │ │  session, cache │ │  string, etc.  │ │
 │  └──────────────────┘ └──────────────────┘ └──────────────────┘ │
 │                                                                     │
@@ -568,7 +611,7 @@ Examples:
 | **Controller** | `app/core/Controller.lua` | 控制器基类 | Base controller with helpers (json, success, fail, redirect methods) |
 | **Loader** | `app/core/Loader.lua` | 自动加载 | Auto-load libraries, models, helpers, views |
 | **Model** | `app/core/Model.lua` | 数据模型 | Base model for database operations |
-| **QueryBuilder** | `app/core/QueryBuilder.lua` | 查询构建器 | Chainable query builder (select, where, join, insert, update, delete) |
+| **QueryBuilder** | `app/db/query.lua` | 查询构建器 | Chainable query builder (select, where, or_where, where_in, like, join, order_by, limit, offset) |
 
 ### Library Modules / 库模块
 
@@ -647,7 +690,7 @@ local UserController = {}
 
 function UserController:new()
     local instance = BaseController:new()
-    instance.user_model = self:load_model('user')
+    instance.user_model = self:load_model('UserModel', 'user_model')
     return setmetatable(instance, { __index = UserController })
 end
 ```
@@ -1573,10 +1616,12 @@ middleware = {
 │   │   ├── Controller.lua         # 控制器基类
 │   │   ├── Loader.lua             # 自动加载器
 │   │   ├── Model.lua              # 数据模型基类
-│   │   ├── QueryBuilder.lua       # 查询构建器
 │   │   ├── Request.lua            # 请求处理
 │   │   ├── Response.lua           # 响应处理
 │   │   └── Router.lua             # 路由分发
+│   │
+│   ├── db/                        # 数据库工具
+│   │   └── query.lua              # 查询构建器 (QueryBuilder)
 │   │
 │   ├── controllers/               # 控制器 (18个)
 │   │   ├── welcome.lua            # 默认首页
@@ -1630,7 +1675,11 @@ middleware = {
 │   │   └── test.lua             # 测试工具
 │   │
 │   ├── models/                    # 数据模型
-│   │   └── user_model.lua       # 用户模型
+│   │   ├── UserModel.lua         # 用户模型
+│   │   ├── AdminModel.lua        # 管理员模型
+│   │   ├── RoleModel.lua         # 角色模型
+│   │   ├── MenuModel.lua         # 菜单模型 (含 AntD 菜单树)
+│   │   └── ProductModel.lua      # 产品模型
 │   │
 │   ├── routes/                    # 路由配置
 │   │   └── routes.lua            # 路由定义
@@ -1710,7 +1759,8 @@ Unit tests are located in `tests/unit/`, used to test framework core modules.
 ```
 tests/unit/
 ├── all.lua              # 测试入口，运行所有测试套件
-├── run.lua              # 测试运行器
+├── run.lua              # 测试运行器（递归发现 spec）
+├── ngx_mock.lua         # 最小化 ngx 模拟（纯 LuaJIT 测试）
 ├── config_spec.lua      # 配置模块测试
 ├── router_spec.lua      # 路由模块测试
 ├── helper_spec.lua      # 辅助函数测试
@@ -1720,6 +1770,9 @@ tests/unit/
 ├── cache_spec.lua       # 缓存模块测试
 ├── session_spec.lua     # 会话模块测试
 ├── http_spec.lua        # HTTP 客户端测试
+├── core/                # 核心模块测试 (Model/Loader/Config 等)
+├── models/              # 生成的模型测试
+├── controllers/         # 生成的控制器测试（独立运行）
 └── ...
 ```
 
@@ -1751,13 +1804,17 @@ local Test = require('app.utils.test')
 |------|------|
 | `assert.equals(expected, actual, msg)` | 期望值等于实际值 |
 | `assert.not_equals(expected, actual)` | 期望值不等于实际值 |
-| `assert.is_true(value, msg)` | 值为 true |
-| `assert.is_false(value, msg)` | 值为 false |
+| `assert.is_true(value, msg)` | 值为真（truthy） |
+| `assert.is_false(value, msg)` | 值为假（falsy） |
 | `assert.is_nil(value, msg)` | 值为 nil |
 | `assert.not_nil(value, msg)` | 值不为 nil |
 | `assert.is_function(value, msg)` | 值是函数 |
 | `assert.is_table(value, msg)` | 值是表 |
 | `assert.is_string(value, msg)` | 值是字符串 |
+| `assert.is_number(value, msg)` | 值是数字 |
+| `assert.is_boolean(value, msg)` | 值是布尔 |
+| `assert.same(expected, actual, msg)` | 深度相等（同 equals） |
+| `assert.True(value, msg)` / `assert.False(value, msg)` | is_true / is_false 的别名 |
 | `assert.has_key(key, table, msg)` | 表包含键 |
 | `assert.error(fn, msg, expected_err)` | 函数抛出错误 |
 | `assert.no_error(fn, msg)` | 函数不抛出错误 |
@@ -1767,18 +1824,24 @@ local Test = require('app.utils.test')
 #### 运行单元测试 / Run Unit Tests
 
 ```bash
-# 运行所有测试
-lua tests/unit/all.lua
-
-# 安静模式（最小输出）
-lua tests/unit/all.lua --quiet
+# 运行所有单元测试（递归发现 tests/unit/**/*_spec.lua）
+luajit tests/unit/run.lua
 
 # JSON 格式输出
-lua tests/unit/all.lua --json
+luajit tests/unit/run.lua --format json
 
-# 运行单个测试套件
-lua tests/unit/run.lua
+# 运行名称匹配的测试套件
+luajit tests/unit/run.lua --spec router
+
+# 运行独立的 QueryBuilder / Model 测试
+luajit tests/unit/query_builder_test.lua
+luajit tests/unit/model_join_test.lua
+luajit tests/unit/model_prefix_test.lua
 ```
+
+> 说明：单元测试通过 `tests/unit/ngx_mock.lua` 提供最小化的 `ngx` 模拟，可在纯 LuaJIT 下运行，无需启动 Nginx。
+
+> Note: unit tests use a minimal `ngx` mock (`tests/unit/ngx_mock.lua`) and run under plain LuaJIT without nginx.
 
 #### 编写单元测试 / Write Unit Tests
 
@@ -2576,22 +2639,28 @@ The framework provides several example controllers demonstrating various feature
 
 ```lua
 -- 示例代码
-local QueryBuilder = require('app.core.QueryBuilder')
+local QueryBuilder = require('app.db.query')
 
 -- 基本查询
-local sql = QueryBuilder.new('users')
-    :select('id', 'name', 'email')
-    :where('status', 'active')
+local sql = QueryBuilder:new('users')
+    :select('id, name, email')
+    :where('status', '=', 'active')
     :order_by('created_at', 'DESC')
     :limit(10)
-    :get_sql()
+    :to_sql()
 
 -- JOIN 查询
-local sql = QueryBuilder.new('users')
-    :select('users.id', 'users.name', 'orders.total')
-    :left_join('orders')
-    :on('users.id', '=', 'orders.user_id')
-    :get_sql()
+local sql = QueryBuilder:new('users')
+    :select({'users.id', 'users.name', 'orders.total'})
+    :left_join('orders'):on('users.id', 'orders.user_id')
+    :to_sql()
+
+-- 模糊 / IN / OR 条件
+local sql = QueryBuilder:new('users')
+    :like('name', 'john')          -- name LIKE '%john%'
+    :where_in('id', {1, 2, 3})     -- id IN (1, 2, 3)
+    :or_where('status', '=', 1)    -- OR status = 1
+    :to_sql()
 ```
 
 ---

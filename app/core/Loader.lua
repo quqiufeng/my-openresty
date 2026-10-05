@@ -26,6 +26,9 @@ _M._VERSION = '1.0.0'
 
 local mt = { __index = _M }
 
+-- Cache loaded module *classes* (not instances). Instances may hold
+-- request-scoped state (e.g. a resty.mysql connection or session data)
+-- and must never be shared across requests/coroutines within a worker.
 local loaded_models = {}
 local loaded_libs = {}
 local loaded_helpers = {}
@@ -44,47 +47,56 @@ function _M.new(self)
 end
 
 function _M.library(self, name)
-    if loaded_libs[name] then
-        return loaded_libs[name]
-    end
+    local class = loaded_libs[name]
 
-    local path = 'app.lib.' .. name
-    local ok, lib = _load_module(path)
+    if not class then
+        local path = 'app.lib.' .. name
+        local ok, lib = _load_module(path)
 
-    if ok and lib then
+        if not ok or not lib then
+            ngx_log(ngx_ERR, 'Library not found: ', path)
+            return nil
+        end
+
         if type(lib) == 'table' and lib.init then
             local Config = require('app.core.Config')
-            local config = Config.get(name) or {}
-            lib:init(config)
-        elseif type(lib) == 'table' and lib.new then
-            lib = lib:new()
+            lib:init(Config.get(name) or {})
         end
-        loaded_libs[name] = lib
-        return lib
+
+        class = lib
+        loaded_libs[name] = class
     end
 
-    ngx_log(ngx_ERR, 'Library not found: ', path)
-    return nil
+    -- Instantiate a fresh instance per call so request-scoped libraries
+    -- (session, etc.) are never shared across requests.
+    if type(class) == 'table' and class.new then
+        return class:new()
+    end
+    return class
 end
 
 function _M.model(self, name)
-    if loaded_models[name] then
-        return loaded_models[name]
-    end
+    local class = loaded_models[name]
 
-    local path = 'app.models.' .. name
-    local ok, model = _load_module(path)
+    if not class then
+        local path = 'app.models.' .. name
+        local ok, model = _load_module(path)
 
-    if ok and model then
-        if type(model) == 'table' and model.new then
-            model = model:new()
+        if not ok or not model then
+            ngx_log(ngx_ERR, 'Model not found: ', path)
+            return nil
         end
-        loaded_models[name] = model
-        return model
+
+        class = model
+        loaded_models[name] = class
     end
 
-    ngx_log(ngx_ERR, 'Model not found: ', path)
-    return nil
+    -- Instantiate a fresh model per call; instances hold request-scoped
+    -- state and must not be reused across requests.
+    if type(class) == 'table' and class.new then
+        return class:new()
+    end
+    return class
 end
 
 function _M.controller(self, name, response)
@@ -160,7 +172,7 @@ function _M.autoload(self, items)
         local parts = new_tab(4, 0)
         local part_count = 0
 
-        for part in string.gmatch(item, '([^/]+') do
+        for part in string.gmatch(item, '([^/]+)') do
             part_count = part_count + 1
             parts[part_count] = part
         end

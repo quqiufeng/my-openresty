@@ -5,9 +5,6 @@ local type = type
 local tonumber = tonumber
 local setmetatable = setmetatable
 local ngx_header = ngx.header
-local ngx_status = ngx.status
-local ngx_say = ngx.say
-local ngx_print = ngx.print
 local ngx_redirect = ngx.redirect
 local cjson = require("cjson")
 local table_insert = table.insert
@@ -59,7 +56,8 @@ function _M.new(self)
         status = 200,
         content_type = 'application/json',
         body = '',
-        headers = {}
+        headers = {},
+        sent = false
     }, mt)
 end
 
@@ -294,6 +292,13 @@ function _M.paginate(self, data, total, page, per_page)
 end
 
 function _M.send(self)
+    -- Guard against double-send: convenience methods in Controller may
+    -- already have sent the response before bootstrap calls send() again.
+    if self.sent then
+        return self
+    end
+    self.sent = true
+
     ngx.status = self.status or 200
     ngx_header['Content-Type'] = self.content_type or 'application/json'
 
@@ -303,10 +308,16 @@ function _M.send(self)
         end
     end
 
-    ngx_say(self.body)
+    ngx.say(self.body)
+    return self
 end
 
 function _M.send_raw(self)
+    if self.sent then
+        return self
+    end
+    self.sent = true
+
     ngx.status = self.status
     ngx_header['Content-Type'] = self.content_type
 
@@ -314,7 +325,12 @@ function _M.send_raw(self)
         ngx_header[k] = v
     end
 
-    ngx_print(self.body)
+    ngx.print(self.body)
+    return self
+end
+
+function _M.is_sent(self)
+    return self.sent
 end
 
 function _M.flush(self)

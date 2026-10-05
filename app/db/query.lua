@@ -6,6 +6,8 @@ if not ok then
     new_tab = function(narr, nrec) return {} end
 end
 
+local ngx_quote_sql_str = ngx and ngx.quote_sql_str
+
 local ok, tb_clear = pcall(require, "table.clear")
 if not ok then
     tb_clear = function(tab)
@@ -26,10 +28,13 @@ local function escape_sql(value)
         return tostring(value)
     elseif t == 'boolean' then
         return value and '1' or '0'
-    elseif t == 'string' then
-        return "'" .. tostring(value):gsub("'", "''") .. "'"
     else
-        return "'" .. tostring(value):gsub("'", "''") .. "'"
+        if ngx_quote_sql_str then
+            return ngx_quote_sql_str(tostring(value))
+        end
+        -- Escape backslash first, then single quote (MySQL default mode).
+        local escaped = tostring(value):gsub("\\", "\\\\"):gsub("'", "''")
+        return "'" .. escaped .. "'"
     end
 end
 
@@ -188,30 +193,45 @@ function _M:auto_prefix_fields()
     end
 end
 
-function _M:join(table_name)
+function _M:join(table_name, left_field, operator, right_field)
     if not table_name then
         return self
     end
     self._last_join_table = table_name
-    table.insert(self.joins, { type = 'JOIN', table = table_name, on = nil })
+    local entry = { type = 'JOIN', table = table_name, on = nil }
+    table.insert(self.joins, entry)
+    if left_field and right_field then
+        entry.on = left_field .. ' ' .. (operator or '=') .. ' ' .. right_field
+        self._last_join_table = nil
+    end
     return self
 end
 
-function _M:left_join(table_name)
+function _M:left_join(table_name, left_field, operator, right_field)
     if not table_name then
         return self
     end
     self._last_join_table = table_name
-    table.insert(self.joins, { type = 'LEFT JOIN', table = table_name, on = nil })
+    local entry = { type = 'LEFT JOIN', table = table_name, on = nil }
+    table.insert(self.joins, entry)
+    if left_field and right_field then
+        entry.on = left_field .. ' ' .. (operator or '=') .. ' ' .. right_field
+        self._last_join_table = nil
+    end
     return self
 end
 
-function _M:right_join(table_name)
+function _M:right_join(table_name, left_field, operator, right_field)
     if not table_name then
         return self
     end
     self._last_join_table = table_name
-    table.insert(self.joins, { type = 'RIGHT JOIN', table = table_name, on = nil })
+    local entry = { type = 'RIGHT JOIN', table = table_name, on = nil }
+    table.insert(self.joins, entry)
+    if left_field and right_field then
+        entry.on = left_field .. ' ' .. (operator or '=') .. ' ' .. right_field
+        self._last_join_table = nil
+    end
     return self
 end
 
@@ -257,6 +277,53 @@ function _M:where(key, operator, value)
         key = key,
         operator = operator or '=',
         value = value
+    })
+    return self
+end
+
+function _M:or_where(key, operator, value)
+    table.insert(self.wheres, {
+        key = key,
+        operator = operator or '=',
+        value = value,
+        is_or = true
+    })
+    return self
+end
+
+function _M:where_in(key, values)
+    local field_name = validate_field_name(key) or 'invalid_field'
+    local list = {}
+    for i, v in ipairs(values or {}) do
+        list[i] = escape_sql(v)
+    end
+    local raw
+    if #list == 0 then
+        -- An empty IN () is invalid SQL; force a false condition instead.
+        raw = '1 = 0'
+    else
+        raw = field_name .. ' IN (' .. table.concat(list, ', ') .. ')'
+    end
+    table.insert(self.wheres, { raw = raw })
+    return self
+end
+
+function _M:like(key, value)
+    table.insert(self.wheres, {
+        key = key,
+        operator = 'LIKE',
+        value = value,
+        is_like = true
+    })
+    return self
+end
+
+function _M:not_like(key, value)
+    table.insert(self.wheres, {
+        key = key,
+        operator = 'NOT LIKE',
+        value = value,
+        is_like = true
     })
     return self
 end
@@ -327,8 +394,13 @@ function _M:to_sql()
         sql = sql .. ' WHERE '
         local conditions = {}
         for i, w in ipairs(self.wheres) do
+            local prefix = ''
+            if i > 1 then
+                prefix = w.is_or and 'OR ' or 'AND '
+            end
+
             if w.raw then
-                table.insert(conditions, w.raw)
+                table.insert(conditions, prefix .. w.raw)
             else
                 -- 验证字段名（允许 table.field 格式）
                 local field_name = validate_field_name(w.key)
@@ -336,15 +408,13 @@ function _M:to_sql()
                     field_name = 'invalid_field'
                 end
 
-                -- 使用转义函数处理值
-                local escaped_value = escape_sql(w.value)
-
-                local prefix = ''
-                if i > 1 and w.is_or then
-                    prefix = 'OR '
-                elseif i > 1 then
-                    prefix = 'AND '
+                -- LIKE / NOT LIKE: 未显式包含 % 时自动包裹为模糊匹配
+                local value = w.value
+                if w.is_like and type(value) == 'string' and not value:find('%%') then
+                    value = '%' .. value .. '%'
                 end
+
+                local escaped_value = escape_sql(value)
                 table.insert(conditions, prefix .. field_name .. ' ' .. w.operator .. ' ' .. escaped_value)
             end
         end

@@ -4,6 +4,13 @@
 local Middleware = require('app.middleware')
 
 local function run_access_middleware()
+    -- Ensure middleware config is loaded before the first access phase
+    -- (bootstrap.lua sets it up in the content phase, which runs later).
+    if #Middleware:get_config() == 0 then
+        local Config = require('app.core.Config')
+        Config.load()
+        Middleware:setup(Config.get('middleware') or {})
+    end
     return Middleware:run_phase('access')
 end
 

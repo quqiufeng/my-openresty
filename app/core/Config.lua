@@ -104,6 +104,12 @@ function _M.load(self)
 end
 
 function _M.get(self, key)
+    -- Support both Config:get(key) and Config.get(key) / Config.get() call styles.
+    if self == nil or type(self) == 'string' then
+        key = key or self
+        self = _M
+    end
+
     if not loaded then
         self:load()
     end

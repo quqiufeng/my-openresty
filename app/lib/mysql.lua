@@ -8,11 +8,16 @@ end
 
 local _M = { _VERSION = '1.0.0' }
 
-local resty_mysql = require('resty.mysql')
-local Config = require('app.config.config')
+-- Lazily loaded so the module can be required (and introspected) in
+-- environments without resty.mysql / OpenResty cosockets.
+local resty_mysql
+
+-- Single config source: app.core.Config (which loads app/config/config.lua).
+local CoreConfig = require('app.core.Config')
+CoreConfig.load()
 
 -- Cache MySQL config once at module load
-local mysql_config = Config.mysql or {}
+local mysql_config = CoreConfig.get('mysql') or {}
 local pool_size = mysql_config.pool_size or 100
 local idle_timeout = mysql_config.idle_timeout or 10000
 local default_timeout = mysql_config.timeout or 5000
@@ -26,6 +31,9 @@ local pool_name = string.format('%s:%s:%d:%s',
 )
 
 function _M.new()
+    if not resty_mysql then
+        resty_mysql = require('resty.mysql')
+    end
     local db = resty_mysql:new()
     db:set_timeout(default_timeout)
     return db, mysql_config
@@ -34,7 +42,8 @@ end
 function _M.connect(db, db_name)
     local config = mysql_config
     if db_name then
-        local conn_config = Config.connections and Config.connections[db_name]
+        local connections = CoreConfig.get('connections')
+        local conn_config = connections and connections[db_name]
         if conn_config then
             local final_config = new_tab(0, 8)
             for k, v in pairs(config) do final_config[k] = v end
@@ -66,7 +75,7 @@ end
 
 -- DEPRECATED: Use set_keepalive() instead.
 -- Calling close() may cause "Got packets out of order" errors.
--- See CLAUDE.md Bug#1 for details.
+-- See AGENTS.md Bug#1 for details.
 function _M.close(db)
     if db then
         ngx.log(ngx.WARN, 'mysql:close() is deprecated, use set_keepalive() instead')

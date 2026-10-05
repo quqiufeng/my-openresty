@@ -46,14 +46,11 @@ local function create_router()
     local function match(uri, method)
         local method_routes = routes[method] or {}
         for _, route in ipairs(method_routes) do
-            if string.match(uri, route.pattern) then
+            local captures = { string.match(uri, route.pattern) }
+            if #captures > 0 then
                 local params = {}
-                local i = 1
-                for param in string.gmatch(uri, '([^/]+)') do
-                    if route.params[i] then
-                        params[route.params[i]] = param
-                    end
-                    i = i + 1
+                for i, name in ipairs(route.params) do
+                    params[name] = captures[i]
                 end
                 return route.handler, params
             end
@@ -62,11 +59,11 @@ local function create_router()
     end
     
     return {
-        get = function(pattern, handler) add_route('GET', pattern, handler) return {get=function() end} end,
-        post = function(pattern, handler) add_route('POST', pattern, handler) return {post=function() end} end,
-        put = function(pattern, handler) add_route('PUT', pattern, handler) end,
-        delete = function(pattern, handler) add_route('DELETE', pattern, handler) end,
-        match = match
+        get = function(self, pattern, handler) add_route('GET', pattern, handler) return self end,
+        post = function(self, pattern, handler) add_route('POST', pattern, handler) return self end,
+        put = function(self, pattern, handler) add_route('PUT', pattern, handler) return self end,
+        delete = function(self, pattern, handler) add_route('DELETE', pattern, handler) return self end,
+        match = function(self, uri, method) return match(uri, method) end
     }
 end
 
@@ -140,6 +137,7 @@ describe('Router Module', function()
 end)
 
     describe('any()', function()
+        before_each(function() require('app.core.Router'):reset_routes() end)
         it('should register route for all methods', function()
             local Router = require('app.core.Router')
             local r = Router:new()
@@ -161,6 +159,7 @@ end)
     end)
 
     describe('count_routes()', function()
+        before_each(function() require('app.core.Router'):reset_routes() end)
         it('should count registered routes', function()
             local Router = require('app.core.Router')
             local r = Router:new()
@@ -194,6 +193,7 @@ end)
     end)
 
     describe('resource()', function()
+        before_each(function() require('app.core.Router'):reset_routes() end)
         it('should register RESTful routes', function()
             local Router = require('app.core.Router')
             local r = Router:new()
@@ -207,6 +207,7 @@ end)
     end)
 
     describe('dispatch()', function()
+        before_each(function() require('app.core.Router'):reset_routes() end)
         it('should parse controller:action string', function()
             local Router = require('app.core.Router')
             local r = Router:new()

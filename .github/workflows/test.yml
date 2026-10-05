@@ -14,31 +14,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup LuaJIT
+      - name: Setup LuaJIT and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y luajit
+          sudo apt-get install -y luajit libssl-dev
+          # The framework/specs reference an absolute project path.
+          sudo mkdir -p /var/www/web
+          sudo ln -sfn "$PWD" /var/www/web/my-openresty
 
-      - name: Auto-generate missing tests
+      - name: Run unit tests (app.utils.test framework)
+        run: luajit tests/unit/run.lua
+
+      - name: Run legacy QueryBuilder / Model tests
         run: |
-          echo "Checking for missing tests..."
-          luajit myresty curd --scan 2>/dev/null && echo "Tests generated" || echo "No curd command or no missing tests"
-
-      - name: Run QueryBuilder Tests
-        run: luajit tests/unit/query_builder_test.lua
-
-      - name: Run Model Tests
-        run: |
-          luajit tests/unit/models/admin_spec.lua
-          luajit tests/unit/models/role_spec.lua
-          luajit tests/unit/models/user_spec.lua
-          luajit tests/unit/models/menu_spec.lua
-          luajit tests/unit/models/product_spec.lua 2>/dev/null || echo "No product_spec.lua, skipping"
-
-      - name: Run Controller Tests
-        run: |
-          for f in tests/unit/controllers/*Spec.lua; do
-            if [ -f "$f" ]; then
-              luajit "$f" 2>/dev/null || echo "Skipped: $f"
-            fi
-          done
+          luajit tests/unit/query_builder_test.lua
+          luajit tests/unit/model_join_test.lua
+          luajit tests/unit/model_prefix_test.lua

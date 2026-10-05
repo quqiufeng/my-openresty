@@ -38,7 +38,7 @@ describe('Validator Module', function()
                 ''
             }
             for _, email in ipairs(invalid_emails) do
-                local valid = email and email:match('@') and email:match('%.') and #email > 5
+                local valid = email and email:match('^[^@]+@[^@]+%.[^@]+$') ~= nil
                 assert.is_false(valid, 'Expected ' .. tostring(email) .. ' to be invalid')
             end
         end)

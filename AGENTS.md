@@ -106,7 +106,7 @@ apt-get install -y fonts-wqy-microhei fonts-wqy-zenhei
 
 # 验证版本
 luajit -v
-# 输出: LuaJIT 2.1.ROLLING -- Copyright (C) 2005-2025 Mike Pall.
+# 输出: LuaJIT 2.1.1780076327 -- Copyright (C) 2005-2026 Mike Pall.
 ```
 
 ### Nginx 安装与配置

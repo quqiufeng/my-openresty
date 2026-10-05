@@ -46,7 +46,7 @@ function Command.new()
         local tn=config.table
         local sn=_M.singular(tn)
         local mn=sn:gsub('^%l',string.upper)..'Model'
-        local cn=sn:gsub('^%l',string.upper)
+        local cn=sn
         print('[INFO] Generating CRUD for table: '..tn)
         print('[OK] Model: '..mn)
         print('[OK] Controller: '..cn)
@@ -59,7 +59,7 @@ function Command.new()
         print('')
         print('[OK] Tests generated!')
         print('[OK] Run: luajit tests/unit/models/'..sn..'_spec.lua')
-        print('[OK] Run: luajit tests/unit/controllers/'..cn..'Spec.lua')
+        print('[OK] Run: luajit tests/unit/controllers/'..cn:gsub('^%l',string.upper)..'Spec.lua')
         print('[OK] Run: ./tests/integration/crud/'..cn..'.sh')
         print('')
         print('[OK] Done!')
@@ -307,9 +307,9 @@ function _M.gen_empty_model_test(self, tn)
     ct=ct..'local instance = '..mn..':new()\n'
     ct=ct..'assert_eq("table",type(instance),"new() should return table")\n'
     ct=ct..'print()\n\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Test Results")\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Passed: "..tests_passed)\n'
     ct=ct..'print("Failed: "..tests_failed)\n'
     ct=ct..'print()\n'
@@ -352,9 +352,9 @@ function _M.gen_empty_ctrl_test(self, cn)
     ct=ct..'end\n'
     ct=ct..'assert_eq("table",type(C),"controller should be table")\n'
     ct=ct..'print()\n\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Test Results")\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Passed: "..tests_passed)\n'
     ct=ct..'print("Failed: "..tests_failed)\n'
     ct=ct..'print()\n'
@@ -400,7 +400,7 @@ function _M.gen_model(self,config,mn,tn)
     ct=ct..'local _M=setmetatable({},{__index=M})\n'
     ct=ct..'_M._TABLE="'..tn..'"\n\n'
     ct=ct..'function _M.new()\n'
-    ct=ct..'  local o=M:new()o:set_table(_M._TABLE)return o\n'
+    ct=ct..'  local o=M:new()o:set_table(_M._TABLE)return setmetatable(o,{__index=_M})\n'
     ct=ct..'end\n\n'
     ct=ct..'-- /'..tn..'/list - 列表查询\n'
     ct=ct..'function _M.list(o)\n'
@@ -410,8 +410,9 @@ function _M.gen_model(self,config,mn,tn)
     ct=ct..'  b:select("'..ss..'")\n'
     ct=ct..'  local sf='..sstr..'\n'
     ct=ct..'  if o.keyword and o.keyword~="" then\n'
-    ct=ct..'    local c={}for _,f in ipairs(sf)do c[#c+1]="'..tn..'."..f.." LIKE \\"%%"..o.keyword.."%%\\"" end\n'
-    ct=ct..'    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end\n'
+    ct=ct..'    for i,f in ipairs(sf)do\n'
+    ct=ct..string.format('      if i==1 then b:where("%s."..f,"LIKE","%%"..o.keyword.."%%")else b:or_where("%s."..f,"LIKE","%%"..o.keyword.."%%")end\n', tn, tn)
+    ct=ct..'    end\n'
     ct=ct..'  end\n'
     ct=ct..jstr..'\n'
     ct=ct..'  b:order_by("'..tn..'.id","DESC")\n'
@@ -439,18 +440,18 @@ function _M.gen_model(self,config,mn,tn)
     ct=ct..'  return self:insert(d)\n'
     ct=ct..'end\n\n'
     ct=ct..'-- /'..tn..'/update - 更新\n'
-    ct=ct..'function _M.update(o)\n'
-    ct=ct..'  local id=o and o.id\n'
+    ct=ct..'function _M.update(a,b)\n'
+    ct=ct..'  local id,d\n'
+    ct=ct..'  if type(a)=="table"then d=a;id=a.id else id=a;d=b or{}end\n'
     ct=ct..'  if not id then return false end\n'
-    ct=ct..'  local d=o or{}\n'
     ct=ct..'  d.updated_at=ngx and ngx.time()or os.time()\n'
-    ct=ct..'  return self:update(d,{id=tonumber(id)})\n'
+    ct=ct..'  return M.update(self,d,{id=tonumber(id)})\n'
     ct=ct..'end\n\n'
     ct=ct..'-- /'..tn..'/delete - 删除\n'
-    ct=ct..'function _M.delete(o)\n'
-    ct=ct..'  local id=o and o.id\n'
+    ct=ct..'function _M.delete(a)\n'
+    ct=ct..'  local id=type(a)=="table"and a.id or a\n'
     ct=ct..'  if not id then return false end\n'
-    ct=ct..'  return self:delete({id=tonumber(id)})\n'
+    ct=ct..'  return M.delete(self,{id=tonumber(id)})\n'
     ct=ct..'end\n\n'
     ct=ct..'-- /'..tn..'/count - 统计\n'
     ct=ct..'function _M.count(o)\n'
@@ -458,8 +459,9 @@ function _M.gen_model(self,config,mn,tn)
     ct=ct..'  b:select("COUNT(*)as cnt")\n'
     ct=ct..'  local sf='..sstr..'\n'
     ct=ct..'  if o and o.keyword and o.keyword~="" then\n'
-    ct=ct..'    local c={}for _,f in ipairs(sf)do c[#c+1]="'..tn..'."..f.." LIKE \\"%%"..o.keyword.."%%\\"" end\n'
-    ct=ct..'    if #c>0 then b:wheres_raw("("..table.concat(c," OR ")..")",o.keyword)end\n'
+    ct=ct..'    for i,f in ipairs(sf)do\n'
+    ct=ct..string.format('      if i==1 then b:where("%s."..f,"LIKE","%%"..o.keyword.."%%")else b:or_where("%s."..f,"LIKE","%%"..o.keyword.."%%")end\n', tn, tn)
+    ct=ct..'    end\n'
     ct=ct..'  end\n'
     ct=ct..'  local r=self:query(b:to_sql())\n'
     ct=ct..'  return r and r[1]and r[1].cnt or 0\n'
@@ -488,11 +490,13 @@ function _M.gen_ctrl(self,config,cn,tn,sn)
     ct=ct..'end\n\n'
     ct=ct..'-- 获取请求参数(支持GET/POST/JSON)\n'
     ct=ct..'function _M.get_params()\n'
-    ct=ct..'  local p=self.get or{}\n'
-    ct=ct..'  local post=self.post or{}\n'
-    ct=ct..'  for k,v in pairs(post)do p[k]=v end\n'
-    ct=ct..'  local input=self:input()\n'
-    ct=ct..'  if input and type(input)=="table"then for k,v in pairs(input)do p[k]=v end end\n'
+    ct=ct..'  local p={}\n'
+    ct=ct..'  local req=self.request\n'
+    ct=ct..'  if req then\n'
+    ct=ct..'    if type(req.get)=="table"then for k,v in pairs(req.get)do p[k]=v end end\n'
+    ct=ct..'    if type(req.post)=="table"then for k,v in pairs(req.post)do p[k]=v end end\n'
+    ct=ct..'    if type(req.json)=="table"then for k,v in pairs(req.json)do p[k]=v end end\n'
+    ct=ct..'  end\n'
     ct=ct..'  return p\n'
     ct=ct..'end\n\n'
     ct=ct..'-- /'..tn..'/list - 列表查询(分页)\n'
@@ -599,9 +603,9 @@ function _M.gen_model_test(self,config,mn,tn,sn)
     ct=ct..'local ok=m:delete({id=1})\n'
     ct=ct..'assert_eq("boolean",type(ok),"delete() should return boolean")\n'
     ct=ct..'print()\n\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Test Results")\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Passed: "..tests_passed)\n'
     ct=ct..'print("Failed: "..tests_failed)\n'
     ct=ct..'print()\n'
@@ -614,7 +618,7 @@ end
 function _M.gen_ctrl_test(self,config,cn,tn,sn)
     local mv=sn..'_model'
     local ct='-- '..cn..' Controller Unit Tests\n'
-    ct=ct..'-- Generated by curd command. Run with: luajit tests/unit/controllers/'..cn..'Spec.lua\n\n'
+    ct=ct..'-- Generated by curd command. Run with: luajit tests/unit/controllers/'..cn:gsub('^%l',string.upper)..'Spec.lua\n\n'
     ct=ct..'package.path="/var/www/web/my-openresty/?.lua;;"..package.path\n'
     ct=ct..'package.cpath="/var/www/web/my-openresty/?.so;;"..package.cpath\n\n'
     ct=ct..'local tests_passed=0\n'
@@ -671,14 +675,14 @@ function _M.gen_ctrl_test(self,config,cn,tn,sn)
     ct=ct..'print("Test: delete() interface")\n'
     ct=ct..'assert_eq("function",type(C.delete),"delete should be function")\n'
     ct=ct..'print()\n\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Test Results")\n'
-    ct=ct..'print("="..string.rep("=",60)..")\n'
+    ct=ct..'print("="..string.rep("=",60))\n'
     ct=ct..'print("Passed: "..tests_passed)\n'
     ct=ct..'print("Failed: "..tests_failed)\n'
     ct=ct..'print()\n'
     ct=ct..'if tests_failed>0 then os.exit(1) end\n'
-    local p='/var/www/web/my-openresty/tests/unit/controllers/'..cn..'Spec.lua'
+    local p='/var/www/web/my-openresty/tests/unit/controllers/'..cn:gsub('^%l',string.upper)..'Spec.lua'
     self:write(p,ct)print('[OK] Controller Test: '..p)
 end
 

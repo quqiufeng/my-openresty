@@ -95,8 +95,8 @@ describe('Request Module', function()
     describe('pagination params', function()
         it('should parse pagination from request', function()
             local function get_pagination(defaults)
-                local page = tonumber(1) or defaults.page or 1
-                local per_page = tonumber(10) or defaults.per_page or 20
+                local page = defaults.page or 1
+                local per_page = defaults.per_page or 10
                 return {page = page, per_page = per_page}
             end
             

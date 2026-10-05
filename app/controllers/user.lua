@@ -4,13 +4,13 @@ local _M = {}
 
 function _M:__construct()
     Controller.__construct(self)
-    self:load('user_model')
+    self:load('UserModel', 'user_model')
 end
 
 function _M:get_list()
-    local Request = require('app.core.Request')
-    local limit = tonumber(Request.get['limit']) or 10
-    local offset = tonumber(Request.get['offset']) or 0
+    local get = self.request.get or {}
+    local limit = tonumber(get['limit']) or 10
+    local offset = tonumber(get['offset']) or 0
 
     local users = self.user_model:get_all(nil, limit, offset)
     self:json({
@@ -24,7 +24,10 @@ function _M:get_list()
 end
 
 function _M:get_one(id)
-    local user = self.user_model:get_by_id(id)
+    if id == nil or id == '' then
+        id = self.request.get and self.request.get['id']
+    end
+    local user = self.user_model:get_by_id(tonumber(id))
     if user then
         self:json({success = true, data = user})
     else
@@ -33,8 +36,10 @@ function _M:get_one(id)
 end
 
 function _M:create()
-    local Request = require('app.core.Request')
-    local data = Request.post
+    local data = self.request.json or {}
+    if not next(data) then
+        data = self.request.post or {}
+    end
 
     if not data.username or not data.email then
         self:json({success = false, error = 'Missing required fields'}, 400)
@@ -50,10 +55,20 @@ function _M:create()
 end
 
 function _M:update(id)
-    local Request = require('app.core.Request')
-    local data = Request.post
+    if id == nil or id == '' then
+        id = self.request.get and self.request.get['id']
+    end
+    if id == nil or id == '' or tonumber(id) == nil then
+        self:json({success = false, error = 'ID required'}, 400)
+        return
+    end
 
-    local success = self.user_model:update(data, 'id = ' .. tonumber(id))
+    local data = self.request.json or {}
+    if not next(data) then
+        data = self.request.post or {}
+    end
+
+    local success = self.user_model:update(data, { id = tonumber(id) })
     if success then
         self:json({success = true})
     else
@@ -62,7 +77,15 @@ function _M:update(id)
 end
 
 function _M:delete(id)
-    local success = self.user_model:delete('id = ' .. tonumber(id))
+    if id == nil or id == '' then
+        id = self.request.get and self.request.get['id']
+    end
+    if id == nil or id == '' or tonumber(id) == nil then
+        self:json({success = false, error = 'ID required'}, 400)
+        return
+    end
+
+    local success = self.user_model:delete({ id = tonumber(id) })
     if success then
         self:json({success = true})
     else

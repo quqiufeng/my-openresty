@@ -37,7 +37,7 @@ function _M:setup(config)
         if cfg.enabled ~= false then
             local mod = load_middleware(cfg.name)
             if mod then
-                ngx.log(ngx.INFO, 'Middleware [' .. cfg.name .. '] loaded, phase: ' .. (cfg.phase or 'access'))
+                ngx.log(ngx.DEBUG, 'Middleware [' .. cfg.name .. '] loaded, phase: ' .. (cfg.phase or 'access'))
             end
         end
     end
@@ -51,11 +51,10 @@ function _M:run(name, options)
 
     local handler = mod.handle or mod.run or mod.execute
     if not handler then
-        ngx.log(ngx.INFO, 'Middleware [' .. name .. ']: no handler found')
+        ngx.log(ngx.DEBUG, 'Middleware [' .. name .. ']: no handler found')
         return true
     end
 
-    ngx.log(ngx.INFO, 'Middleware [' .. name .. ']: executing handler')
     local ok, result = pcall(handler, mod, options or {})
 
     if not ok then

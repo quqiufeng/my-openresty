@@ -34,9 +34,9 @@ end
 assert_eq("table",type(C),"controller should be table")
 print()
 
-print("="..string.rep("=",60)..")
+print("="..string.rep("=",60))
 print("Test Results")
-print("="..string.rep("=",60)..")
+print("="..string.rep("=",60))
 print("Passed: "..tests_passed)
 print("Failed: "..tests_failed)
 print()

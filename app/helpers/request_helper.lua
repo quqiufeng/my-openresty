@@ -71,9 +71,9 @@ local function _get_request_data(req, fields, custom_rules, source)
 
         local value
         if source == "get" then
-            value = req:get[field]
+            value = req.get[field]
         elseif source == "post" then
-            value = req:post[field]
+            value = req.post[field]
         elseif source == "json" then
             value = req.json and req.json[field]
         else
@@ -399,9 +399,9 @@ function RequestHelper:string(key, default, source)
 
     local value
     if source == "get" then
-        value = req:get[key]
+        value = req.get[key]
     elseif source == "post" then
-        value = req:post[key]
+        value = req.post[key]
     elseif source == "json" then
         value = req.json and req.json[key]
     else
@@ -423,9 +423,9 @@ function RequestHelper:number(key, default, source)
 
     local value
     if source == "get" then
-        value = req:get[key]
+        value = req.get[key]
     elseif source == "post" then
-        value = req:post[key]
+        value = req.post[key]
     elseif source == "json" then
         value = req.json and req.json[key]
     else
@@ -445,9 +445,9 @@ function RequestHelper:integer(key, default, source)
 
     local value
     if source == "get" then
-        value = req:get[key]
+        value = req.get[key]
     elseif source == "post" then
-        value = req:post[key]
+        value = req.post[key]
     elseif source == "json" then
         value = req.json and req.json[key]
     else
@@ -467,9 +467,9 @@ function RequestHelper:boolean(key, default, source)
 
     local value
     if source == "get" then
-        value = req:get[key]
+        value = req.get[key]
     elseif source == "post" then
-        value = req:post[key]
+        value = req.post[key]
     elseif source == "json" then
         value = req.json and req.json[key]
     else
@@ -493,9 +493,9 @@ function RequestHelper:array(key, source)
 
     local value
     if source == "get" then
-        value = req:get[key]
+        value = req.get[key]
     elseif source == "post" then
-        value = req:post[key]
+        value = req.post[key]
     elseif source == "json" then
         value = req.json and req.json[key]
     else

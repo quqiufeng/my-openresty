@@ -43,7 +43,8 @@ end
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
-local cached_request = nil
+-- Per-request cache key lives in ngx.ctx (request-scoped, coroutine-safe).
+local CTX_KEY = '__myresty_request'
 
 local function _parse_cookies(headers)
     local cookies = {}
@@ -117,8 +118,9 @@ function _M.new(self)
 end
 
 function _M.fetch(self, force)
-    if cached_request and not force then
-        return cached_request
+    local ctx = ngx.ctx
+    if not force and ctx and ctx[CTX_KEY] then
+        return ctx[CTX_KEY]
     end
 
     self.method = ngx_req.get_method()
@@ -160,12 +162,16 @@ function _M.fetch(self, force)
     self.user_agent = self.headers['User-Agent'] or ''
     self.referer = self.headers['Referer'] or self.headers['referer'] or ''
 
-    cached_request = self
+    if ctx then
+        ctx[CTX_KEY] = self
+    end
     return self
 end
 
 function _M.reset_cache()
-    cached_request = nil
+    if ngx.ctx then
+        ngx.ctx[CTX_KEY] = nil
+    end
 end
 
 function _M.get_method(self)

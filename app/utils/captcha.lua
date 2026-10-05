@@ -40,15 +40,13 @@ ffi.cdef[[
     int gdImageFontWidth(int font);
     int gdImageFontHeight(int font);
 
-    void gdImagePng(gdImagePtr im, FILE *out);
+    void gdImagePng(gdImagePtr im, void *out);
     void gdImagePngPtr(gdImagePtr im, void **png, int *size);
     void gdFree(void *m);
 
     void gdImageBlur(gdImagePtr im);
     void gdImagePixelate(gdImagePtr im, int blocksize, int mode);
     void gdImageRotate90(gdImagePtr im, int direction);
-
-    unsigned char *gdImagePngPtr(gdImagePtr im, int *size);
 ]]
 
 local libgd = nil
@@ -164,12 +162,13 @@ local function create_captcha_image(code, width, height)
     draw_noise_dots(im, width, height, 10)
 
     local png_size = ffi.new('int[1]')
-    local png_ptr = libgd.gdImagePngPtr(im, png_size)
+    local png_ptr = ffi.new('void*[1]')
+    libgd.gdImagePngPtr(im, png_ptr, png_size)
 
     local image_data = nil
-    if png_ptr ~= nil then
-        image_data = ffi.string(png_ptr, png_size[0])
-        libgd.gdFree(png_ptr)
+    if png_ptr[0] ~= nil then
+        image_data = ffi.string(png_ptr[0], png_size[0])
+        libgd.gdFree(png_ptr[0])
     end
 
     libgd.gdImageDestroy(im)

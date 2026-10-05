@@ -1,5 +1,7 @@
 local Auth = {}
 
+local TableUtil = require('app.utils.table')
+
 Auth.options = {
     mode = 'session',  -- session, token, both
     token_header = 'Authorization',
@@ -14,12 +16,12 @@ Auth.options = {
 }
 
 function Auth:setup(options)
-    self.options = vim.tbl_deep_extend('force', self.options, options or {})
+    self.options = TableUtil.deep_extend('force', self.options, options or {})
     return self
 end
 
 function Auth:handle(options)
-    options = vim.tbl_deep_extend('force', self.options, options or {})
+    options = TableUtil.deep_extend('force', self.options, options or {})
 
     local user_id, user_data, auth_type
 

@@ -44,7 +44,8 @@ end
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
-local routes = {
+-- Static routes: exact URI -> entry (O(1) lookup).
+local static_routes = {
     GET = {},
     POST = {},
     PUT = {},
@@ -52,6 +53,25 @@ local routes = {
     PATCH = {},
     OPTIONS = {}
 }
+
+-- Dynamic routes (containing :param / {param}): scanned in order.
+local dynamic_routes = {
+    GET = {},
+    POST = {},
+    PUT = {},
+    DELETE = {},
+    PATCH = {},
+    OPTIONS = {}
+}
+
+-- Index of registered patterns per method so repeated registration
+-- (e.g. re-running routes.lua on every request) does not grow the table.
+local route_index = {}
+
+local function _ensure_method(method)
+    if not static_routes[method] then static_routes[method] = {} end
+    if not dynamic_routes[method] then dynamic_routes[method] = {} end
+end
 
 local function _compile_pattern(pattern)
     local params = new_tab(8, 0)
@@ -77,21 +97,41 @@ local function _compile_pattern(pattern)
 end
 
 local function _add_route(method, pattern, handler)
-    if not routes[method] then
-        routes[method] = {}
+    _ensure_method(method)
+
+    local index = route_index[method]
+    if not index then
+        index = {}
+        route_index[method] = index
     end
+
+    -- Re-registering the same method+pattern replaces the handler instead
+    -- of appending a duplicate (prevents unbounded growth per request).
+    local existing = index[pattern]
+    if existing then
+        existing.handler = handler
+        return
+    end
+
     local compiled_pattern, params = _compile_pattern(pattern)
-    table.insert(routes[method], {
+    local entry = {
         original_pattern = pattern,
         pattern = compiled_pattern,
         params = params,
         handler = handler
-    })
+    }
+    index[pattern] = entry
+
+    if #params == 0 then
+        static_routes[method][pattern] = entry
+    else
+        table.insert(dynamic_routes[method], entry)
+    end
 end
 
 function _M.new(self)
     return setmetatable({
-        routes = routes,
+        routes = static_routes,
         controller = 'welcome',
         method = 'index',
         params = {},
@@ -174,7 +214,17 @@ end
 
 function _M.match(self, uri, http_method)
     http_method = http_method or 'GET'
-    local method_routes = routes[http_method]
+
+    -- Fast path: exact static route lookup (O(1)).
+    local static = static_routes[http_method]
+    if static then
+        local entry = static[uri]
+        if entry then
+            return entry.handler, {}, {}
+        end
+    end
+
+    local method_routes = dynamic_routes[http_method]
     if not method_routes then
         return nil
     end
@@ -186,7 +236,11 @@ function _M.match(self, uri, http_method)
             for i, key in ipairs(route.params) do
                 params[key] = matches[i]
             end
-            return route.handler, params, matches
+            -- Only pass captured params to the action. A pattern without
+            -- captures yields the whole URI from string.match, which must
+            -- not be forwarded as a positional action argument.
+            local captures = (#route.params > 0) and matches or {}
+            return route.handler, params, captures
         end
     end
 
@@ -241,7 +295,7 @@ function _M.dispatch(self, Request)
     if handler then
         if type(handler) == 'string' then
             local parts = {}
-            for segment in string_gmatch(handler, '([^%.]+)') do
+            for segment in string_gmatch(handler, '([^:]+)') do
                 table.insert(parts, segment)
             end
             if #parts == 2 then
@@ -294,18 +348,53 @@ function _M.reverse(self, name, params)
 end
 
 function _M.get_routes(self, method)
+    local list = {}
     if method then
-        return routes[method] or {}
+        for _, entry in pairs(static_routes[method] or {}) do
+            list[#list + 1] = entry
+        end
+        for _, entry in ipairs(dynamic_routes[method] or {}) do
+            list[#list + 1] = entry
+        end
+        return list
     end
-    return routes
+    for m, _ in pairs(static_routes) do
+        for _, entry in pairs(static_routes[m]) do
+            list[#list + 1] = entry
+        end
+    end
+    for m, _ in pairs(dynamic_routes) do
+        for _, entry in ipairs(dynamic_routes[m]) do
+            list[#list + 1] = entry
+        end
+    end
+    return list
 end
 
 function _M.count_routes(self)
     local count = 0
-    for _, method_routes in pairs(routes) do
-        count = count + #method_routes
+    for _, entries in pairs(static_routes) do
+        for _ in pairs(entries) do count = count + 1 end
+    end
+    for _, entries in pairs(dynamic_routes) do
+        count = count + #entries
     end
     return count
+end
+
+-- Clear all registered routes. Mainly useful for tests; production relies
+-- on idempotent registration in _add_route.
+function _M.reset_routes(self)
+    for method, _ in pairs(static_routes) do
+        static_routes[method] = {}
+    end
+    for method, _ in pairs(dynamic_routes) do
+        dynamic_routes[method] = {}
+    end
+    for method, _ in pairs(route_index) do
+        route_index[method] = {}
+    end
+    return self
 end
 
 return _M

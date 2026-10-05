@@ -15,7 +15,6 @@ local ngx_ERR = ngx.ERR
 local ngx_WARN = ngx.WARN
 local ngx_INFO = ngx.INFO
 local ngx_now = ngx.now
-local ngx_ctx = ngx.ctx
 local ngx_exit = ngx.exit
 local ngx_header = ngx.header
 
@@ -37,13 +36,16 @@ end
 function Timeout:handle(options)
     local opts = options or self.options
 
-    -- Record start time
-    ngx_ctx._request_start = ngx_now()
-    ngx_ctx._max_execution = opts.max_execution_time or 30
+    -- Record start time (read ngx.ctx at call time; it is per-request)
+    local ctx = ngx.ctx
+    if ctx then
+        ctx._request_start = ngx_now()
+        ctx._max_execution = opts.max_execution_time or 30
+    end
 
     -- Check if we're in degradation mode
     if self:is_degraded() then
-        ngx_ctx._degraded = true
+        if ctx then ctx._degraded = true end
         ngx_header['X-Degradation-Mode'] = 'true'
     end
 
@@ -51,11 +53,12 @@ function Timeout:handle(options)
 end
 
 function Timeout:check_timeout()
-    local start = ngx_ctx._request_start
+    local ctx = ngx.ctx or {}
+    local start = ctx._request_start
     if not start then return true end
 
     local elapsed = ngx_now() - start
-    local max_time = ngx_ctx._max_execution or 30
+    local max_time = ctx._max_execution or 30
 
     if elapsed > max_time then
         ngx_log(ngx_ERR, 'Request timeout after ', elapsed, 's (max: ', max_time, 's)')

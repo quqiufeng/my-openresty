@@ -1,5 +1,7 @@
 local CORS = {}
 
+local TableUtil = require('app.utils.table')
+
 CORS.options = {
     origin = '*',  -- Origin to allow, * for all, false to disable
     methods = {'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'},
@@ -26,12 +28,12 @@ CORS.options = {
 }
 
 function CORS:setup(options)
-    self.options = vim.tbl_deep_extend('force', self.options, options or {})
+    self.options = TableUtil.deep_extend('force', self.options, options or {})
     return self
 end
 
 function CORS:handle(options)
-    options = vim.tbl_deep_extend('force', self.options, options or {})
+    options = TableUtil.deep_extend('force', self.options, options or {})
 
     local request_method = ngx.var.request_method
 

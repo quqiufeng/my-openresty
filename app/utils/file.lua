@@ -149,7 +149,7 @@ function _M.copy(src, dst, buffer_size)
 
     local file_size = tonumber(stat_buf.st_size)
     local flags = 0x41
-    local dst_fd = lib.open(dst, flags, 0o644)
+    local dst_fd = lib.open(dst, flags, tonumber('644', 8))
 
     if dst_fd < 0 then
         lib.close(src_fd)
@@ -253,7 +253,7 @@ function _M.write(filepath, content, mode)
     end
 
     local flags = 0x41
-    local file_mode = mode or 0o644
+    local file_mode = mode or 420
     local fd = lib.open(filepath, flags, file_mode)
 
     if fd < 0 then
@@ -278,7 +278,7 @@ function _M.append(filepath, content, mode)
     end
 
     local flags = 0x2001
-    local file_mode = mode or 0o644
+    local file_mode = mode or 420
     local fd = lib.open(filepath, flags, file_mode)
 
     if fd < 0 then

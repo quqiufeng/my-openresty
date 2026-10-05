@@ -377,9 +377,10 @@ function _M.values(self)
     local values = {}
     local prefix_len = #self.prefix
 
-    for key, value in dict:get_keys(0) do
-        if key:sub(1, prefix_len) == self.prefix then
-            if key:sub(1, 4) ~= 'lock' then
+    for _, key in ipairs(dict:get_keys(0)) do
+        if key:sub(1, prefix_len) == self.prefix and key:sub(1, 4) ~= 'lock' then
+            local value = dict:get(key)
+            if value ~= nil then
                 table.insert(values, value)
             end
         end

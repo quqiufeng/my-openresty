@@ -1,5 +1,7 @@
 local RateLimit = {}
 
+local TableUtil = require('app.utils.table')
+
 RateLimit.options = {
     zones = {},
     default_limit = 60,
@@ -20,7 +22,7 @@ RateLimit.zones = {
 }
 
 function RateLimit:setup(options)
-    self.options = vim.tbl_deep_extend('force', self.options, options or {})
+    self.options = TableUtil.deep_extend('force', self.options, options or {})
 
     for name, config in pairs(self.zones) do
         if not self.options.zones[name] then
@@ -32,7 +34,7 @@ function RateLimit:setup(options)
 end
 
 function RateLimit:handle(options)
-    options = vim.tbl_deep_extend('force', self.options, options or {})
+    options = TableUtil.deep_extend('force', self.options, options or {})
 
     local zone_name = options.zone or 'default'
     local zone = options.zones and options.zones[zone_name] or self.options.zones[zone_name]

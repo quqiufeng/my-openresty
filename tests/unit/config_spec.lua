@@ -37,7 +37,7 @@ describe('Config Module', function()
             local function get(config, key)
                 if not key then return config end
                 local keys = {}
-                for part in string.gmatch(key, '([^%.]+') do
+                for part in string.gmatch(key, '([^%.]+)') do
                     table.insert(keys, part)
                 end
                 local value = config

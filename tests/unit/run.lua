@@ -3,14 +3,21 @@
 MyResty Unit Test Runner
 
 Usage:
-    lua tests/unit/run.lua                    -- Run all tests
-    lua tests/unit/run.lua --spec calculator  -- Run specific spec
-    lua tests/unit/run.lua --format json      -- JSON output
-    lua tests/unit/run.lua --help             -- Show help
+    luajit tests/unit/run.lua                    -- Run all tests
+    luajit tests/unit/run.lua --spec router      -- Run specs matching "router"
+    luajit tests/unit/run.lua --format json      -- JSON output
+    luajit tests/unit/run.lua --help             -- Show help
+
+Discovers every *_spec.lua under tests/unit (recursively) that uses the
+app.utils.test framework. Standalone generated specs (self-executing) are
+skipped here and can be run directly, e.g. luajit tests/unit/controllers/AdminSpec.lua
 ]]
 
 package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
 package.cpath = '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
+
+-- Provide a minimal `ngx` mock so modules can load under plain LuaJIT.
+pcall(dofile, '/var/www/web/my-openresty/tests/unit/ngx_mock.lua')
 
 local Test = require('app.utils.test')
 local args = {...}
@@ -39,54 +46,57 @@ if options.help then
 MyResty Unit Test Runner
 
 Usage:
-    lua tests/unit/run.lua [options]
+    luajit tests/unit/run.lua [options]
 
 Options:
-    --spec NAME      Run specific spec file (without _spec.lua)
-    --format FORMAT  Output format: plain, json, quiet (default: plain)
+    --spec NAME      Run specs whose path contains NAME
+    --format FORMAT  Output format: plain, json (default: plain)
     --help, -h       Show this help message
 
 Examples:
-    lua tests/unit/run.lua
-    lua tests/unit/run.lua --spec calculator
-    lua tests/unit/run.lua --format json
-    lua tests/unit/run.lua --spec config --format json
-
-Specs:
-    calculator  - Calculator and string utility tests
-    config      - Config module tests
+    luajit tests/unit/run.lua
+    luajit tests/unit/run.lua --spec router
+    luajit tests/unit/run.lua --format json
 ]])
     os.exit(0)
 end
 
--- Find and load spec files
+local SPEC_DIR = '/var/www/web/my-openresty/tests/unit'
+
+-- Find recursively every *_spec.lua that uses the app.utils.test framework.
 local function find_specs()
     local specs = {}
-    local spec_dir = '/var/www/web/my-openresty/tests/unit'
 
-    -- Check if spec directory exists
-    local ok, err = io.open(spec_dir)
-    if not ok then
-        print('Error: Spec directory not found: ' .. spec_dir)
+    local dir = io.open(SPEC_DIR)
+    if not dir then
+        print('Error: Spec directory not found: ' .. SPEC_DIR)
         os.exit(1)
     end
-    ok:close()
+    dir:close()
 
-    -- Find all spec files (pure Lua, no ls dependency)
-    local popenf = io.popen and io.popen('ls ' .. spec_dir .. ' 2>/dev/null')
-    if popenf then
-        for file in popenf:lines() do
-            if file:match('_spec%.lua$') then
-                table.insert(specs, (file:gsub('_spec%.lua$', '')))
-            end
-        end
-        popenf:close()
+    local pipe = io.popen and io.popen('find ' .. SPEC_DIR .. ' -type f -name "*_spec.lua" 2>/dev/null')
+    if not pipe then
+        print('Error: cannot enumerate spec files (io.popen unavailable)')
+        os.exit(1)
     end
 
+    for file in pipe:lines() do
+        local f = io.open(file, 'r')
+        if f then
+            local content = f:read('*a')
+            f:close()
+            -- Only Test-framework specs can be aggregated into one run.
+            if content and content:find('app.utils.test', 1, true) then
+                specs[#specs + 1] = file
+            end
+        end
+    end
+    pipe:close()
+
+    table.sort(specs)
     return specs
 end
 
--- Filter specs if specified
 local function filter_specs(all_specs, filter)
     if not filter then
         return all_specs
@@ -94,47 +104,29 @@ local function filter_specs(all_specs, filter)
 
     local filtered = {}
     for _, spec in ipairs(all_specs) do
-        if spec == filter or spec:find(filter, 1, true) then
-            table.insert(filtered, spec)
+        if spec:find(filter, 1, true) then
+            filtered[#filtered + 1] = spec
         end
     end
 
     if #filtered == 0 then
-        print('Error: Spec "' .. filter .. '" not found')
-        print('Available specs: ' .. table.concat(all_specs, ', '))
+        print('Error: no spec matching "' .. filter .. '"')
+        print('Available specs:')
+        for _, spec in ipairs(all_specs) do print('  ' .. spec) end
         os.exit(1)
     end
 
     return filtered
 end
 
--- Load a spec file
-local function load_spec(name)
-    local spec_file = '/var/www/web/my-openresty/tests/unit/' .. name .. '_spec.lua'
+-- Expose Test module functions globally for the specs
+_G.describe = Test.describe
+_G.it = Test.it
+_G.pending = Test.pending
+_G.before_each = Test.before_each
+_G.after_each = Test.after_each
+_G.assert = Test.assert
 
-    local ok, err = io.open(spec_file)
-    if not ok then
-        print('Error: Spec file not found: ' .. spec_file)
-        os.exit(1)
-    end
-    ok:close()
-
-    -- Clear test state
-    Test.reset()
-
-    -- Expose Test module functions globally for the spec
-    _G.describe = Test.describe
-    _G.it = Test.it
-    _G.pending = Test.pending
-    _G.before_each = Test.before_each
-    _G.after_each = Test.after_each
-    _G.assert = Test.assert
-
-    -- Load and run the spec
-    dofile(spec_file)
-end
-
--- Main
 print('MyResty Unit Test Runner')
 print('========================')
 print('')
@@ -145,12 +137,15 @@ local specs_to_run = filter_specs(all_specs, options.spec)
 print('Running ' .. #specs_to_run .. ' test suite(s)...')
 print('')
 
+local load_errors = 0
 for _, spec in ipairs(specs_to_run) do
-    print('Loading: ' .. spec .. '_spec.lua')
-    load_spec(spec)
+    print('Loading: ' .. spec)
+    local ok, err = pcall(dofile, spec)
+    if not ok then
+        load_errors = load_errors + 1
+        print('  [LOAD ERROR] ' .. tostring(err))
+    end
 end
 
 print('')
-
--- Run all tests
 Test.run({ format = options.format })

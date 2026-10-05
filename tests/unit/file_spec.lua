@@ -81,6 +81,12 @@ describe('File Module', function()
                 return ok, err
             end
 
+            local function file_exists(path)
+                local fh = io.open(path, 'r')
+                if fh then fh:close() return true end
+                return false
+            end
+
             local ok, err = file_delete(test_file)
             assert.is_true(ok)
             assert.is_false(file_exists(test_file))
@@ -156,8 +162,8 @@ describe('File Module', function()
                 local p = io.popen('ls -a "' .. dir_path .. '" 2>/dev/null')
                 if p then
                     for line in p:lines() do
-                        local name = line:match('^.*%s+(.+)$')
-                        if name and name ~= '.' and name ~= '..' then
+                        local name = line:match('^%s*(.-)%s*$')
+                        if name and name ~= '' and name ~= '.' and name ~= '..' then
                             table.insert(files, name)
                         end
                     end
@@ -216,8 +222,9 @@ describe('File Module', function()
                 for i, part in ipairs(parts) do
                     if i > 1 then
                         result = result .. '/'
+                        part = part:gsub('^/+', '')
                     end
-                    result = result .. part:gsub('^/', ''):gsub('/+$', '')
+                    result = result .. part:gsub('/+$', '')
                 end
                 return result
             end
@@ -226,7 +233,7 @@ describe('File Module', function()
             assert.equals('/absolute/path', path_join('/absolute', 'path'))
             assert.equals('single', path_join('single'))
         end)
-    end
+    end)
 
     describe('path_basename', function()
         it('should get basename from path', function()
@@ -250,7 +257,7 @@ describe('File Module', function()
 
             assert.equals('/path/to', path_dirname('/path/to/file.lua'))
             assert.equals('.', path_dirname('file.lua'))
-            assert.equals('/path', path_dirname('/path/to/dir/'))
+            assert.equals('/path/to', path_dirname('/path/to/dir/'))
         end)
     end)
 end)

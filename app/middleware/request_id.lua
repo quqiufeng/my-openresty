@@ -13,9 +13,9 @@ RequestId.options = {
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
 local ngx_INFO = ngx.INFO
+local ngx_DEBUG = ngx.DEBUG
 local ngx_now = ngx.now
 local ngx_header = ngx.header
-local ngx_ctx = ngx.ctx
 local tostring = tostring
 local string_format = string.format
 local string_byte = string.byte
@@ -50,16 +50,18 @@ function RequestId:handle(options)
     end
 
     -- Store in context for other components
-    ngx_ctx.request_id = request_id
+    if ngx.ctx then
+        ngx.ctx.request_id = request_id
+    end
 
     -- Set response header
     if self.options.set_response_header then
         ngx_header[self.options.header_name] = request_id
     end
 
-    -- Log with request
+    -- Log with request (DEBUG: avoid per-request INFO noise)
     if self.options.log_with_request then
-        ngx_log(ngx_INFO, '[', request_id, '] Request: ', ngx.var.uri)
+        ngx_log(ngx_DEBUG, '[', request_id, '] Request: ', ngx.var.uri)
     end
 
     return true

@@ -128,4 +128,25 @@ function _M:delete(id)
     self:json({ success = true, message = '删除成功', data = nil })
 end
 
+-- /role/detail - 详情查询 (route passes no positional args)
+function _M:detail()
+    local id = self.request.get and self.request.get['id']
+    if (not id or id == '') and self.request.json then
+        id = self.request.json['id']
+    end
+    if not id or id == '' then
+        self:json({ success = false, message = '缺少ID', data = nil }, 400)
+        return
+    end
+
+    local role_model = RoleModel:new()
+    local res = role_model:get_by_id(tonumber(id))
+
+    if res then
+        self:json({ success = true, message = 'success', data = res })
+    else
+        self:json({ success = false, message = '不存在', data = nil }, 404)
+    end
+end
+
 return _M

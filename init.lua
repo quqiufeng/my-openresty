@@ -11,6 +11,16 @@ local middleware_config = Config.get('middleware') or {
 }
 Middleware:setup(middleware_config)
 
+-- Register all routes once per worker (instead of on every request).
+local Router = require('app.core.Router')
+local Routes = require('app.routes')
+Router:reset_routes()
+Routes(Router)
+Router:get('/test', function(req, res)
+    res:json({message = 'Direct route works!'})
+end)
+ngx.log(ngx.INFO, 'MyResty routes registered: ', Router:count_routes())
+
 -- Lazy-init optional services (will be initialized on first use)
 local mysql_config = Config.get('mysql')
 if mysql_config then

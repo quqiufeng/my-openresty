@@ -1,5 +1,7 @@
 local Logger = {}
 
+local TableUtil = require('app.utils.table')
+
 Logger.options = {
     level = 'info',  -- debug, info, warn, error
     format = 'combined',  -- combined, json, custom
@@ -14,12 +16,12 @@ Logger.options = {
 Logger.request_id_header = 'X-Request-ID'
 
 function Logger:setup(options)
-    self.options = vim.tbl_deep_extend('force', self.options, options or {})
+    self.options = TableUtil.deep_extend('force', self.options, options or {})
     return self
 end
 
 function Logger:handle(options)
-    options = vim.tbl_deep_extend('force', self.options, options or {})
+    options = TableUtil.deep_extend('force', self.options, options or {})
 
     local uri = ngx.var.uri
 

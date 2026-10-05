@@ -57,8 +57,20 @@ local test_state = {
 -- Assertion functions
 local assertions = {}
 
+local function deep_equal(a, b)
+    if a == b then return true end
+    if type(a) ~= 'table' or type(b) ~= 'table' then return false end
+    for k, v in pairs(a) do
+        if not deep_equal(v, b[k]) then return false end
+    end
+    for k in pairs(b) do
+        if a[k] == nil then return false end
+    end
+    return true
+end
+
 function assertions.equals(expected, actual, msg)
-    if expected ~= actual then
+    if not deep_equal(expected, actual) then
         msg = msg or string.format('Expected %s, got %s', tostring(expected), tostring(actual))
         error(msg, 2)
     end
@@ -72,15 +84,37 @@ function assertions.not_equals(expected, actual, msg)
 end
 
 function assertions.is_true(value, msg)
-    if value ~= true then
-        msg = msg or 'Expected true, got ' .. tostring(value)
+    if not value then
+        msg = msg or 'Expected a truthy value, got ' .. tostring(value)
         error(msg, 2)
     end
 end
 
 function assertions.is_false(value, msg)
-    if value ~= false then
-        msg = msg or 'Expected false, got ' .. tostring(value)
+    if value then
+        msg = msg or 'Expected a falsy value, got ' .. tostring(value)
+        error(msg, 2)
+    end
+end
+
+-- Aliases (some specs use capitalized names)
+assertions.True = assertions.is_true
+assertions.False = assertions.is_false
+
+function assertions.same(expected, actual, msg)
+    assertions.equals(expected, actual, msg)
+end
+
+function assertions.is_number(value, msg)
+    if type(value) ~= 'number' then
+        msg = msg or 'Expected number, got ' .. type(value)
+        error(msg, 2)
+    end
+end
+
+function assertions.is_boolean(value, msg)
+    if type(value) ~= 'boolean' then
+        msg = msg or 'Expected boolean, got ' .. type(value)
         error(msg, 2)
     end
 end

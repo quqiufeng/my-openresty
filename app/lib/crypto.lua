@@ -4,6 +4,10 @@
 
 local _M = { _VERSION = '1.0.0' }
 
+local ngx_log = ngx and ngx.log or function() end
+local ngx_WARN = ngx and ngx.WARN or 5
+local ngx_ERR = ngx and ngx.ERR or 4
+
 local ffi = require("ffi")
 
 ffi.cdef[[

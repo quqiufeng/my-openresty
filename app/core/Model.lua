@@ -43,19 +43,29 @@ end
 local Mysql = require('app.lib.mysql')
 local QB = require('app.db.query')
 
--- Cache config module for table prefix
-local config_ok, config_module = pcall(require, 'app.config.config')
-local default_prefix = ''
-if config_ok and config_module and config_module.table_prefix then
-    default_prefix = config_module.table_prefix
-end
+-- Cache config module for table prefix (single config source)
+local CoreConfig = require('app.core.Config')
+CoreConfig.load()
+local default_prefix = CoreConfig.get('table_prefix') or ''
 
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
+-- Prefer OpenResty's battle-tested escaping (handles backslash, NUL,
+-- control chars, quotes). Falls back to manual escaping under plain LuaJIT.
+local ngx_quote_sql_str = ngx and ngx.quote_sql_str
+
 local function _escape_str(str)
     if not str then return '' end
-    return string.gsub(str, "'", "''")
+    -- Escape MySQL special characters: backslash first, then quote.
+    return (string.gsub(string.gsub(str, "\\", "\\\\"), "'", "''"))
+end
+
+local function _quote(value)
+    if ngx_quote_sql_str then
+        return ngx_quote_sql_str(value)
+    end
+    return "'" .. _escape_str(tostring(value)) .. "'"
 end
 
 local function _build_where_clause(where)
@@ -70,7 +80,7 @@ local function _build_where_clause(where)
             end
             local val_str
             if type(v) == 'string' then
-                val_str = "'" .. _escape_str(v) .. "'"
+                val_str = _quote(v)
             else
                 val_str = tostring(v)
             end
@@ -130,10 +140,14 @@ function _M.query(self, query, est_nrows)
         return nil, "connect failed: " .. err
     end
     local res, err, errno = Mysql.query(self._db, query)
-    Mysql.set_keepalive(self._db)
     if err then
+        -- Do not return a possibly-corrupted connection to the pool.
+        if self._db and self._db.close then
+            pcall(function() self._db:close() end)
+        end
         return nil, err, errno
     end
+    Mysql.set_keepalive(self._db)
     return res
 end
 
@@ -173,7 +187,7 @@ function _M.insert(self, data)
         count = count + 1
         fields[count] = k
         if type(v) == "string" then
-            values[count] = "'" .. _escape_str(v) .. "'"
+            values[count] = _quote(v)
         else
             values[count] = tostring(v)
         end
@@ -194,8 +208,17 @@ function _M.insert(self, data)
     return res and res.insert_id or false
 end
 
+local function _where_is_empty(where)
+    if where == nil then return true end
+    if type(where) == 'table' then return next(where) == nil end
+    if type(where) == 'string' then return where:match('^%s*$') ~= nil end
+    return false
+end
+
 function _M.update(self, data, where)
     if not data or type(data) ~= 'table' then return false end
+    -- Refuse full-table UPDATE without an explicit WHERE clause.
+    if _where_is_empty(where) then return false end
 
     local set_parts = new_tab(#data, 0)
     local count = 0
@@ -203,7 +226,7 @@ function _M.update(self, data, where)
     for k, v in pairs(data) do
         count = count + 1
         if type(v) == "string" then
-            set_parts[count] = k .. " = '" .. _escape_str(v) .. "'"
+            set_parts[count] = k .. " = " .. _quote(v)
         else
             set_parts[count] = k .. " = " .. tostring(v)
         end
@@ -223,6 +246,8 @@ function _M.update(self, data, where)
 end
 
 function _M.delete(self, where)
+    -- Refuse full-table DELETE without an explicit WHERE clause.
+    if _where_is_empty(where) then return false end
     local full_table = self:get_full_table_name()
     local sql_parts = new_tab(3, 0)
     sql_parts[1] = "DELETE FROM "
@@ -345,7 +370,7 @@ function _M.insert_batch(self, data_list)
         for j, f in ipairs(fields) do
             local v = data[f]
             if type(v) == 'string' then
-                vals[j] = "'" .. _escape_str(v) .. "'"
+                vals[j] = _quote(v)
             else
                 vals[j] = tostring(v)
             end

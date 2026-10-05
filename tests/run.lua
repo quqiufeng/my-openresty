@@ -230,7 +230,7 @@ local function run_tests()
             duration = duration .. 's',
             timestamp = os.date('%Y-%m-%d %H:%M:%S')
         }
-        print(json.encode(result, pretty = true))
+        print(json.encode(result))
     else
         print('')
         print('========================================')

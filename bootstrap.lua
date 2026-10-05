@@ -12,20 +12,25 @@ Config.load()
 
 -- Initialize middleware system (for header_filter / log phases)
 local Middleware = require('app.middleware')
-local mw_config = Config.get('middleware') or {
-    { name = 'request_id', phase = 'access', options = { header_name = 'X-Request-Id' } },
-    { name = 'timeout', phase = 'access', options = { max_execution_time = 30 } },
-    { name = 'logger', phase = 'log', options = { level = 'info' } },
-    { name = 'cors', phase = 'header_filter' }
-}
-Middleware:setup(mw_config)
+if #Middleware:get_config() == 0 then
+    local mw_config = Config.get('middleware') or {
+        { name = 'request_id', phase = 'access', options = { header_name = 'X-Request-Id' } },
+        { name = 'timeout', phase = 'access', options = { max_execution_time = 30 } },
+        { name = 'logger', phase = 'log', options = { level = 'info' } },
+        { name = 'cors', phase = 'header_filter' }
+    }
+    Middleware:setup(mw_config)
+end
 
-local router = Router:new()
-Routes(router)
-
-router:get('/test', function(req, res)
-    res:json({message = 'Direct route works!'})
-end)
+-- Routes are normally registered once in the init phase (init.lua via
+-- init_by_lua_file). Fall back to registering here only when the init
+-- phase did not run (e.g. dev setups without init_by_lua).
+if Router:count_routes() == 0 then
+    Routes(Router:new())
+    Router:get('/test', function(req, res)
+        res:json({message = 'Direct route works!'})
+    end)
+end
 
 local function run()
     -- Generate request ID for tracing
@@ -97,7 +102,7 @@ local function run()
                 local action_func = ctrl[action]
                 if action_func and type(action_func) == "function" then
                     local ok, result = xpcall(function()
-                        return action_func(ctrl, unpack(matches))
+                        return action_func(ctrl, unpack(matches or {}))
                     end, function(err)
                         ngx.log(ngx.ERR, debug.traceback(err))
                         return err
