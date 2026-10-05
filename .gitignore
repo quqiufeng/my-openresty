@@ -40,3 +40,4 @@ luac.out
 /lib/
 /dist/
 /logs/*.log
+/nginx/conf/stream.d/forward.conf

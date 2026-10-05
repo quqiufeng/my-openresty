@@ -8,6 +8,7 @@ NGINX="$ROOT/bin/nginx"
 [ -x "$NGINX" ] || { echo "[ERROR] 缺少 bin/nginx，请先运行 bin/build.sh" >&2; exit 1; }
 
 mkdir -p "$ROOT/logs/cache" "$ROOT/run" "$ROOT/uploads"
+[ -f "$ROOT/nginx/conf/stream.d/forward.conf" ] || "$ROOT/bin/sync-conf.sh"
 PIDF="$ROOT/run/nginx.pid"
 if [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; then
     echo "[INFO] 已在运行 pid=$(cat "$PIDF")"; exit 0

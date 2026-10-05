@@ -1,7 +1,7 @@
 -- 由 conf/forward.lua 生成 conf/stream.d/forward.conf
 -- 用法: luajit bin/gen-conf.lua <project_root>
 local root = arg[1] or "."
-local file = root .. "/conf/forward.lua"
+local file = root .. "/nginx/conf/forward.lua"
 
 local chunk, err = loadfile(file)
 if not chunk then

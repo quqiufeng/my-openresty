@@ -4,39 +4,43 @@
 用 **Lua** 编写 TCP/UDP 应用与转发逻辑，通过 **conf 文件配置网络转发**，
 可打包为 **自包含部署目录（二进制 + lib + conf + lua）**。
 
-- LuaJIT 与框架一起**编译打包**（`bin/build.sh`）
+> **已并入主项目统一构建**：HTTP API 与 TCP/UDP 现在共用**一份构建、一个 dist**，
+> 由同一个 nginx 实例同时运行 `http{}`（8080）与 `stream{}`（L4）。
+> 相关文件位于项目根：`bin/build.sh`、`nginx/conf/{nginx.conf,myresty.conf,forward.lua}`、`lua/`。
+
+- LuaJIT 与框架一起**编译打包**（根 `bin/build.sh`）
 - 把已安装的 OpenResty nginx 二进制当依赖汇聚进来
-- Lua 库（`.lua`）与 `.so` 统一放入 `lib/`
+- Lua 库（`.lua`）与 `.so` 统一放入根 `lib/`
 - 功能全部由 Lua 实现，无需写 C
 
 ---
 
-## 目录结构
+## 目录结构（统一后）
 
 ```
-tcpudp/
+my-openresty/
 ├── bin/
 │   ├── nginx            # 运行时二进制（构建时从 OpenResty 复制）
 │   ├── luajit           # 构建的 LuaJIT 解释器
 │   ├── build.sh         # 编译 LuaJIT + 汇集二进制/库 + 生成 conf + 组 dist
-│   ├── start.sh         # 启动
-│   ├── stop.sh          # 停止
-│   ├── reload.sh        # 重载（含重新生成转发配置）
-│   ├── status.sh        # 状态
-│   ├── sync-conf.sh     # 由 conf/forward.lua 生成 stream 配置
+│   ├── start.sh stop.sh reload.sh status.sh
+│   ├── sync-conf.sh     # 由 nginx/conf/forward.lua 生成 stream 配置
 │   └── gen-conf.lua     # 配置生成器（Lua）
 ├── lib/                 # Lua 库(.lua) 与 .so（构建时填充）
-├── conf/
-│   ├── nginx.conf       # 主配置（stream + lua_package + 引入转发配置）
-│   ├── forward.lua      # ★ 用户配置：转发规则
+├── nginx/conf/
+│   ├── nginx.conf       # 主配置：http{} + stream{}
+│   ├── myresty.conf     # HTTP server (8080)
+│   ├── forward.lua      # ★ 用户配置：TCP/UDP 转发规则
 │   └── stream.d/
 │       └── forward.conf # 由 sync-conf.sh 生成，勿手改
 ├── lua/
-│   ├── worker.lua       # init_worker_by_lua
+│   ├── stream_init.lua  # stream init_by_lua（设置 package.path + 预热规则）
+│   ├── worker.lua       # stream init_worker_by_lua
 │   ├── framework/       # 框架：config / upstream / tcp / udp / log / init
 │   └── apps/            # 用户应用（示例 apps/hello.lua）
+├── app/ middleware/ ... # HTTP API 应用（MVC）
 ├── logs/  run/          # 运行目录
-└── dist/                # 部署包（bin + lib + conf + lua）
+└── dist/                # 部署包（bin + lib + nginx/conf + app + lua + .env）
 ```
 
 ---
@@ -44,10 +48,10 @@ tcpudp/
 ## 快速开始
 
 ```bash
-# 1) 构建（编译 LuaJIT、汇集 nginx 二进制与 Lua 库、生成配置、组装 dist）
+# 1) 一份构建：编译 LuaJIT、汇集 nginx 二进制与 Lua 库、生成配置、组装 dist
 bin/build.sh
 
-# 2) 启动 / 停止 / 重载 / 状态
+# 2) 启动/停止/重载/状态（同一实例同时提供 HTTP 8080 与 TCP/UDP）
 bin/start.sh
 bin/status.sh
 bin/reload.sh
@@ -57,14 +61,15 @@ bin/stop.sh
 测试（默认规则见下）：
 
 ```bash
-printf 'hello\n' | nc 127.0.0.1 19001     # TCP echo
-nc 127.0.0.1 19005                         # 自定义 handler（先返回问候语）
+curl http://127.0.0.1:8080/                  # HTTP API
+printf 'hello\n' | nc 127.0.0.1 19001        # TCP echo
+nc 127.0.0.1 19005                            # 自定义 handler（先返回问候语）
 python3 -c 'import socket;s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.settimeout(3);s.sendto(b"hi",("127.0.0.1",19003));print(s.recvfrom(100)[0])'  # UDP echo
 ```
 
 ---
 
-## 配置转发（`conf/forward.lua`）
+## 配置转发（`nginx/conf/forward.lua`）
 
 框架只认这个文件；`bin/sync-conf.sh` 会把它翻译成 nginx `stream` 的 `server` 块。
 
@@ -118,7 +123,7 @@ end
 return _M
 ```
 
-在 `conf/forward.lua` 中：`handler = "apps.myapp"`。
+在 `nginx/conf/forward.lua` 中：`handler = "apps.myapp"`。
 
 框架内可用的能力（`ngx_stream_lua` 提供）：
 - `ngx.req.socket()`：下游 TCP/UDP 套接字
@@ -142,7 +147,7 @@ return _M
 1. **编译 LuaJIT**（默认源码 `$OPENRESTY_SRC/bundle/LuaJIT-2.1-20260415`），产出 `bin/luajit` 与 `lib/libluajit-5.1.so.2`
 2. 复制 OpenResty 的 nginx 二进制到 `bin/nginx`
 3. 汇集 Lua 库：`/usr/local/lualib` 的 `resty/ ngx/ rds/ redis/` 目录与 `*.lua`、`*.so` → `lib/`
-4. 由 `conf/forward.lua` 生成 `conf/stream.d/forward.conf`
+4. 由 `nginx/conf/forward.lua` 生成 `nginx/conf/stream.d/forward.conf`
 5. 组装 `dist/ = bin + lib + conf + lua`
 
 可用环境变量覆盖：
@@ -169,7 +174,7 @@ SKIP_LUAJIT=1 bin/build.sh   # 跳过编译，改为复制系统 luajit
 ## 运行原理
 
 ```
-conf/forward.lua ──(bin/sync-conf.sh)──▶ conf/stream.d/forward.conf
+nginx/conf/forward.lua ──(bin/sync-conf.sh)──▶ nginx/conf/stream.d/forward.conf
                                                 │ include
                                                 ▼
                                         conf/nginx.conf (stream)
@@ -187,6 +192,6 @@ conf/forward.lua ──(bin/sync-conf.sh)──▶ conf/stream.d/forward.conf
 ## 已知限制
 
 - UDP 为**单数据报**请求/响应（`ngx_stream_lua` 的 UDP 下游每次读取一个报文）；多包会话需在 Lua 里自行处理。
-- 转发规则以 `conf/forward.lua` 为唯一来源，`conf/stream.d/forward.conf` 自动生成，勿手改。
+- 转发规则以 `nginx/conf/forward.lua` 为唯一来源，`nginx/conf/stream.d/forward.conf` 自动生成，勿手改。
 - 动态增删监听端口需改 `forward.lua` 后 `reload`（nginx 不支持运行时新增 `listen`）。
 - 当前 `lua_code_cache` 默认开启，改 Lua 代码后需 `reload`。

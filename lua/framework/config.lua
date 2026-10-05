@@ -8,7 +8,7 @@ local by_name -- name -> rule
 local function forward_path()
     local root = ngx.config.prefix()
     if root:sub(-1) ~= "/" then root = root .. "/" end
-    return root .. "conf/forward.lua"
+    return root .. "nginx/conf/forward.lua"
 end
 
 local function load()
