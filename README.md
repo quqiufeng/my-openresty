@@ -175,6 +175,34 @@ apt-get update && apt-get install -y build-essential libc6-dev libgd-dev libpng-
 | `libc6-dev` | 文件操作的 C 库 | Standard C library for file operations |
 | `zlib1g-dev` | 压缩库 | Compression library |
 
+### Runtime Dependencies / 运行期依赖（部署目标机）
+
+运行期 **不需要** 开发包：LuaJIT 与 Lua 库已随 `dist/` 打包，FFI 只是动态链接到系统 `.so`，
+在目标机安装下列 **运行库** 即可（一条命令）：
+
+```bash
+# 一键安装（脚本会自动区分 libssl3 / libssl3t64）
+sudo bin/install-deps.sh
+
+# 等价的手工命令（Ubuntu 24.04）
+sudo apt-get update && sudo apt-get install -y \
+    libssl3t64 libcrypt1 libpcre2-8-0 zlib1g libgd3
+```
+
+| 库 | 提供方 | 用途 |
+|----|--------|------|
+| `libssl.so.3` / `libcrypto.so.3` | `libssl3t64`（旧版 `libssl3`） | nginx TLS + FFI 会话加密 (`libcrypto`) |
+| `libpcre2-8.so.0` | `libpcre2-8-0` | nginx 正则 |
+| `libz.so.1` | `zlib1g` | nginx 压缩 |
+| `libcrypt.so.1` | `libcrypt1` | nginx 依赖 |
+| `libgd.so.3` | `libgd3` | FFI 验证码 / 图像 |
+
+依赖自检：
+
+```bash
+bin/check-deps.sh   # 检查 bin/nginx 与 FFI 所需 .so 是否齐全
+```
+
 ---
 
 ## Quick Start / 快速开始

@@ -158,7 +158,7 @@ local config = {
 
     session = {
         cookie_name = e('SESSION_COOKIE_NAME', 'myresty_session'),
-        secret_key = nil,  -- crypto.lua reads SESSION_SECRET env var directly
+        secret_key = e('SESSION_SECRET', ''),
         expires = e_num('SESSION_EXPIRES', 86400),
         cookie_path = '/',
         cookie_domain = '',

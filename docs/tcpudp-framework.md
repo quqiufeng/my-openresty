@@ -166,7 +166,9 @@ SKIP_LUAJIT=1 bin/build.sh   # 跳过编译，改为复制系统 luajit
 **部署**：把 `dist/` 整体拷到目标机，执行 `dist/bin/start.sh`。
 启动脚本会设置 `LD_LIBRARY_PATH=$ROOT/lib`，优先使用自带的 `libluajit`。
 
-> 目标机需具备系统库：`libssl3 / libcrypto3 / libpcre2-8 / zlib / libcrypt`（nginx 的 `NEEDED`）。
+> 目标机需具备系统库：`libssl3 / libcrypto3 / libpcre2-8 / zlib / libcrypt`（nginx 的 `NEEDED`），
+> 以及 FFI 动态链接的 `libgd`。一键安装：`bin/install-deps.sh`，自检：`bin/check-deps.sh`。
+> （LuaJIT 与 Lua 库已随 dist 打包，无需安装。）
 > nginx 与 LuaJIT 均为 x86_64 构建，跨平台需在目标架构上重新 `build.sh`。
 
 ---

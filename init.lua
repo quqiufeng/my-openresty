@@ -8,6 +8,14 @@ package.path = _prefix .. '?.lua;' .. _prefix .. '?/init.lua;'
 local Config = require('app.core.Config')
 Config.load()
 
+-- 启动期强制校验会话密钥：生产必须 >=32 字符；测试可用 MYRESTY_INSECURE_OK=1 强制
+local Crypto = require('app.lib.crypto')
+if not Crypto.has_strong_secret() and os.getenv('MYRESTY_INSECURE_OK') ~= '1' then
+    ngx.log(ngx.EMERG, '[myresty] SESSION_SECRET 未设置或长度不足 32，拒绝启动。'
+        .. '请设置 SESSION_SECRET（>=32 字符），或设 MYRESTY_INSECURE_OK=1 强制启动。')
+    error('SESSION_SECRET is required (>=32 chars)')
+end
+
 -- Initialize middleware system (runs once at nginx startup)
 local Middleware = require('app.middleware')
 local middleware_config = Config.get('middleware') or {

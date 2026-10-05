@@ -77,7 +77,9 @@ local function run()
             end)
 
             if not ok then
-                response:json({success = false, error = 'Internal Server Error', message = tostring(result)}, 500)
+                local rid = ngx.ctx and ngx.ctx.request_id or "-"
+                        ngx.log(ngx.ERR, "[myresty] request error rid=", rid, ": ", tostring(result))
+                        response:json({success = false, error = "Internal Server Error", request_id = rid}, 500)
             end
         else
             local controller, action
@@ -117,7 +119,9 @@ local function run()
                     end)
 
                     if not ok then
-                        response:json({success = false, error = 'Internal Server Error', message = tostring(result)}, 500)
+                        local rid = ngx.ctx and ngx.ctx.request_id or "-"
+                        ngx.log(ngx.ERR, "[myresty] request error rid=", rid, ": ", tostring(result))
+                        response:json({success = false, error = "Internal Server Error", request_id = rid}, 500)
                     end
                 else
                     response:json({success = false, error = 'Action Not Found', action = action}, 404)

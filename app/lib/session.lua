@@ -16,6 +16,15 @@ end
 local Crypto = require("app.lib.crypto")
 local cjson = require("cjson")
 
+-- 读取应用 session 配置（Cookie 安全属性）
+local sconf = {}
+do
+    local ok, Config = pcall(require, 'app.core.Config')
+    if ok and Config and Config.get then
+        sconf = Config.get('session') or {}
+    end
+end
+
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
@@ -29,9 +38,18 @@ function _M:new(options)
     self.data = {}
     self.session_id = nil
     self.is_new_session_flag = true
-    self.cookie_name = (options and options.cookie_name) or COOKIE_NAME
-    self.cookie_path = (options and options.cookie_path) or COOKIE_PATH
-    self.cookie_max_age = (options and options.cookie_max_age) or COOKIE_MAX_AGE
+    self.cookie_name = (options and options.cookie_name) or sconf.cookie_name or COOKIE_NAME
+    self.cookie_path = (options and options.cookie_path) or sconf.cookie_path or COOKIE_PATH
+    self.cookie_max_age = (options and options.cookie_max_age) or sconf.expires or COOKIE_MAX_AGE
+    self.cookie_domain = sconf.cookie_domain
+
+    -- Cookie 安全属性（默认 Secure/HttpOnly 开，SameSite=Lax）
+    self.cookie_secure = (options and options.cookie_secure)
+    if self.cookie_secure == nil then self.cookie_secure = sconf.cookie_secure ~= false end
+    self.cookie_httponly = (options and options.cookie_httponly)
+    if self.cookie_httponly == nil then self.cookie_httponly = sconf.cookie_httponly ~= false end
+    self.cookie_samesite = (options and options.cookie_samesite)
+    if self.cookie_samesite == nil then self.cookie_samesite = sconf.cookie_samesite or 'Lax' end
 
     self.secret_key = Crypto.get_secret_key()
 
@@ -156,17 +174,32 @@ function _M:save()
     return self
 end
 
+-- 组装 Cookie 属性（Path/Domain/Max-Age/Secure/HttpOnly/SameSite）
+function _M:_cookie_attrs(max_age)
+    local a = { 'Path=' .. self.cookie_path }
+    if self.cookie_domain and self.cookie_domain ~= '' then
+        a[#a + 1] = 'Domain=' .. self.cookie_domain
+    end
+    a[#a + 1] = 'Max-Age=' .. tostring(max_age or self.cookie_max_age)
+    if self.cookie_httponly then a[#a + 1] = 'HttpOnly' end
+    if self.cookie_secure then a[#a + 1] = 'Secure' end
+    if self.cookie_samesite and self.cookie_samesite ~= '' then
+        a[#a + 1] = 'SameSite=' .. self.cookie_samesite
+    end
+    return table.concat(a, '; ')
+end
+
 function _M:to_cookie()
     self:save()
 
     local json_str = cjson.encode(self.data)
     local encrypted = self:aes_encrypt(json_str)
 
-    return self.cookie_name .. '=' .. encrypted .. '; Path=' .. self.cookie_path .. '; HttpOnly; Max-Age=' .. self.cookie_max_age
+    return self.cookie_name .. '=' .. encrypted .. '; ' .. self:_cookie_attrs()
 end
 
 function _M:set_cookie(value)
-    local cookie_str = self.cookie_name .. '=' .. value .. '; Path=' .. self.cookie_path .. '; HttpOnly; Max-Age=' .. self.cookie_max_age
+    local cookie_str = self.cookie_name .. '=' .. value .. '; ' .. self:_cookie_attrs()
     ngx.header['Set-Cookie'] = cookie_str
 end
 
@@ -174,7 +207,7 @@ function _M:destroy()
     self.data = {}
     self.session_id = nil
     self.is_new_session_flag = true
-    ngx.header['Set-Cookie'] = self.cookie_name .. '=deleted; Path=' .. self.cookie_path .. '; Max-Age=0'
+    ngx.header['Set-Cookie'] = self.cookie_name .. '=deleted; ' .. self:_cookie_attrs(0)
     return self
 end
 
