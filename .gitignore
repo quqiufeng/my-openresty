@@ -33,3 +33,10 @@ luac.out
 *.x86_64
 *.hex
 .env
+
+# MyResty 自包含构建产物 (bin/build.sh 生成)
+/bin/nginx
+/bin/luajit
+/lib/
+/dist/
+/logs/*.log

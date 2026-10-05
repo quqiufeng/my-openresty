@@ -8,11 +8,33 @@ local function trim(s)
     return s:match('^%s*(.-)%s*$')
 end
 
+-- 运行时根目录（优先 nginx -p 前缀），并自动把旧绝对路径重定位到当前根
+local LEGACY_ROOT = '/var/www/web/my-openresty'
+local function detect_root()
+    if ngx and ngx.config and ngx.config.prefix then
+        local p = ngx.config.prefix()
+        if p and p ~= '' then
+            if p:sub(-1) == '/' then p = p:sub(1, -2) end
+            if p ~= '' then return p end
+        end
+    end
+    return os.getenv('MYRESTY_ROOT') or LEGACY_ROOT
+end
+local ROOT = detect_root()
+
+local function relocate(p)
+    if type(p) == 'string' and p:sub(1, #LEGACY_ROOT) == LEGACY_ROOT then
+        return ROOT .. p:sub(#LEGACY_ROOT + 1)
+    end
+    return p
+end
+
 -- Read .env file
 local env = {}
 local env_paths = {
     '/tmp/.nginx/.env',
-    '/var/www/web/my-openresty/.env',
+    ROOT .. '/.env',
+    LEGACY_ROOT .. '/.env',
 }
 local env_path = nil
 local f, err
@@ -71,9 +93,9 @@ local config = {
     host = e('APP_HOST', 'localhost'),
     port = e_num('APP_PORT', 8080),
     charset = e('APP_CHARSET', 'UTF-8'),
-    app_path = '/var/www/web/my-openresty',
-    cache_path = '/var/www/web/my-openresty/logs/cache',
-    log_path = e('LOG_DIR', '/var/www/web/my-openresty/logs'),
+    app_path = ROOT,
+    cache_path = ROOT .. '/logs/cache',
+    log_path = relocate(e('LOG_DIR', ROOT .. '/logs')),
     log_threshold = e_num('LOG_LEVEL', 4),
     table_prefix = '',
     autoload = {'helper', 'url', 'request'},
@@ -99,7 +121,7 @@ local config = {
     },
 
     upload = {
-        path = e('UPLOAD_PATH', '/var/www/web/my-openresty/uploads'),
+        path = relocate(e('UPLOAD_PATH', ROOT .. '/uploads')),
         max_size = e_num('UPLOAD_MAX_SIZE', 10),
         allowed_types = split_csv(e('UPLOAD_ALLOWED_TYPES', ''), {'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'}),
         allowed_mimes = {
@@ -151,7 +173,7 @@ local config = {
             console = true,
             file = true,
         },
-        log_dir = e('LOG_DIR', '/var/www/web/my-openresty/logs'),
+        log_dir = relocate(e('LOG_DIR', ROOT .. '/logs')),
         max_size = e_num('LOG_MAX_SIZE', 10485760),
         max_files = e_num('LOG_MAX_FILES', 5),
         async = true,

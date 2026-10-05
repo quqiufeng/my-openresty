@@ -1,5 +1,13 @@
-package.path = '/tmp/.nginx/?.lua;/tmp/.nginx/app/?.lua;/tmp/.nginx/app/?/init.lua;/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
-package.cpath = '/tmp/.nginx/?.so;/tmp/.nginx/lualib/?.so;/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
+-- 运行路径：优先 nginx 前缀（-p），兼容 ELF 运行时 /tmp/.nginx 与旧绝对路径
+local _prefix = (ngx and ngx.config and ngx.config.prefix and ngx.config.prefix()) or ''
+if _prefix ~= '' and _prefix:sub(-1) ~= '/' then _prefix = _prefix .. '/' end
+package.path  = _prefix .. '?.lua;' .. _prefix .. '?/init.lua;'
+             .. _prefix .. 'lib/?.lua;' .. _prefix .. 'lib/?/init.lua;'
+             .. '/tmp/.nginx/?.lua;/tmp/.nginx/app/?.lua;/tmp/.nginx/app/?/init.lua;'
+             .. '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+package.cpath = _prefix .. 'lib/?.so;'
+             .. '/tmp/.nginx/?.so;/tmp/.nginx/lualib/?.so;'
+             .. '/var/www/web/my-openresty/?.so;/usr/local/lualib/?.so;;'
 
 local Config = require('app.core.Config')
 local Router = require('app.core.Router')

@@ -43,6 +43,8 @@ end
 local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
+local Paths = require('app.core.paths')
+
 -- Per-request cache key lives in ngx.ctx (request-scoped, coroutine-safe).
 local CTX_KEY = '__myresty_request'
 
@@ -338,7 +340,7 @@ function _M.save_file(self, name, save_path, new_name)
 
     local config = self.config or {}
     local upload_config = config.upload or {}
-    local upload_path = save_path or upload_config.path or '/var/www/web/my-openresty/uploads'
+    local upload_path = save_path or upload_config.path or Paths.path('uploads')
 
     local FileHelper = require('app.helpers.file_helper')
     local FileUtil = require('app.utils.file')
@@ -373,7 +375,7 @@ function _M.move_file(self, name, save_path, new_name)
 
     local config = self.config or {}
     local upload_config = config.upload or {}
-    local upload_path = save_path or upload_config.path or '/var/www/web/my-openresty/uploads'
+    local upload_path = save_path or upload_config.path or Paths.path('uploads')
 
     local FileHelper = require('app.helpers.file_helper')
     local FileUtil = require('app.utils.file')

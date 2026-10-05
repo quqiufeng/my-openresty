@@ -1,4 +1,9 @@
-package.path = '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
+-- 运行路径：优先 nginx 前缀（-p）
+local _prefix = (ngx and ngx.config and ngx.config.prefix and ngx.config.prefix()) or ''
+if _prefix ~= '' and _prefix:sub(-1) ~= '/' then _prefix = _prefix .. '/' end
+package.path = _prefix .. '?.lua;' .. _prefix .. '?/init.lua;'
+            .. _prefix .. 'lib/?.lua;' .. _prefix .. 'lib/?/init.lua;'
+            .. '/var/www/web/my-openresty/?.lua;/var/www/web/my-openresty/?/init.lua;/usr/local/lualib/?.lua;;'
 
 local Config = require('app.core.Config')
 Config.load()
