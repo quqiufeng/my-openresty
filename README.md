@@ -26,49 +26,6 @@
 
 ---
 
-## 更新日志 / Changelog
-
-### 2026-10-05 — 代码审计修复 / Code Audit Fixes
-
-本次审计修复了导致框架无法运行、测试失效以及若干安全/正确性问题。
-
-This audit fixed issues that prevented the framework from running, broke the test suite, and introduced security/correctness problems.
-
-**阻断性问题 / Blocking**
-
-- 修复 `app/lib/validation.lua`、`app/helpers/request_helper.lua`、`app/utils/file.lua`、`app/utils/captcha.lua` 的语法 / FFI 错误（此前这些模块无法加载）。
-- 修复单元测试运行器：递归发现 spec、改正 `crypto_spec.lua`、`tests/run.lua` 及已生成控制器测试的语法错误。
-- 新增 `tests/unit/ngx_mock.lua`，使框架模块可在纯 LuaJIT 下测试。
-
-**核心框架 / Core**
-
-- **Router**：路由注册去重（消除每请求路由表无限增长的内存泄漏）；无捕获参数的路由不再把 URI 当 action 参数传入；`dispatch()` 按 `:` 解析 `controller:action`；新增 `Router:reset_routes()`。
-- **Config**：`Config.get(k)` 与 `Config:get(k)` 行为一致（此前 `Config.get('middleware')` 会返回整份配置）。
-- **中间件**：移除 Neovim 专属的 `vim.tbl_deep_extend`，改用 `app/utils/table.lua`（auth/cors/logger/rate_limit 此前运行时必然报错）。
-- **Loader**：只缓存模块类，Model 与 Library 实例改为**按请求实例化**，不再跨请求共享连接 / 会话状态。
-- **路由初始化**：`init.lua`（`init_by_lua_file`）一次性注册路由，`bootstrap.lua` 仅在未初始化时回退注册，消除每请求注册开销。
-- **路由匹配**：静态路由改为 O(1) 哈希查找，动态路由（含参数）单独扫描，不再对全部路由线性遍历。
-- **配置统一**：`app/lib/mysql.lua`、`app/core/Model.lua` 统一通过 `app.core.Config` 读取配置，不再直接 `require('app.config.config')`。
-- **日志降噪**：中间件执行过程中的 INFO 日志降为 DEBUG，减少每请求日志开销。
-- **Response**：新增 `sent` 标记，`send()` 幂等，修复便捷方法（`success`/`fail`/`paginate` 等）与 `bootstrap.lua` 重复输出响应体的问题。
-- **Request**：请求缓存从模块级变量迁移到 `ngx.ctx`，协程安全，避免跨请求串数据。
-- **crypto**：补上未定义的 `ngx_log / ngx_WARN / ngx_ERR`。
-- **request_id / timeout**：改为运行时读取 `ngx.ctx`，不再在模块加载时捕获 nil。
-
-**数据层 / Data Layer**
-
-- **Model**：字符串值改用 `ngx.quote_sql_str` 转义（回退手动转义）；拒绝无 `WHERE` 的全表 `UPDATE`/`DELETE`；查询失败时关闭连接而非放回连接池。
-- **命名统一**：`user_model.lua` → `UserModel.lua`；`menu_model.lua` 合并进 `MenuModel.lua` 并补齐 `format_menus_for_antd`；生成模型的搜索条件由字符串拼接改为 `where/or_where`（消除 LIKE 注入点）。
-- **QueryBuilder**（`app/db/query.lua`）：新增 `or_where()`、`where_in()`、`like()`、`not_like()`；`join/left_join/right_join` 支持 `(table, left, op, right)`；原始 WHERE 条件补上 `AND`/`OR` 连接。
-- **CRUD 生成器**：修正 `update`/`delete` 自递归、控制器文件名大小写、`get_params` 引用不存在方法等问题；为 `admin`/`role` 补充 `detail` 接口。
-
-**测试 / Tests**
-
-- `luajit tests/unit/run.lua` 运行 291 个用例（全部通过），其中 `framework_behavior_spec.lua` 针对真实模块做行为验证；`query_builder_test.lua` / `model_join_test.lua` / `model_prefix_test.lua` 共 88 个用例通过。
-- CI 不再使用 `|| echo "Skipped"` 掩盖测试失败。
-
----
-
 ## LuaJIT Best Practices / LuaJIT 最佳实践
 
 本项目包含一份详细的 LuaJIT 最佳实践指南，基于 OpenResty 源码分析编写。
